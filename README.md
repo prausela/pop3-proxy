@@ -7,3 +7,8 @@ Yo suelo usar un par de convenciones cuando programo, las quiero poner aca asi e
 - Los typedef de punteros a estructuras los escribo con CammelCase. Ejemplo: ```typedef mystruct_t *MyStruct```.
 - Las funciones de ADTs las escribo con cammelCase.
 - Variables y funciones en todo otro caso las escribo en snake_case.
+- Aquellas variables que sean punteros, su nombre termina en \_ptr. Ejemplo: ```int * read_ptr```.
+
+## Cosas Utiles ##
+
+- La directiva ```inline``` hace que cuando se llame a la funcion, en vez de hacer un call a la misma, el compilador coloque el codigo donde iria la llamada (como si fuera una macro). Aumenta la velocidad de ejecucion pero tiene un costo sobre el peso del programa.
