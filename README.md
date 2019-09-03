@@ -12,3 +12,7 @@ Yo suelo usar un par de convenciones cuando programo, las quiero poner aca asi e
 ## Cosas Utiles ##
 
 - La directiva ```inline``` hace que cuando se llame a la funcion, en vez de hacer un call a la misma, el compilador coloque el codigo donde iria la llamada (como si fuera una macro). Aumenta la velocidad de ejecucion pero tiene un costo sobre el peso del programa.
+
+### Paginas Web ###
+
+- http://www.networksorcery.com/enp/protocol/pop.htm
