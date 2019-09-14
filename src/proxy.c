@@ -87,10 +87,15 @@
  // main entry point
  int main(int argc,char *argv[])
  {
-     pthread_t tid;
-     char port[100],ip[100];
-     char *hostname= calloc(15, sizeof(char));
-     char proxy_port[100];
+       pthread_t tid;
+       char port[100],ip[100];
+       char *hostname= calloc(15, sizeof(char));
+       if(argc<=3)
+       {
+         printf("Error creating the proxy, please add a valid ip/dns, a port to connect on the origin server and a local port\n");
+         return 1;
+       }
+       char proxy_port[100];
         // accept arguments from terminal
         if(is_valid_ip_address(argv[1])){
           strcpy(ip,argv[1]); // server ip
@@ -101,14 +106,14 @@
         strcpy(port,argv[2]);  // server port
         strcpy(proxy_port,argv[3]); // proxy port
         //hostname_to_ip(hostname , ip);
-        printf("server IP : %s and port %s" , ip,port);
+        printf("server IP : %s and port %s " , ip,port);
         printf("proxy port is %s",proxy_port);
         printf("\n");
       //socket variables
       int proxy_fd =0, client_fd=0;
       struct sockaddr_in proxy_sd;
- // add this line only if server exits when client exits
- signal(SIGPIPE,SIG_IGN);
+     // add this line only if server exits when client exits
+     signal(SIGPIPE,SIG_IGN);
       // create a socket
       if((proxy_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
       {
