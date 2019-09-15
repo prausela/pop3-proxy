@@ -3,9 +3,11 @@ all: proxy.c
 	gcc -o pop3_command_parser parser_factory.c parser_utils.c pop3_command_parser.c pop3_command_parser_test.c
 	gcc -o pop3_singleline_response_parser parser_factory.c parser_utils.c pop3_singleline_response_parser.c pop3_singleline_response_parser_test.c -g
 	gcc -o pop3_multiline_response_parser parser_factory.c pop3_multiline_response_parser_test.c pop3_multiline_response_parser.c -g
+	gcc -o pop3_parser parser_factory.c parser_utils.c pop3_singleline_response_parser.c pop3_multiline_response_parser.c pop3_parser_test.c -g
 
 clean:
 	$(RM) proxy
 	$(RM) pop3_command_parser
 	$(RM) pop3_singleline_response_parser
 	$(RM) pop3_multiline_response_parser
+	$(RM) pop3_parser
