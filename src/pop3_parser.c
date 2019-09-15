@@ -69,3 +69,41 @@ const char * multiline_commands[] =
 	"LANG",
 };
 
+	enum pop3_states {
+		SL_PARSER,
+		ML_PARSER,
+		CMD_PARSER,
+	}
+
+	enum pop3_event_type {
+		PARSE_SL,
+		PARSE_DOT_STUFFED,
+		PARSE_CMD,
+	}
+
+static void
+parse_sl(struct parser_event *ret, const uint8_t c){
+	ret->type 		= PARSE_SL;
+	ret->n 			= 0;
+}
+
+static void
+parse_dot_stuffed(struct parser_event *ret, const uint8_t c){
+	ret->type 		= PARSE_DOT_STUFFED;
+	ret->n 			= 0;
+}
+
+static void
+parse_cmd(struct parser_event *ret, const uint8_t c){
+	ret->type 		= PARSE_CMD;
+	ret->n 			= 0;
+}
+
+struct parser *curr_parser;
+
+
+
+struct parser *
+pop3_parser_init(void){
+
+}
