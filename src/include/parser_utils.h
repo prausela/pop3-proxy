@@ -7,7 +7,8 @@
  *   ||		If this utilities library is included:								||
  *   ||		             1) parser_event_type 	enums MUST BEGIN AT 2. 			||
  *   ||                  2) parser_states 		enums MUST BEGIN AT 1.			||
- *   ||																			||
+ *   ||                                                                         ||
+ *   ||		Note: ~ means it has junk which should not be read.					||
  *   |+-------------------------------------------------------------------------+|
  *   +---------------------------------------------------------------------------+
  */
@@ -18,13 +19,16 @@
 
 #include "parser_factory.h"
 
+#define N(x) (sizeof(x)/sizeof((x)[0]))
+
 	enum parser_utils_states {
-		TRAP 	= 0,
+		TRAP 		= 0,
 	};
 
 	enum parser_utils_event_type {
 		IGNORE 		= 0,
 		TRAPPED 	= 1,
+		FINAL 		= 2,
 	};
 
 /** This event's intention of purpose is to IGNORE the input given.
@@ -50,8 +54,21 @@ ignore(struct parser_event *ret, const uint8_t c);
 void
 trap(struct parser_event *ret, const uint8_t c);
 
+/** This event's intention of purpose is to signal that the current
+ * 	input has reached a FINAL state.
+ *
+ *		~~EVENT~~
+ *      type 	🡢 FINAL
+ *		n 		🡢 0
+ *		data 	🡢 ~
+ */
+
+void
+final(struct parser_event *ret, const uint8_t c);
+
 /** ~~TRAP STATE TRANSITIONS~~
- * One cannot transition from the TRAP STATE to any other state.
+ *
+ * No one can just transition from the TRAP STATE to any other state.
  * TRAP STATE's transitions are as follows:
  *
  *      +----+----+

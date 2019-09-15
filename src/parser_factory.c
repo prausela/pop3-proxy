@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "include/parser_factory.h"
 
@@ -55,7 +56,6 @@ parser_feed(struct parser *p, const uint8_t c) {
     const struct parser_state_transition *state = p->def->states[p->state];
     const size_t n                              = p->def->states_n[p->state];
     bool matched   = false;
-
     for(unsigned i = 0; i < n ; i++) {
         const int when = state[i].when;
         if (state[i].when <= 0xFF) {

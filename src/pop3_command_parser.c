@@ -256,10 +256,6 @@ static const struct parser_state_transition ST_CRLF [] =  {
     {.when = ANY,        .dest = CRLF,       .act1 = ignore,	},
 };
 
-
-//Por favor poner en services este define y agregar el include de services.h
-#define N(x) (sizeof(x)/sizeof((x)[0]))
-
 static const size_t pop3_command_states_n [] = {
 	N(ST_KWRD),
 	N(ST_ARG),

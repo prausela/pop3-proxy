@@ -1,31 +1,27 @@
-#include "include/pop3_command_parser.h"
+#include "include/pop3_multiline_response_parser.h"
 #include <stdio.h>
 
-//~~TEST CASE~~
+//test
 
 inline
 static char* get_event_type(unsigned type){
 	switch(type){
-		case BUFFER_CMD:
-			return "BUFFER_CMD";
-		case HAS_ARGS:
-			return "HAS_ARGS";
+		case DAT_STUFFED:
+			return "DAT_STUFFED";
 		case IGNORE:
 			return "IGNORE";
-		case SET_CMD:
-			return "SET_CMD";
-		case BAD_CMD:
-			return "BAD_CMD";
 	}
 }
 
 int main(int argc, char *argv[]){
-	char *to_analyse = "RETR \r\njasnxkjasnajk";
+	char *to_analyse = "\r\n.\r\njasnajk";
+
 	struct parser_event *event;
-	struct parser *parser = pop3_command_parser_init();
+	struct parser *parser = pop3_multiline_parser_init();
 	while(*to_analyse != 0){
 		event = parser_feed(parser, *to_analyse);
-		printf("%s\n", to_analyse);
+        printf("%s\n",to_analyse);
+
 		printf("TYPE: %s\nDATA: %c\nN:   %d\n", get_event_type(event->type), event->n > 0 ? (char) event->data[0] : '~', event->n);
 		getchar();
 		to_analyse++;
