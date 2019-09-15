@@ -36,7 +36,23 @@ trap(struct parser_event *ret, const uint8_t c){
 	ret->n 			= 0;
 }
 
+/** This event's intention of purpose is to signal that the current
+ * 	input has reached a FINAL state.
+ *
+ *		~~EVENT~~
+ *      type 	🡢 FINAL
+ *		n 		🡢 0
+ *		data 	🡢 ~
+ */
+
+void
+final(struct parser_event *ret, const uint8_t c){
+	ret->type 		= FINAL;
+	ret->n 			= 0;
+}
+
 /** ~~TRAP STATE TRANSITIONS~~
+ *
  * One cannot transition from the TRAP STATE to any other state.
  * TRAP STATE's transitions are as follows:
  *
