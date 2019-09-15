@@ -8,3 +8,6 @@ src/.DS_Store
 pop3_singleline_response_parser.dSYM
 pop3_multiline_response_parser.dSYM
 /src/testing_transformations
+
+*.json
+*.so
