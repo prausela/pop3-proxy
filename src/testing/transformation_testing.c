@@ -18,5 +18,16 @@ int main(){
     printf("An error has ocurred");
     return 1;
   }
-  
+  char message1[11] = "Hola mundo";
+  while(1){
+    sleep(2);
+    printf("Writing to pipe:\n");
+    write(sender_pipe[1],message1,11);
+    sleep(2);
+    int size = 16;
+    char message[size];
+    read(receiver_pipe[0],message,11);
+    printf("Lei: %s\n", message);
+  }
+
 }

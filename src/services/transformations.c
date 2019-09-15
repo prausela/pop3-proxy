@@ -18,18 +18,9 @@ int create_transformation(int * sender_pipe, int * receiver_pipe){
   {
     return 1;
   }
-  printf("Pipe created\n");
-
-
-
   int pid = fork();
   if(pid == 0) //Child process
-  { //aca deberia hacer un exec y cambiar el fd
-    FILE *fp = NULL;
-    fp = fopen("textFile.txt" ,"a");
-    fprintf(stderr,"test 1 %d\n",sender_pipe[1]);
-    fprintf(stderr,"test 2 %d\n",STDOUT_FILENO);
-
+  {
     dup2(sender_pipe[0],STDIN_FILENO);
     close(sender_pipe[0]);
 
@@ -37,16 +28,7 @@ int create_transformation(int * sender_pipe, int * receiver_pipe){
     close(receiver_pipe[1]);
 
     char *argv[] = {"cat", 0};
-    fprintf(stderr,"Creating cat process\n");
     execvp(argv[0],argv);
-
-
-    /*while(1){
-      int size = 256;
-      char message[size];
-      read(sender_pipe[0],message,size);
-      fprintf(stderr, "Lei: %s\n", message);
-    }*/
     return 1;
   }
   else if(pid < 0)
@@ -55,18 +37,7 @@ int create_transformation(int * sender_pipe, int * receiver_pipe){
   }
   else //Parent
   {
-    char message1[11] = "Hola mundo";
-    char* msg1 = "hello, world #1";
-    while(1){
-      sleep(2);
-      printf("Writing to pipe:\n");
-      write(sender_pipe[1],message1,11);
-      sleep(2);
-      int size = 16;
-      char message[size];
-      read(receiver_pipe[0],message,11);
-      printf("Lei: %s\n", message);
-    }
+
   }
   return 0;
 }
