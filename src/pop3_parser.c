@@ -80,20 +80,20 @@ const char * multiline_commands[] =
 		MULTILINE,
 		SINGLELINE,
 		OVERLOADED,
-	}
+	};
 
 	enum pop3_states {
 		INIT,
 		SL_PARSER,
 		ML_PARSER,
 		CMD_PARSER,
-	}
+	};
 
 	enum pop3_event_type {
 		PARSE_SL,
 		PARSE_DOT_STUFFED,
 		PARSE_CMD,
-	}
+	};
 
 static void
 parse_sl(struct parser_event *ret, const uint8_t c){
@@ -138,7 +138,7 @@ struct parser *curr_parser = NULL;
 char cmd[] = { 0, 0, 0, 0, 0 };
 size_t cmd_len = 0;
 bool has_args = false;
-enum pop3_command_types cmd_type;
+int cmd_type;
 bool answer_status = false;
 
 struct parser *
@@ -188,7 +188,7 @@ pop3_parser_feed(struct parser *p, const uint8_t c){
 }
 
 
-enum pop3_command_types
+int
 get_command_type(char *cmd){
 	if(is_in_string_array(cmd, multiline_commands)){
 		return MULTILINE;
