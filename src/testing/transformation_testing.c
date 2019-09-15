@@ -18,19 +18,5 @@ int main(){
     printf("An error has ocurred");
     return 1;
   }
-  char message1[11] = "Hola mundo";
-  //printf("%s\n", message1);
-  printf("fd: %d\n",sender_pipe[1]);
-  write(sender_pipe[1],message1,strlen(message1));
-  printf("TERMINE\n");
-  while(1){
-    sleep(5);
-    printf("Writing to pipe:\n");
-    write(sender_pipe[1],message1,strlen(message1));
-    sleep(5);
-    int size = 256;
-    char message[size];
-    read(sender_pipe[0],message,size);
-    printf("Lei: %s\n", message);
-  }
+  
 }
