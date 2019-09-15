@@ -343,23 +343,23 @@ static const struct parser_state_transition ST_CRLF [] = {
 
 
 static const size_t pop3_singleline_response_states_n [] = {
+	N(ST_TRAP),
 	N(ST_STAT),
 	N(ST_OK),
 	N(ST_ERR),
 	N(ST_MSG),
 	N(ST_CR),
 	N(ST_CRLF),
-	N(ST_TRAP),
 };
 
 static const struct parser_state_transition *pop3_singleline_response_states [] = {
+    ST_TRAP,
     ST_STAT,
 	ST_OK,
 	ST_ERR,
 	ST_MSG,
 	ST_CR,
 	ST_CRLF,
-	ST_TRAP,
 };
 
 /** ~~POP3 SINGLELINE RESPONSE PARSER~~
