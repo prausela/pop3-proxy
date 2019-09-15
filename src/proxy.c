@@ -221,7 +221,12 @@ int checkArg(char* argument, int* expecting_data){
               break;
             }
             case 'h':{
-              printf("Esta funcion esta siendo desarrollada.\n");
+              printf("OPCIONES:\n -e archivo-de-error\tEspecifica  el  archivo  donde se redirecciona stderr de las ejecuciones de los filtros, por defecto el archivo es /dev/null.
+              \n -h \tImprime la ayuda y termina\n -l Direccion-pop3\tEstablece la direccion donde servirAi el proxy. Por defecto escucha en todas las interfaces.\n -L Direccion de management\t
+              Establece la direccion donde donde servira el servicio de management. Por defecto escucha agonicamente en loopback.\n -p Puerto-local\tPuerto TCP donde donde escuchara
+              por conexiones entrantes POP3. Por defecto el valor es 1110\n -P Puerto-origen Puerto TCP donde se encuentra el servidor POP3 en el servidor origen. Por defecto el
+              valor es 110.\n -t cmd\t Comando utilizado para las transformaciones externas. Compatible con system(3). La
+              seccion FILTROS describe como es la interaccion entre pop3filter y el comando filtro. Por defecto no se aplica ninguna transformacion.\n -v\t Imprime informacion sobre la version y termina");
               break;
             }
             case 'l':{
