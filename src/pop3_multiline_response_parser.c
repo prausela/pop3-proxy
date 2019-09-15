@@ -10,14 +10,15 @@ enum pop3_multiline_response_states {
         CRLFDOT,
         CRLFDOTCR,
         CRLFDOTCRLF,
-       
 	};
+
+
 
 static void
 dat_stuffed_end(struct parser_event *ret, const uint8_t c){
 	ret->type		= DAT_STUFFED_END;
 	ret->n 			= 0;
-            printf("hola\n");
+    printf("holaaaaaaaaaaaaaaaaaa\n");
 
 }
 
@@ -27,7 +28,14 @@ dat_stuffed(struct parser_event *ret, const uint8_t c){
 	ret->type		= DAT_STUFFED;
 	ret->n 			= 1;
     ret->data[0] 	= c;
-    ret->next       = dat_stuffed_end;
+   // ret->next       = dat_stuffed_end;
+    
+}
+
+static void 
+ignore(struct parser_event *ret, const uint8_t c){
+	ret->type 		= IGNORE;
+	ret->n 			= 0;
 }
 
 
@@ -70,13 +78,13 @@ static const struct parser_state_transition ST_CRLFDOT [] =  {
 };
 
 static const struct parser_state_transition ST_CRLFDOTCR [] =  {
-   {.when = '\n',          .dest = CRLFDOTCRLF,         .act1=dat_stuffed ,     .act2 = dat_stuffed_end,    	},
+   {.when = '\n',          .dest = CRLFDOTCRLF,         .act1=   dat_stuffed ,  .act2=dat_stuffed_end,    	},
     {.when = ANY,           .dest = DOT_DATA,           .act1 =  dat_stuffed	},
   
 };
 
 static const struct parser_state_transition ST_CRLFDOTCRLF [] =  {
-    {.when = ANY,        .dest = CRLFDOTCRLF,       .act1 = ignore,	},
+    {.when = ANY,        .dest = CRLFDOTCRLF,       .act1 = ignore	},
 };
 
 

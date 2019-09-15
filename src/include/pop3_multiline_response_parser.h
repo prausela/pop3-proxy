@@ -6,8 +6,6 @@
 
 struct parser * pop3_multiline_parser_init(void);
 
-void
-ignore(struct parser_event *ret, const uint8_t c);
 
 enum pop3_multiline_event_type {
         DAT_STUFFED,
