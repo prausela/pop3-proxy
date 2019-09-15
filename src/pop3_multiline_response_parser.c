@@ -1,24 +1,42 @@
 #include "include/pop3_multiline_response_parser.h"
 
+
 // deberia hacer el dibujo, lo tengo en papel
 
 enum pop3_multiline_response_states {
-		STATUS,
-        OK,
+        DOT_DATA,
         CR,
         CRLF,
         CRLFDOT,
         CRLFDOTCR,
         CRLFDOTCRLF,
-        DOT_DATA,
+       
 	};
 
 static void
-dat_stuffed(struct parser_event *ret, const uint8_t c){
-	ret->type		= DAT_STUFFED;
+dat_stuffed_end(struct parser_event *ret, const uint8_t c){
+	ret->type		= DAT_STUFFED_END;
 	ret->n 			= 0;
+            printf("hola\n");
+
 }
 
+static void
+dat_stuffed(struct parser_event *ret, const uint8_t c){
+
+	ret->type		= DAT_STUFFED;
+	ret->n 			= 1;
+    ret->data[0] 	= c;
+    ret->next       = dat_stuffed_end;
+}
+
+
+
+// void
+// ignore(struct parser_event *ret, const uint8_t c){
+// 	ret->type 		= IGNORE;
+// 	ret->n 			= 0;
+// }
 
 
 // static const struct parser_state_transition ST_STATUS [] =  {
@@ -28,32 +46,32 @@ dat_stuffed(struct parser_event *ret, const uint8_t c){
 // };
 
 static const struct parser_state_transition ST_DOT_DATA [] =  {
-    {.when = '\r',        .dest = CR,             .act1 = ignore,	},
-    {.when = ANY,         .dest = DOT_DATA,       .act1 = ignore,	},
+    {.when = '\r',        .dest = CR,             .act1 = dat_stuffed,	},
+    {.when = ANY,         .dest = DOT_DATA,       .act1 = dat_stuffed,	},
 
 };
 
 static const struct parser_state_transition ST_CR [] =  {
-    {.when = '\n',       .dest = CRLF,              .act1 = ignore,	},  
-    {.when = ANY,        .dest = DOT_DATA,         .act1 = ignore,	},
+    {.when = '\n',       .dest = CRLF,              .act1 =  dat_stuffed,	},  
+    {.when = ANY,        .dest = DOT_DATA,         .act1 =  dat_stuffed,	},
   
 };
 
 static const struct parser_state_transition ST_CRLF [] =  {
-    {.when = '.',        .dest = CRLFDOT,            .act1 = ignore,	},
-    {.when = ANY,        .dest = DOT_DATA,           .act1 = ignore	},
+    {.when = '.',        .dest = CRLFDOT,            .act1 = dat_stuffed,	},
+    {.when = ANY,        .dest = DOT_DATA,           .act1 =  dat_stuffed	},
   
 };
 
 static const struct parser_state_transition ST_CRLFDOT [] =  {
-    {.when = '\r',        .dest = CRLFDOTCR,         .act1 = ignore,	},
-    {.when = ANY,          .dest = DOT_DATA,           .act1 = ignore,	},
+    {.when = '\r',        .dest = CRLFDOTCR,         .act1 = dat_stuffed,	},
+    {.when = ANY,          .dest = DOT_DATA,           .act1 =  dat_stuffed,	},
   
 };
 
 static const struct parser_state_transition ST_CRLFDOTCR [] =  {
-   {.when = '\n',          .dest = CRLFDOTCRLF,        .act1 = dat_stuffed,	},
-    {.when = ANY,           .dest = DOT_DATA,           .act1 = ignore	},
+   {.when = '\n',          .dest = CRLFDOTCRLF,         .act1=dat_stuffed ,     .act2 = dat_stuffed_end,    	},
+    {.when = ANY,           .dest = DOT_DATA,           .act1 =  dat_stuffed	},
   
 };
 

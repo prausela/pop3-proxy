@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "include/parser_factory.h"
 
@@ -78,6 +79,7 @@ parser_feed(struct parser *p, const uint8_t c) {
             break;
         }
     }
+
     return &p->e1;
 }
 
