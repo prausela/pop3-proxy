@@ -9,6 +9,7 @@
 #include "../services/services.h"
 #include <unistd.h>
 
+
 int main(){
   int sender_pipe[2],receiver_pipe[2];
   int resp = create_transformation(sender_pipe,receiver_pipe);
@@ -22,4 +23,14 @@ int main(){
   printf("fd: %d\n",sender_pipe[1]);
   write(sender_pipe[1],message1,strlen(message1));
   printf("TERMINE\n");
+  while(1){
+    sleep(5);
+    printf("Writing to pipe:\n");
+    write(sender_pipe[1],message1,strlen(message1));
+    sleep(5);
+    int size = 256;
+    char message[size];
+    read(sender_pipe[0],message,size);
+    printf("Lei: %s\n", message);
+  }
 }

@@ -25,32 +25,33 @@ int create_transformation(int * sender_pipe, int * receiver_pipe){
     FILE *fp = NULL;
     fp = fopen("textFile.txt" ,"a");
     fprintf(stderr,"test 1 %d\n",sender_pipe[1]);
-    fprintf(stderr,"test 2 %d\n",sender_pipe[0]);
+    fprintf(stderr,"test 2 %d\n",STDOUT_FILENO);
 
-    dup2(sender_pipe[1],STDOUT_FILENO);
-    dup2(receiver_pipe[0],STDIN_FILENO);
+    dup2(sender_pipe[0],STDOUT_FILENO);
+    //dup2(receiver_pipe[1],STDIN_FILENO);
     close(sender_pipe[1]);
-    close(receiver_pipe[0]);
+    //close(receiver_pipe[0]);
 
-    char *argv[] = {"cat", "textFile.txt", 0};
+    char *argv[] = {"cat", 0};
     fprintf(stderr,"Creating cat process\n");
-    fprintf(stderr,"%d\n",sender_pipe[1]);
-    //execvp(argv[0],argv);
-    while(1){
+    execvp(argv[0],argv);
+
+
+    /*while(1){
       int size = 256;
       char message[size];
       read(sender_pipe[0],message,size);
       fprintf(stderr, "Lei: %s\n", message);
-    }
+    }*/
     return 1;
   }
   else if(pid < 0)
   {
     printf("ERROR CREATING FORK\n");
   }
-  else         //Parent
+  else //Parent
   {
-    //wait(NULL);
+    //wait(WUNTRACED);
   }
   return 0;
 }
