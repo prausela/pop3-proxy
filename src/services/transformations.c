@@ -30,11 +30,11 @@ int create_transformation(int * sender_pipe, int * receiver_pipe){
     fprintf(stderr,"test 1 %d\n",sender_pipe[1]);
     fprintf(stderr,"test 2 %d\n",STDOUT_FILENO);
 
-    dup2(sender_pipe[1],STDOUT_FILENO);
-    close(sender_pipe[1]);
+    dup2(sender_pipe[0],STDIN_FILENO);
+    close(sender_pipe[0]);
 
-    dup2(receiver_pipe[0],STDIN_FILENO);
-    close(receiver_pipe[0]);
+    dup2(receiver_pipe[1],STDOUT_FILENO);
+    close(receiver_pipe[1]);
 
     char *argv[] = {"cat", 0};
     fprintf(stderr,"Creating cat process\n");
@@ -60,13 +60,11 @@ int create_transformation(int * sender_pipe, int * receiver_pipe){
     while(1){
       sleep(2);
       printf("Writing to pipe:\n");
-      write(sender_pipe[0],msg1,16);
+      write(sender_pipe[1],message1,11);
       sleep(2);
       int size = 16;
       char message[size];
-      printf("ssss\n");
-      read(receiver_pipe[1],message,16);
-      printf("ssss1\n");
+      read(receiver_pipe[0],message,11);
       printf("Lei: %s\n", message);
     }
   }
