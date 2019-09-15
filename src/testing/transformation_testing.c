@@ -18,7 +18,8 @@ int main(){
     return 1;
   }
   char message1[11] = "Hola mundo";
-  printf("%s\n", message1);
-  write(sender_pipe[0],message1,strlen(message1));
+  //printf("%s\n", message1);
+  printf("fd: %d\n",sender_pipe[1]);
+  write(sender_pipe[1],message1,strlen(message1));
   printf("TERMINE\n");
 }

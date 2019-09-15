@@ -27,15 +27,21 @@ int create_transformation(int * sender_pipe, int * receiver_pipe){
     fprintf(stderr,"test 1 %d\n",sender_pipe[1]);
     fprintf(stderr,"test 2 %d\n",sender_pipe[0]);
 
-    dup2(sender_pipe[0],STDOUT_FILENO);
+    dup2(sender_pipe[1],STDOUT_FILENO);
     dup2(receiver_pipe[0],STDIN_FILENO);
-    close(sender_pipe[0]);
     close(sender_pipe[1]);
     close(receiver_pipe[0]);
-    close(receiver_pipe[1]);
+
     char *argv[] = {"cat", "textFile.txt", 0};
     fprintf(stderr,"Creating cat process\n");
-    execvp(argv[0],argv);
+    fprintf(stderr,"%d\n",sender_pipe[1]);
+    //execvp(argv[0],argv);
+    while(1){
+      int size = 256;
+      char message[size];
+      read(sender_pipe[0],message,size);
+      fprintf(stderr, "Lei: %s\n", message);
+    }
     return 1;
   }
   else if(pid < 0)
@@ -44,7 +50,7 @@ int create_transformation(int * sender_pipe, int * receiver_pipe){
   }
   else         //Parent
   {
-    wait(NULL);
+    //wait(NULL);
   }
   return 0;
 }
