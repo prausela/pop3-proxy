@@ -3,6 +3,9 @@
 
 #include "pop3_singleline_response_parser.h"
 #include "pop3_multiline_response_parser.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <inttypes.h>
 
 struct parser *
 pop3_parser_init(void);
