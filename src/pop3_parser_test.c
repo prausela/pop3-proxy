@@ -29,7 +29,7 @@ inline static char *get_event_type(unsigned type)
 
 int main(int argc, char *argv[])
 {
-	char *to_analyse = "+OK\r\nBLA\r\nBLA\r\n.\r\n";
+	char *to_analyse = "CAPA MSG\r\n+OK\r\nBLA\r\nBLA\r\n.\r\n";
 
 	struct parser_event *event;
 	struct parser *parser = pop3_parser_init();

@@ -109,9 +109,9 @@ parse_cmd(struct parser_event *ret, const uint8_t c){
 }
 
 static const struct parser_state_transition ST_INIT [] =  {
-    {.when = '+',        .dest = SL_PARSER, 	.act1 = parse_sl,			},
-    {.when = '-',        .dest = SL_PARSER, 	.act1 = parse_sl,			},
-    {.when = ANY,        .dest = CMD_PARSER, 	.act1 = parse_cmd,	},
+    {.when = '+',        .dest = INIT, 	.act1 = parse_sl,			},
+    {.when = '-',        .dest = INIT, 	.act1 = parse_sl,			},
+    {.when = ANY,        .dest = INIT, 	.act1 = parse_cmd,	},
 };
 
 static const size_t pop3_states_n [] = {
