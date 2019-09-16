@@ -72,6 +72,7 @@ const char * multiline_commands[] =
 	"RETR",
 	"TOP",
 	"LANG",
+	"CAPA",
 	NULL,
 };
 
@@ -83,9 +84,9 @@ enum pop3_states {
 	};
 
 	enum pop3_command_types {
-		MULTILINE,
-		SINGLELINE,
-		OVERLOADED,
+		MULTILINE = 77,
+		SINGLELINE = 78,
+		OVERLOADED = 79,
 	};
 
 	
@@ -176,6 +177,7 @@ pop3_parser_feed(struct parser *p, const uint8_t c){
 			curr_parser = NULL;
 			break;
 		case OK_RESP:
+			printf("%d\n", cmd_type);
 			answer_status = true;
 			break;
 		case END_SINGLELINE:
