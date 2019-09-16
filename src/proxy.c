@@ -172,10 +172,10 @@ int checkArg(char* argument, int* expecting_data){
          return 1;
        }
         // accept arguments from terminal
-        if(is_valid_ip_address(argv[1])){
+        if(is_valid_ip_address(argv[argc-1])){
           strcpy(ip,argv[1]); // server ip
         }else{
-          hostname_to_ip(argv[1],hostname);
+          hostname_to_ip(argv[argc-1],hostname);
           strcpy(ip,hostname);
         }
 
@@ -187,7 +187,7 @@ int checkArg(char* argument, int* expecting_data){
       if(argc>2){
         int expecting_data=0;
         int is_valid;
-        for(int i=2, j=0; i<argc; i++){ // Recorro cada argumento
+        for(int i=1, j=0; i<argc-1; i++){ // Recorro cada argumento
             is_valid=checkArg(argv[i], &expecting_data);  // checkArg me devuelve 1 si es un dato, y 0 si es una opcion (por ejemplo -e)
             if (is_valid){
               options[j]=calloc(1, sizeof(char*));
