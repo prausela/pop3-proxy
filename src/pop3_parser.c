@@ -148,7 +148,7 @@ pop3_parser_init(void){
 
 const struct parser_event *
 pop3_parser_feed(struct parser *p, const uint8_t c){
-	parser_event *event;
+	struct parser_event *event;
 	if(curr_parser == NULL){
 		event = parser_feed(p, c);
 		switch(event->type){
