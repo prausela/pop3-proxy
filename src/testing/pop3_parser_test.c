@@ -18,6 +18,8 @@ inline static char *get_event_type(unsigned type)
 		return "BAD_CMD";
 	case DAT_STUFFED:
 		return "DAT_STUFFED";
+	case DAT_STUFFED_END:
+		return "DAT_STUFFED_END";
 	case OK_RESP:
 		return "OK_RESP";
 	case ERR_RESP:
@@ -37,7 +39,10 @@ int main(int argc, char *argv[])
 	{
 			printf("%s\n", to_analyse);
 			event = pop3_parser_feed(parser, *to_analyse);
-			printf("TYPE: %s\nDATA: %c\nN:   %d\n", get_event_type(event->type), event->n > 0 ? (char)event->data[0] : '~', event->n);
+			do{
+				printf("TYPE: %s\nDATA: %c\nN:   %d\n", get_event_type(event->type), event->n > 0 ? (char)event->data[0] : '~', event->n);
+				event = event->next;
+			} while(event != NULL);
 		getchar();
 		to_analyse++;
 	}
