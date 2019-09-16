@@ -13,23 +13,24 @@
  *   +---------------------------------------------------------------------------+
  */
 
-
 #ifndef PARSER_UTILS_H_ACK0Q8X1WrbMI9ZFlPxsr98iOM
 #define PARSER_UTILS_H_ACK0Q8X1WrbMI9ZFlPxsr98iOM
 
 #include "parser_factory.h"
 
-#define N(x) (sizeof(x)/sizeof((x)[0]))
+#define N(x) (sizeof(x) / sizeof((x)[0]))
 
-	enum parser_utils_states {
-		TRAP 		= 0,
-	};
+enum parser_utils_states
+{
+	TRAP = 0,
+};
 
-	enum parser_utils_event_type {
-		IGNORE 		= 0,
-		TRAPPED 	= 1,
-		FINAL 		= 2,
-	};
+enum parser_utils_event_type
+{
+	IGNORE = 0,
+	TRAPPED = 1,
+	FINAL = 2,
+};
 
 /** This event's intention of purpose is to IGNORE the input given.
  *
@@ -39,8 +40,7 @@
  *		data 	🡢 ~
  */
 
-void
-ignore(struct parser_event *ret, const uint8_t c);
+void ignore(struct parser_event *ret, const uint8_t c);
 
 /** This event's intention of purpose is to TRAP the input given.
  * 	This means that the chain is not accepted by the automata.
@@ -51,8 +51,7 @@ ignore(struct parser_event *ret, const uint8_t c);
  *		data 	🡢 ~
  */
 
-void
-trap(struct parser_event *ret, const uint8_t c);
+void trap(struct parser_event *ret, const uint8_t c);
 
 /** This event's intention of purpose is to signal that the current
  * 	input has reached a FINAL state.
@@ -63,8 +62,7 @@ trap(struct parser_event *ret, const uint8_t c);
  *		data 	🡢 ~
  */
 
-void
-final(struct parser_event *ret, const uint8_t c);
+void final(struct parser_event *ret, const uint8_t c);
 
 /** ~~TRAP STATE TRANSITIONS~~
  *
