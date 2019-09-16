@@ -2,11 +2,13 @@
  #include <sys/types.h>
  #include <resolv.h>
  #include <string.h>
+ #include <stdbool.h>
  #include <stdlib.h>
  #include <pthread.h>
  #include <unistd.h>
  #include <netdb.h> //hostent
  #include <arpa/inet.h>
+ #include "include/pop3_parser.h"
 
 #define INVALID -1
 #define REQUIRED 1
@@ -30,6 +32,34 @@ int socket_ip_type = IPV4 ;
  // A thread function
  // A thread for each client request
 
+inline static char *get_event_type(unsigned type)
+{
+  switch (type)
+  {
+  case IGNORE:
+    return "IGNORE";
+  case TRAPPED:
+    return "TRAPPED";
+  case BUFFER_CMD:
+    return "BUFFER_CMD";
+  case HAS_ARGS:
+    return "HAS_ARGS";
+  case SET_CMD:
+    return "SET_CMD";
+  case BAD_CMD:
+    return "BAD_CMD";
+  case DAT_STUFFED:
+    return "DAT_STUFFED";
+  case DAT_STUFFED_END:
+    return "DAT_STUFFED_END";
+  case OK_RESP:
+    return "OK_RESP";
+  case ERR_RESP:
+    return "ERR_RESP";
+  case END_SINGLELINE:
+    return "END_SINGLELINE";
+  }
+}
 
 // Notas: Tiene que haber un boolean que diga si se ingreso una opcion antes.
 // De ser asi, podemos procesar si esta bien o no el dato que ingresaron despues.
@@ -87,27 +117,66 @@ int socket_ip_type = IPV4 ;
         }
       }
       printf("server socket connected\n");
+      struct parser * pop3_parser = pop3_parser_init();
+      struct parser_event *event = NULL;
+      int buffer_pos = 0;
+      int trans_start = -1;
+      int trans_end = -1;
       while(1)
       {
         //recieve response from server
+
         memset(&buffer, '\0', sizeof(buffer));
-        bytes = read(server_fd, buffer, sizeof(buffer));
-        if(bytes <= 0){
-        }
-        else
-        {
-             // send response back to client
-             write(info->client_fd, buffer, bytes);
-             printf("From server :\n");
-             fputs(buffer,stdout);
-        }
+        do {
+          printf("4\n");
+          buffer_pos = 0;
+          bytes = read(server_fd, buffer, sizeof(buffer));
+          
+          if(bytes <= 0){
+          }
+          else
+          {
+              while(buffer[buffer_pos] != 0){
+                event = pop3_parser_feed(pop3_parser, buffer[buffer_pos]);
+                if(event->type == DAT_STUFFED && trans_start == -1){
+                  trans_start = buffer_pos;
+                }
+                if(event->type == DAT_STUFFED && event->next != NULL){
+                  trans_end = buffer_pos;
+                }
+                buffer_pos++;
+                printf("2\n");
+              }
+                
+               if(trans_start != -1){
+
+               }
+               // send response back to client
+               write(info->client_fd, buffer, bytes);
+               printf("From server :\n");
+               fputs(buffer,stdout);
+          }
+          printf("This is the event: %s\n", get_event_type(event->type));
+          //printf("1 %d\n", event != NULL && event != END_SINGLELINE && event->next == NULL);
+        } while( event != NULL && event->type != END_SINGLELINE && event->next == NULL);
+          parser_reset(pop3_parser);
+          do { 
+           printf("3\n");
            //receive data from client
            memset(&buffer, '\0', sizeof(buffer));
+           buffer_pos = 0;
            bytes = read(info->client_fd, buffer, sizeof(buffer));
            if(bytes <= 0){
            }
            else
            {
+               while(buffer[buffer_pos] != 0){
+                event = pop3_parser_feed(pop3_parser, buffer[buffer_pos]);
+                buffer_pos++;
+                printf("2\n");
+                printf("Event: %s %s\n", get_event_type(event->type), buffer);
+              }
+
                 buffer[bytes] = '\r';
                 buffer[bytes+1] = '\n';
                 printf("A VER %s\n",buffer);
@@ -119,7 +188,8 @@ int socket_ip_type = IPV4 ;
                 fflush(stdout);
            }
 
-      };
+          } while(event != NULL && event->type != SET_CMD && event->type != BAD_CMD);
+        }
    return NULL;
  }
 

@@ -63,9 +63,9 @@ parser_feed(struct parser *p, const uint8_t c)
     bool matched = false;
     for (unsigned i = 0; i < n; i++)
     {
-        printf("ENTRO PARSER FEEDDD: n=%ld, i=%d\n", n, i);
+        //printf("ENTRO PARSER FEEDDD: n=%ld, i=%d\n", n, i);
         const int when = state[i].when;
-        printf("ENTRO00000000\n");
+        //printf("ENTRO00000000\n");
         if (state[i].when <= 0xFF)
         {
             matched = (c == when);

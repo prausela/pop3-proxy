@@ -5,7 +5,7 @@
  *   |+-------------------------------------------------------------------------+|
  *   ||                            ~~IMPORTANT!!~~                              ||
  *   ||		If this utilities library is included:								||
- *   ||		             1) parser_event_type 	enums MUST BEGIN AT 2. 			||
+ *   ||		             1) parser_event_type 	enums MUST BEGIN AT 3. 			||
  *   ||                  2) parser_states 		enums MUST BEGIN AT 1.			||
  *   ||                                                                         ||
  *   ||		Note: ~ means it has junk which should not be read.					||
