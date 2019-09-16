@@ -109,17 +109,21 @@ parse_cmd(struct parser_event *ret, const uint8_t c){
 }
 
 static const struct parser_state_transition ST_INIT [] =  {
-    {.when = '+',        .dest = SL_PARSER, .act1 = parse_sl,			},
-    {.when = '-',        .dest = SL_PARSER, .act1 = parse_sl,			},
-    {.when = ANY,        .dest = ML_PARSER, .act1 = parse_dot_stuffed,	},
+    {.when = '+',        .dest = SL_PARSER, 	.act1 = parse_sl,			},
+    {.when = '-',        .dest = SL_PARSER, 	.act1 = parse_sl,			},
+    {.when = ANY,        .dest = CMD_PARSER, 	.act1 = parse_cmd,	},
 };
 
 static const size_t pop3_states_n [] = {
 	N(ST_INIT),
+	// N(SL_PARSER),
+	// N(ML_PARSER),
+	// N(CMD_PARSER),
 };
 
 static const struct parser_state_transition *pop3_states [] = {
     ST_INIT,
+	
 };
 
 static struct parser_definition pop3_definition = {
@@ -146,6 +150,7 @@ pop3_parser_feed(struct parser *p, const uint8_t c){
 	struct parser_event *event;
 	if(curr_parser == NULL){
 		event = parser_feed(p, c);
+		printf("event type: %d\n",event->type);
 		switch(event->type){
 			case PARSE_SL:
 				curr_parser = pop3_singleline_response_parser_init();
@@ -168,6 +173,7 @@ pop3_parser_feed(struct parser *p, const uint8_t c){
 			break;
 		case SET_CMD:
 			cmd_type = get_command_type(cmd);
+			curr_parser = NULL;
 			break;
 		case OK_RESP:
 			answer_status = true;
@@ -197,9 +203,13 @@ get_command_type(char *cmd){
 bool
 is_in_string_array(char *what, const char **string_array){
 	while(*string_array != NULL){
-		if(strcmp(what, string_array) == 0){
+		if(strcmp(what, *string_array) == 0){
+				printf("holaaaaaa IF TRUE\n");
+
 			return true;
 		}
+		string_array++;
 	}
+	printf("holaaaaaa IF FALSE\n");
 	return false;
 }

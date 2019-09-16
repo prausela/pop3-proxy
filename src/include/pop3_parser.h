@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <inttypes.h>
+#include <string.h>
 
 struct parser *
 pop3_parser_init(void);
