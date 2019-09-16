@@ -9,8 +9,12 @@
  #include <arpa/inet.h>
 
 #define INVALID -1
- #define REQUIRED 1
- #define NOT_REQUIRED 2
+#define REQUIRED 1
+#define NOT_REQUIRED 2
+#define IPV4 1
+#define IPV6 2
+
+int socket_ip_type = IPV4 ;
 
  int hostname_to_ip(char * , char *);
  int is_valid_ip_address(char *);
@@ -43,22 +47,44 @@
       //code to connect to main server via this proxy server
       int server_fd =0;
       struct sockaddr_in server_sd;
+      struct sockaddr_in6 server_sd6;
       // create a socket
-      server_fd = socket(AF_INET, SOCK_STREAM, 0);
+      if(socket_ip_type == IPV4)
+      {
+        server_fd = socket(AF_INET, SOCK_STREAM, 0);
+      }
+      else
+      {
+        server_fd = socket(AF_INET6, SOCK_STREAM, 0);
+      }
       if(server_fd < 0)
       {
            printf("server socket not created\n");
       }
       printf("server socket created\n");
-      memset(&server_sd, 0, sizeof(server_sd));
-      // set socket variables
-      server_sd.sin_family = AF_INET;
-      server_sd.sin_port = htons(atoi(info->port));
-      server_sd.sin_addr.s_addr = inet_addr(info->ip);
-      //connect to main server from this proxy server
-      if((connect(server_fd, (struct sockaddr *)&server_sd, sizeof(server_sd)))<0)
+      if(socket_ip_type == IPV4)
       {
-           printf("server connection not established");
+        memset(&server_sd, 0, sizeof(server_sd));
+        // set socket variables
+        server_sd.sin_family = AF_INET;
+        server_sd.sin_port = htons(atoi(info->port));
+        server_sd.sin_addr.s_addr = inet_addr(info->ip);
+        //connect to main server from this proxy server
+        if((connect(server_fd, (struct sockaddr *)&server_sd, sizeof(server_sd)))<0)
+        {
+             printf("server connection not established");
+        }
+      }
+      else{
+        memset(&server_sd6, 0, sizeof(server_sd6));
+        inet_pton(AF_INET6, info->ip, &(server_sd6.sin6_addr));
+        server_sd6.sin6_family = AF_INET6;
+        server_sd6.sin6_port = htons(atoi(info->port));
+        //server_sd6.sin6_addr = inet_pton(info->ip,NULL,NULL);
+        if((connect(server_fd, (struct sockaddr *)&server_sd6, sizeof(server_sd6)))<0)
+        {
+             printf("server connection not established");
+        }
       }
       printf("server socket connected\n");
       while(1)
@@ -159,6 +185,7 @@ int checkArg(char* argument, int* expecting_data){
  int main(int argc,char *argv[])
  {
        pthread_t tid;
+       int ip_type,res;
        char port[100],ip[100];
        char *hostname= calloc(15, sizeof(char));
        char proxy_port[100];
@@ -172,14 +199,25 @@ int checkArg(char* argument, int* expecting_data){
          return 1;
        }
         // accept arguments from terminal
-        if(is_valid_ip_address(argv[argc-1])){
-          strcpy(ip,argv[1]); // server ip
-        }else{
+        res = is_valid_ip_address(argv[argc-1]);
+        if( res == IPV4 )
+        {
+          ip_type = IPV4;
+          strcpy(ip,argv[argc-1]); // server ip
+        }
+        else if( res == IPV6 )
+        {
+          socket_ip_type = IPV6;
+          ip_type = IPV6;
+          strcpy(ip,argv[argc-1]);
+        }
+        else
+        {
+          ip_type=IPV4;
           hostname_to_ip(argv[argc-1],hostname);
           strcpy(ip,hostname);
         }
 
-      ////////// HAGALE PUES
       char* options[10];  // Creo array donde se guardan las opciones ingresadas por el cliente
       char* data[10];  // Creo array de punteros a char con los datos, donde la posicion de cada
                                               // uno corresponde a la posicion de las opciones.
@@ -269,33 +307,64 @@ int checkArg(char* argument, int* expecting_data){
 
       // A PARTIR DE ACA COMIENZO A REDIRIGIR datos
 
-        //strcpy(port,argv[2]);  // server port
-        //strcpy(proxy_port,argv[3]); // proxy port
-        //hostname_to_ip(hostname , ip);
         printf("server IP : %s and port %s " , ip,port);
         printf("proxy port is %s",proxy_port);
         printf("\n");
       //socket variables
       int proxy_fd =0, client_fd=0;
+
       struct sockaddr_in proxy_sd;
+      struct sockaddr_in6 proxy_sd6;
      // add this line only if server exits when client exits
      signal(SIGPIPE,SIG_IGN);
       // create a socket
-      if((proxy_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-      {
-          printf("\nFailed to create socket");
+      if(ip_type==IPV4){
+        if((proxy_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        {
+            printf("\nFailed to create socket");
+        }
+        else
+        {
+          printf("Proxy created\n");
+        }
       }
-      printf("Proxy created\n");
-      memset(&proxy_sd, 0, sizeof(proxy_sd));
+      else
+      {
+        if((proxy_fd = socket(AF_INET6, SOCK_STREAM, 0)) < 0)
+        {
+            printf("\nFailed to create socket");
+        }
+        else
+        {
+          printf("Proxy created\n");
+        }
+      }
       // set socket variables
-      proxy_sd.sin_family = AF_INET;
-      proxy_sd.sin_port = htons(atoi(proxy_port));
-      proxy_sd.sin_addr.s_addr = INADDR_ANY;
-      // bind the socket
-      if((bind(proxy_fd, (struct sockaddr*)&proxy_sd,sizeof(proxy_sd))) < 0)
+      if(ip_type == IPV4)
       {
-           printf("Failed to bind a socket");
+        memset(&proxy_sd, 0, sizeof(proxy_sd));
+        proxy_sd.sin_family = AF_INET;
+        proxy_sd.sin_port = htons(atoi(proxy_port));
+        proxy_sd.sin_addr.s_addr = INADDR_ANY;
+        if((bind(proxy_fd, (struct sockaddr*)&proxy_sd,sizeof(proxy_sd))) < 0)
+        {
+             printf("Failed to bind a socket");
+        }
       }
+      else
+      {
+        memset(&proxy_sd6, 0, sizeof(proxy_sd6));
+        proxy_sd6.sin6_family = AF_INET6;
+        proxy_sd6.sin6_port = htons(atoi(proxy_port));
+        proxy_sd6.sin6_addr = in6addr_any;
+        if((bind(proxy_fd, (struct sockaddr*)&proxy_sd6,sizeof(proxy_sd6))) < 0)
+        {
+             printf("Failed to bind a socket");
+        }
+      }
+
+      // bind the socket
+
       // start listening to the port for new connections
       if((listen(proxy_fd, SOMAXCONN)) < 0)
       {
