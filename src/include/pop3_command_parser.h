@@ -3,13 +3,11 @@
 
 #include "pop3_parser_utils.h"
 
-
 static void
 set_cmd(struct parser_event *ret, const uint8_t c);
 
 static void
 bad_cmd(struct parser_event *ret, const uint8_t c);
-
 
 /**	~~INIT PARSER 
  *		(Create a new parser intended for pop3 command interpretation)~~
@@ -65,15 +63,15 @@ pop3_command_parser_init(void);
  * 	};
  */
 
-	// enum pop3_command_event_type {
-	// 	BUFFER_CMD = 1,
-	// 	HAS_ARGS,
-	// 	SET_CMD,
-	// 	BAD_CMD,
-	// //	IGNORE,			(from parser_utils)
-	// };
+// enum pop3_command_event_type {
+// 	BUFFER_CMD = 1,
+// 	HAS_ARGS,
+// 	SET_CMD,
+// 	BAD_CMD,
+// //	IGNORE,			(from parser_utils)
+// };
 
- /** ~~KWRD TRANSITIONS~~
+/** ~~KWRD TRANSITIONS~~
  *
  *                 '\r'
  *        +-------------------+

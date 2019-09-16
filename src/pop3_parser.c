@@ -182,7 +182,6 @@ pop3_parser_feed(struct parser *p, const uint8_t c)
 	if (curr_parser == NULL)
 	{
 		event = parser_feed(p, c);
-		//printf("event type: %d\n",event->type);
 		switch (event->type)
 		{
 		case PARSE_SL:
@@ -210,7 +209,6 @@ pop3_parser_feed(struct parser *p, const uint8_t c)
 		curr_parser = NULL;
 		break;
 	case OK_RESP:
-		printf("%d\n", cmd_type);
 		answer_status = true;
 		break;
 	case END_SINGLELINE:
@@ -243,12 +241,9 @@ bool is_in_string_array(char *what, const char **string_array)
 	{
 		if (strcmp(what, *string_array) == 0)
 		{
-			//printf("holaaaaaa IF TRUE\n");
-
 			return true;
 		}
 		string_array++;
 	}
-	//printf("holaaaaaa IF FALSE\n");
 	return false;
 }

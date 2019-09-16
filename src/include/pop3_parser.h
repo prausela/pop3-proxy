@@ -16,13 +16,10 @@ pop3_parser_init(void);
 const struct parser_event *
 pop3_parser_feed(struct parser *p, const uint8_t c);
 
-int
-get_command_type(char *cmd);
+int get_command_type(char *cmd);
 
-bool
-is_in_string_array(char *what, const char **string_array);
+bool is_in_string_array(char *what, const char **string_array);
 
-void
-pop3_parser_reset(struct parser *p);
+void pop3_parser_reset(struct parser *p);
 
 #endif
