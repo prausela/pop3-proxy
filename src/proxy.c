@@ -189,7 +189,7 @@ int checkArg(char* argument, int* expecting_data){
         int is_valid;
         for(int i=1, j=0; i<argc-1; i++){ // Recorro cada argumento
             is_valid=checkArg(argv[i], &expecting_data);  // checkArg me devuelve 1 si es un dato, y 0 si es una opcion (por ejemplo -e)
-            if (is_valid){
+            if (is_valid==REQUIRED){
               options[j]=calloc(1, sizeof(char*));
               options[j]=argv[i];
               if (expecting_data==REQUIRED){
