@@ -22,4 +22,7 @@ get_command_type(char *cmd);
 bool
 is_in_string_array(char *what, const char **string_array);
 
+void
+pop3_parser_reset(struct parser *p);
+
 #endif

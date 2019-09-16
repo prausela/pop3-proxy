@@ -159,7 +159,7 @@ inline static char *get_event_type(unsigned type)
           printf("This is the event: %s\n", get_event_type(event->type));
           //printf("1 %d\n", event != NULL && event != END_SINGLELINE && event->next == NULL);
         } while( event != NULL && event->type != END_SINGLELINE && event->next == NULL);
-          parser_reset(pop3_parser);
+          pop3_parser_reset(pop3_parser);
           do { 
            printf("3\n");
            //receive data from client
@@ -177,11 +177,11 @@ inline static char *get_event_type(unsigned type)
                 printf("Event: %s %s\n", get_event_type(event->type), buffer);
               }
 
-                buffer[bytes] = '\r';
-                buffer[bytes+1] = '\n';
-                printf("A VER %s\n",buffer);
+                // buffer[bytes] = '\r';
+                // buffer[bytes+1] = '\n';
+                printf("A VER %s size:%d\n",buffer,bytes);
                 // send data to main server
-                write(server_fd, buffer, bytes+2);
+                write(server_fd, buffer, bytes);
                 //printf("client fd is : %d\n",c_fd);
                 printf("From client :\n");
                 fputs(buffer,stdout);
