@@ -71,7 +71,7 @@
 	enum pop3_singleline_response_event_type {
 	//	IGNORE 			= 0,
 	// 	TRAPPED 		= 1,	
-		OK_RESP 		= 2,
+		OK_RESP 		= 7,
 		ERR_RESP 		   ,
 		END_SINGLELINE 	   ,
 	};

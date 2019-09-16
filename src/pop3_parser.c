@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include "include/pop3_parser.h"
 
 
@@ -76,24 +75,20 @@ const char * multiline_commands[] =
 	NULL,
 };
 
-	enum pop3_command_types {
-		MULTILINE,
-		SINGLELINE,
-		OVERLOADED,
-	};
-
-	enum pop3_states {
+enum pop3_states {
 		INIT,
 		SL_PARSER,
 		ML_PARSER,
 		CMD_PARSER,
 	};
 
-	enum pop3_event_type {
-		PARSE_SL,
-		PARSE_DOT_STUFFED,
-		PARSE_CMD,
+	enum pop3_command_types {
+		MULTILINE,
+		SINGLELINE,
+		OVERLOADED,
 	};
+
+	
 
 static void
 parse_sl(struct parser_event *ret, const uint8_t c){
@@ -179,7 +174,7 @@ pop3_parser_feed(struct parser *p, const uint8_t c){
 			break;
 		case END_SINGLELINE:
 			if(answer_status && (cmd_type == MULTILINE || cmd_type == OVERLOADED && has_args)){
-				curr_parser = pop3_multiline_parser_init();
+				curr_parser = pop3_multiline_response_parser_init();
 				ignore(event, c);
 			}
 			break;
@@ -200,7 +195,7 @@ get_command_type(char *cmd){
 }
 
 bool
-is_in_string_array(char *what, char **string_array){
+is_in_string_array(char *what, const char **string_array){
 	while(*string_array != NULL){
 		if(strcmp(what, string_array) == 0){
 			return true;

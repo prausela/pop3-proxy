@@ -9,7 +9,7 @@ struct parser * pop3_multiline_response_parser_init(void);
 
 enum pop3_multiline_response_event_type {
         //IGNORE =0,
-		DAT_STUFFED =1,
+		DAT_STUFFED =10,
 		DAT_STUFFED_END,
 	};
 

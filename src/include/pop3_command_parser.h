@@ -1,9 +1,8 @@
 #ifndef POP3_COMMAND_PARSER_H_ACK0Q8X1WrbMI9ZFlPxsr98iOM
 #define POP3_COMMAND_PARSER_H_ACK0Q8X1WrbMI9ZFlPxsr98iOM
 
-//#include "pop3_parser_utils.h"
-#include "parser_factory.h"
-#include "parser_utils.h"
+#include "pop3_parser_utils.h"
+
 
 static void
 set_cmd(struct parser_event *ret, const uint8_t c);
@@ -15,8 +14,8 @@ bad_cmd(struct parser_event *ret, const uint8_t c);
 /**	~~INIT PARSER 
  *		(Create a new parser intended for pop3 command interpretation)~~
  */
-		struct parser *
-		pop3_command_parser_init	(void);
+struct parser *
+pop3_command_parser_init(void);
 
 /** 
  * PLEASE USE THE FOLLOWING PARSER_FACTORY METHODS FOR MORE OPERATIONS:
@@ -66,13 +65,13 @@ bad_cmd(struct parser_event *ret, const uint8_t c);
  * 	};
  */
 
-	enum pop3_command_event_type {
-		BUFFER_CMD = 1,
-		HAS_ARGS,
-		SET_CMD,
-		BAD_CMD,
-	//	IGNORE,			(from parser_utils)
-	};
+	// enum pop3_command_event_type {
+	// 	BUFFER_CMD = 1,
+	// 	HAS_ARGS,
+	// 	SET_CMD,
+	// 	BAD_CMD,
+	// //	IGNORE,			(from parser_utils)
+	// };
 
  /** ~~KWRD TRANSITIONS~~
  *

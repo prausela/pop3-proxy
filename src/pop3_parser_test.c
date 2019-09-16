@@ -3,28 +3,24 @@
 inline
 static char* get_event_type(unsigned type){
 	switch(type){
-		case DAT_STUFFED:
-			return "DAT_STUFFED";
-		case IGNORE:
-			return "IGNORE";
-		case BUFFER_CMD:
-			return "BUFFER_CMD";
-		case HAS_ARGS:
-			return "HAS_ARGS";
-		case IGNORE:
-			return "IGNORE";
-		case SET_CMD:
-			return "SET_CMD";
-		case BAD_CMD:
-			return "BAD_CMD";
-		case OK_RESP:
-			return "OK_RESP";
-		case ERR_RESP:
-			return "ERR_RESP";
 		case IGNORE:
 			return "IGNORE";
 		case TRAPPED:
 			return "TRAPPED";
+		case BUFFER_CMD:
+			return "BUFFER_CMD";
+		case HAS_ARGS:
+			return "HAS_ARGS";
+		case SET_CMD:
+			return "SET_CMD";
+		case BAD_CMD:
+			return "BAD_CMD";
+		case DAT_STUFFED:
+			return "DAT_STUFFED";
+		case OK_RESP:
+			return "OK_RESP";
+		case ERR_RESP:
+			return "ERR_RESP";
 		case END_SINGLELINE:
 			return "END_SINGLELINE";
 	}
