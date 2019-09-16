@@ -1,7 +1,7 @@
 #ifndef POP3_SINGLELINE_RESPONSE_PARSER_H_ACK0Q8X1WrbMI9ZFlPxsr98iOM
 #define POP3_SINGLELINE_RESPONSE_PARSER_H_ACK0Q8X1WrbMI9ZFlPxsr98iOM
 
-#include "parser_factory.h"
+
 #include "parser_utils.h"
 
 /**	~~INIT PARSER 
@@ -71,7 +71,7 @@
 	enum pop3_singleline_response_event_type {
 	//	IGNORE 			= 0,
 	// 	TRAPPED 		= 1,	
-		OK_RESP 		= 2,
+		OK_RESP 		= 7,
 		ERR_RESP 		   ,
 		END_SINGLELINE 	   ,
 	};

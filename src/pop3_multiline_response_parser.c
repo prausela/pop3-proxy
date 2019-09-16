@@ -18,7 +18,6 @@ static void
 dat_stuffed_end(struct parser_event *ret, const uint8_t c){
 	ret->type		= DAT_STUFFED_END;
 	ret->n 			= 0;
-    printf("holaaaaaaaaaaaaaaaaaa\n");
 
 }
 
@@ -32,26 +31,6 @@ dat_stuffed(struct parser_event *ret, const uint8_t c){
     
 }
 
-static void 
-ignore(struct parser_event *ret, const uint8_t c){
-	ret->type 		= IGNORE;
-	ret->n 			= 0;
-}
-
-
-
-// void
-// ignore(struct parser_event *ret, const uint8_t c){
-// 	ret->type 		= IGNORE;
-// 	ret->n 			= 0;
-// }
-
-
-// static const struct parser_state_transition ST_STATUS [] =  {
-//     {.when = '+',        .dest = OK,       .act1 = res_ok,	},
-//     {.when = ANY,        .dest = ERR,       .act1 = bad_res,	},
-
-// };
 
 static const struct parser_state_transition ST_DOT_DATA [] =  {
     {.when = '\r',        .dest = CR,             .act1 = dat_stuffed,	},
@@ -89,7 +68,6 @@ static const struct parser_state_transition ST_CRLFDOTCRLF [] =  {
 
 
 
-#define N(x) (sizeof(x)/sizeof((x)[0]))
 
 static const size_t pop3_multiline_response_states_n [] = {
 	N(ST_DOT_DATA),
@@ -110,7 +88,7 @@ static const struct parser_state_transition *pop3_multiline_response_states [] =
     ST_CRLFDOTCRLF,
 };
 
-static struct parser_definition pop3_multiline_definition = {
+static struct parser_definition pop3_multiline_response_definition = {
 	.states_count	= N(pop3_multiline_response_states),
 	.states 		= pop3_multiline_response_states,
 	.states_n 		= pop3_multiline_response_states_n,
@@ -118,8 +96,8 @@ static struct parser_definition pop3_multiline_definition = {
 };
 
 struct parser *
-pop3_multiline_parser_init(void){
-	return parser_init(parser_no_classes(), &pop3_multiline_definition);
+pop3_multiline_response_parser_init(void){
+	return parser_init(parser_no_classes(), &pop3_multiline_response_definition);
 }
 
 

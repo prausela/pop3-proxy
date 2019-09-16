@@ -11,3 +11,8 @@ pop3_multiline_response_parser.dSYM
 
 *.json
 *.so
+src/pop3_command_parser
+
+src/pop3_parser
+
+src/pop3_singleline_response_parser

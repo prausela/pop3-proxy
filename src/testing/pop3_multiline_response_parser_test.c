@@ -17,7 +17,7 @@ int main(int argc, char *argv[]){
 	char *to_analyse = "\r\n.\r\njasnajk";
 
 	struct parser_event *event;
-	struct parser *parser = pop3_multiline_parser_init();
+	struct parser *parser = pop3_multiline_response_parser_init();
 	while(*to_analyse != 0){
 		event = parser_feed(parser, *to_analyse);
         printf("%s\n",to_analyse);
