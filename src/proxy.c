@@ -71,6 +71,7 @@ void *runSocket(void *vargp)
 {
   struct serverInfo *info = (struct serverInfo *)vargp;
   char buffer[65535];
+  char answer[512];
   int bytes = 0;
   printf("client:%d\n", info->client_fd);
   fputs(info->ip, stdout);
@@ -166,7 +167,6 @@ void *runSocket(void *vargp)
         if (trans_start != -1)
         {
           write(sender_pipe[1] , buffer+trans_start , trans_end-trans_start);
-          char answer[512];
           read(receiver_pipe[0],answer,trans_end-trans_start);
           printf("%s\n",answer );
           write(info->client_fd, answer, trans_end-trans_start);
@@ -288,11 +288,16 @@ int checkArg(char *argument, int *expecting_data)
 // main entry point
 int main(int argc, char *argv[])
 {
+  //Definition of variables
+  struct    sockaddr_in proxy_sd;
+  struct    sockaddr_in6 proxy_sd6;
   pthread_t tid;
-  int ip_type, res;
-  char port[100], ip[100];
-  char *hostname = calloc(15, sizeof(char));
-  char proxy_port[100];
+  int       ip_type, res, expecting_data, is_valid, proxy_fd, client_fd;
+  char      port[100], ip[100], proxy_port[100];
+  char     *hostname = calloc(15, sizeof(char));
+  char     *options[10]; // Array for inserted options (by client)
+  char     *data[10];    // Array where each position belongs to the position of the
+                     // options
 
   // Set default values for Server Port and proxy Port
   strcpy(port, "110");        // server port
@@ -322,17 +327,13 @@ int main(int argc, char *argv[])
     strcpy(ip, hostname);
   }
 
-  char *options[10]; // Creo array donde se guardan las opciones ingresadas por el cliente
-  char *data[10];    // Creo array de punteros a char con los datos, donde la posicion de cada
-                     // uno corresponde a la posicion de las opciones.
-
   if (argc > 2)
   {
-    int expecting_data = 0;
-    int is_valid;
+    expecting_data = 0;
     for (int i = 1, j = 0; i < argc - 1; i++)
-    {                                                // Recorro cada argumento
-      is_valid = checkArg(argv[i], &expecting_data); // checkArg me devuelve 1 si es un dato, y 0 si es una opcion (por ejemplo -e)
+    {                                              // Iterate for each argument
+      //is_valid is 1 if its data or0 if its an option
+      is_valid = checkArg(argv[i], &expecting_data);
       if (is_valid == REQUIRED)
       {
         options[j] = calloc(1, sizeof(char *));
@@ -428,16 +429,13 @@ int main(int argc, char *argv[])
     }
   }
 
-  // A PARTIR DE ACA COMIENZO A REDIRIGIR datos
-
   printf("server IP : %s and port %s ", ip, port);
   printf("proxy port is %s", proxy_port);
   printf("\n");
   //socket variables
-  int proxy_fd = 0, client_fd = 0;
+  proxy_fd  = 0;
+  client_fd = 0;
 
-  struct sockaddr_in proxy_sd;
-  struct sockaddr_in6 proxy_sd6;
   // add this line only if server exits when client exits
   signal(SIGPIPE, SIG_IGN);
   // create a socket
@@ -463,7 +461,7 @@ int main(int argc, char *argv[])
       printf("Proxy created\n");
     }
   }
-  // set socket variables
+  // set socket variables and bind to server dependign of the ip type
   if (ip_type == IPV4)
   {
     memset(&proxy_sd, 0, sizeof(proxy_sd));
@@ -486,9 +484,6 @@ int main(int argc, char *argv[])
       printf("Failed to bind a socket");
     }
   }
-
-  // bind the socket
-
   // start listening to the port for new connections
   if ((listen(proxy_fd, SOMAXCONN)) < 0)
   {
@@ -502,7 +497,7 @@ int main(int argc, char *argv[])
     printf("client no. %d connected\n", client_fd);
     if (client_fd > 0)
     {
-      //multithreading variables
+      //multithreading variables for each client
       struct serverInfo *item = malloc(sizeof(struct serverInfo));
       item->client_fd = client_fd;
       strcpy(item->ip, ip);
