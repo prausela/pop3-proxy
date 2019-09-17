@@ -196,7 +196,6 @@ pop3_parser_feed(struct parser *p, const uint8_t c)
 		}
 	}
 	event = parser_feed(curr_parser, c);
-	printf("CMD:%s\tCMD_TYPE:%d\n", cmd, cmd_type);
 	switch (event->type)
 	{
 	case BUFFER_CMD:
@@ -214,11 +213,9 @@ pop3_parser_feed(struct parser *p, const uint8_t c)
 		answer_status = true;
 		break;
 	case END_SINGLELINE:
-		printf("LOOK AT ME: %d ans: %d ml: %d ov: %d %d\n", answer_status && (cmd_type == MULTILINE || (cmd_type == OVERLOADED && has_args)), answer_status, cmd_type == MULTILINE, cmd_type == OVERLOADED, has_args);
 		if (answer_status && (cmd_type == MULTILINE || (cmd_type == OVERLOADED && !has_args)))
 		{
 			curr_parser = pop3_multiline_response_parser_init();
-			printf("YAY\n");
 			//ignore(event, c);
 		}
 		answer_status = false;
