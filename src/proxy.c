@@ -9,6 +9,7 @@
 #include <netdb.h> //hostent
 #include <arpa/inet.h>
 #include "include/pop3_parser.h"
+#include "include/global_strings.h"
 
 #define INVALID -1
 #define REQUIRED 1
@@ -16,12 +17,13 @@
 #define IPV4 1
 #define IPV6 2
 
-int socket_ip_type = IPV4;
+//Global variables
+int socket_ip_type = IPV4; //By default IPV4
 
 int hostname_to_ip(char *, char *);
 int is_valid_ip_address(char *);
 int checkArg(char *argument, int *expecting_data);
- int create_transformation(int * sender_pipe, int * receiver_pipe);
+int create_transformation(int * sender_pipe, int * receiver_pipe);
 // A structure to maintain client fd, and server ip address and port address
 // client will establish connection to server using given IP and port
 struct serverInfo
@@ -30,35 +32,34 @@ struct serverInfo
   char ip[100];
   char port[100];
 };
-// A thread function
-// A thread for each client request
+
 
 inline static char *get_event_type(unsigned type)
 {
   switch (type)
   {
   case IGNORE:
-    return "IGNORE";
+    return IGNORE_MESSAGE;
   case TRAPPED:
-    return "TRAPPED";
+    return TRAPPED_MESSAGE;
   case BUFFER_CMD:
-    return "BUFFER_CMD";
+    return BUFFER_CMD_MESSAGE;
   case HAS_ARGS:
-    return "HAS_ARGS";
+    return HAS_ARGS_MESSAGE;
   case SET_CMD:
-    return "SET_CMD";
+    return SET_CMD_MESSAGE;
   case BAD_CMD:
-    return "BAD_CMD";
+    return BAD_CMD_MESSAGE;
   case DAT_STUFFED:
-    return "DAT_STUFFED";
+    return DAT_STUFFED_MESSAGE;
   case DAT_STUFFED_END:
-    return "DAT_STUFFED_END";
+    return DAT_STUFFED_END_MESSAGE;
   case OK_RESP:
-    return "OK_RESP";
+    return OK_RESP_MESSAGE;
   case ERR_RESP:
-    return "ERR_RESP";
+    return ERR_RESP_MESSAGE;
   case END_SINGLELINE:
-    return "END_SINGLELINE";
+    return END_SINGLELINE_MESSAGE;
   }
 }
 
@@ -67,6 +68,8 @@ inline static char *get_event_type(unsigned type)
 // Tambien podria haber otro boolean para decirnos si esa opcion requiere o no de un dato.
 // Puede haber una funcion FILL en la cual le pases el dato y la variable donde guardarlo.
 
+// A thread function
+// A thread for each client request
 void *runSocket(void *vargp)
 {
   struct serverInfo *info = (struct serverInfo *)vargp;
@@ -300,8 +303,9 @@ int main(int argc, char *argv[])
                      // options
 
   // Set default values for Server Port and proxy Port
-  strcpy(port, "110");        // server port
-  strcpy(proxy_port, "5000"); // proxy port
+  strcpy(port, PORT_110);        // server port
+  strcpy(proxy_port, PORT_5000); // proxy port
+  //Error handling
   if (argc <= 1)
   {
     printf("Error creating the proxy, please add a valid ip/dns, a port to connect on the origin server and a local port\n");

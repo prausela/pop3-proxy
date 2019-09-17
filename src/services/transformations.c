@@ -12,13 +12,18 @@
 #include  <sys/wait.h>                           //
 #include  <sys/stat.h>
 #include <fcntl.h>
+#include "../include/global_strings.h"
 
-int create_transformation(int * sender_pipe, int * receiver_pipe){
+int create_transformation(int * sender_pipe, int * receiver_pipe)
+{
+  //Define variables
+  int pid;
+
   if (pipe(sender_pipe) < 0 ||pipe(receiver_pipe) < 0)
   {
     return 1;
   }
-  int pid = fork();
+  pid = fork();
   if(pid == 0) //Child process
   {
     dup2(sender_pipe[0],STDIN_FILENO);
@@ -27,7 +32,7 @@ int create_transformation(int * sender_pipe, int * receiver_pipe){
     dup2(receiver_pipe[1],STDOUT_FILENO);
     close(receiver_pipe[1]);
 
-    char *argv[] = {"cat", 0};
+    char *argv[] = {CAT, 0};
     execvp(argv[0],argv);
     return 1;
   }

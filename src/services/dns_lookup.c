@@ -5,8 +5,8 @@
 #include <errno.h> //For errno - the error number
 #include <netdb.h>	//hostent
 #include <arpa/inet.h>
-
 #include "services.h"
+#include "../include/global_strings.h"
 
 /*
 	Get ip from domain name
@@ -21,7 +21,7 @@ int hostname_to_ip(char *hostname , char *ip)
 	hints.ai_family = AF_INET; // use AF_INET6 to force IPv6
 	hints.ai_socktype = SOCK_STREAM;
 
-	if ((rv = getaddrinfo( hostname , "http" , &hints , &servinfo)) != 0)
+	if ((rv = getaddrinfo( hostname , HTTP , &hints , &servinfo)) != 0)
 	{
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;

@@ -13,11 +13,15 @@
 
 int is_valid_ip_address(char *ipAddress)
 {
+    //Define variables
     struct sockaddr_in sa;
     struct sockaddr_in sb;
     char aux[100];
+    int result;
+
+    //Auxiliar copy
     strcpy(aux,ipAddress);
-    int result = inet_pton(AF_INET, aux, &(sa.sin_addr));
+    result = inet_pton(AF_INET, aux, &(sa.sin_addr));
     if(result>0)
     {
       strcpy(ipAddress,aux);
