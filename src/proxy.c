@@ -142,9 +142,9 @@ void *runSocket(void *vargp)
   int buffer_pos             = 0;
   int trans_start            = -1;
   int trans_end              = -1;
-  int resp                   = create_transformation(sender_pipe, receiver_pipe);
   int sender_pipe[2], receiver_pipe[2];
-
+  int resp                   = create_transformation(sender_pipe, receiver_pipe);
+  
   if (resp == 1)
   {
     printf("An error has ocurred");
