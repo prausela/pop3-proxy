@@ -21,6 +21,7 @@ int socket_ip_type = IPV4;
 int hostname_to_ip(char *, char *);
 int is_valid_ip_address(char *);
 int checkArg(char *argument, int *expecting_data);
+ int create_transformation(int * sender_pipe, int * receiver_pipe);
 // A structure to maintain client fd, and server ip address and port address
 // client will establish connection to server using given IP and port
 struct serverInfo
@@ -123,6 +124,15 @@ void *runSocket(void *vargp)
   int buffer_pos = 0;
   int trans_start = -1;
   int trans_end = -1;
+
+  int sender_pipe[2],receiver_pipe[2];
+      int resp = create_transformation(sender_pipe,receiver_pipe);
+      if(resp == 1)
+      {
+        printf("An error has ocurred");
+        return 1;
+      }
+
   while (1)
   {
     //recieve response from server
@@ -155,10 +165,18 @@ void *runSocket(void *vargp)
 
         if (trans_start != -1)
         {
+          write(sender_pipe[1] , buffer+trans_start , trans_end-trans_start);
+          char answer[512];
+          read(receiver_pipe[0],answer,trans_end-trans_start);
+          printf("%s\n",answer );
+          write(info->client_fd, answer, trans_end-trans_start);
         }
-        // send response back to client
-        write(info->client_fd, buffer, bytes);
-        fputs(buffer, stdout);
+        else{
+          // send response back to client
+          write(info->client_fd, buffer, bytes);
+          fputs(buffer, stdout);
+        }
+
       }
       //printf("1 %d\n", event != NULL && event != END_SINGLELINE && event->next == NULL);
     } while (event != NULL && event->type != END_SINGLELINE && event->next == NULL);
