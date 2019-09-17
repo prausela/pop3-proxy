@@ -6,15 +6,16 @@
 inline
 static char* get_event_type(unsigned type){
 	switch(type){
-		case DAT_STUFFED:
-			return "DAT_STUFFED";
 		case IGNORE:
 			return "IGNORE";
+		case DAT_STUFFED:
+			return "DAT_STUFFED";
+		
 	}
 }
 
 int main(int argc, char *argv[]){
-	char *to_analyse = "\r\n.\r\njasnajk";
+	char *to_analyse = "LIST \r\n.\r\njasnajk";
 
 	struct parser_event *event;
 	struct parser *parser = pop3_multiline_response_parser_init();

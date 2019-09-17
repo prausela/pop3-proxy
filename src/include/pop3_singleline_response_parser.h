@@ -1,14 +1,13 @@
 #ifndef POP3_SINGLELINE_RESPONSE_PARSER_H_ACK0Q8X1WrbMI9ZFlPxsr98iOM
 #define POP3_SINGLELINE_RESPONSE_PARSER_H_ACK0Q8X1WrbMI9ZFlPxsr98iOM
 
-
 #include "parser_utils.h"
 
 /**	~~INIT PARSER 
  *		(Create a new parser intended for pop3 singleline response interpretation)~~
  */
-		struct parser *
-		pop3_singleline_response_parser_init	(void);
+struct parser *
+pop3_singleline_response_parser_init(void);
 
 /** 
  * PLEASE USE THE FOLLOWING PARSER_FACTORY METHODS FOR MORE OPERATIONS:
@@ -67,14 +66,14 @@
  *	};
  */
 
-
-	enum pop3_singleline_response_event_type {
+enum pop3_singleline_response_event_type
+{
 	//	IGNORE 			= 0,
-	// 	TRAPPED 		= 1,	
-		OK_RESP 		= 7,
-		ERR_RESP 		   ,
-		END_SINGLELINE 	   ,
-	};
+	// 	TRAPPED 		= 1,
+	OK_RESP = 7,
+	ERR_RESP,
+	END_SINGLELINE,
+};
 
 /** ~~STAT TRANSITIONS~~
  *

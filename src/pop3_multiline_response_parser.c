@@ -4,14 +4,13 @@
 // deberia hacer el dibujo, lo tengo en papel
 
 enum pop3_multiline_response_states {
-        DOT_DATA = 800,
+        DOT_DATA = 0,
         CR,
         CRLF,
         CRLFDOT,
         CRLFDOTCR,
         CRLFDOTCRLF,
 	};
-
 
 
 static void

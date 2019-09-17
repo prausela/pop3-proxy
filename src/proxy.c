@@ -128,7 +128,7 @@ inline static char *get_event_type(unsigned type)
 
         memset(&buffer, '\0', sizeof(buffer));
         do {
-          printf("4\n");
+       
           buffer_pos = 0;
           bytes = read(server_fd, buffer, sizeof(buffer));
           

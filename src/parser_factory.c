@@ -57,12 +57,15 @@ parser_feed(struct parser *p, const uint8_t c)
     const unsigned type = p->classes[c];
 
     p->e1.next = p->e2.next = 0;
-
+            
     const struct parser_state_transition *state = p->def->states[p->state];
+
     const size_t n = p->def->states_n[p->state];
+
     bool matched = false;
     for (unsigned i = 0; i < n; i++)
     {
+
         const int when = state[i].when;
         if (state[i].when <= 0xFF)
         {
