@@ -216,7 +216,7 @@ pop3_parser_feed(struct parser *p, const uint8_t c)
 		if (answer_status && (cmd_type == MULTILINE || (cmd_type == OVERLOADED && !has_args)))
 		{
 			curr_parser = pop3_multiline_response_parser_init();
-			//ignore(event, c);
+			ignore(event, c);
 		}
 		answer_status = false;
 		break;

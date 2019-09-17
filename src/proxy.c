@@ -23,7 +23,7 @@ int socket_ip_type = IPV4; //By default IPV4
 int hostname_to_ip(char *, char *);
 int is_valid_ip_address(char *);
 int checkArg(char *argument, int *expecting_data);
-int create_transformation(int * sender_pipe, int * receiver_pipe);
+int create_transformation(int *sender_pipe, int *receiver_pipe);
 // A structure to maintain client fd, and server ip address and port address
 // client will establish connection to server using given IP and port
 struct serverInfo
@@ -32,7 +32,6 @@ struct serverInfo
   char ip[100];
   char port[100];
 };
-
 
 inline static char *get_event_type(unsigned type)
 {
@@ -112,15 +111,28 @@ void *runSocket(void *vargp)
   }
   else
   {
-    memset(&server_sd6, 0, sizeof(server_sd6));
-    inet_pton(AF_INET6, info->ip, &(server_sd6.sin6_addr));
-    server_sd6.sin6_family = AF_INET6;
-    server_sd6.sin6_port = htons(atoi(info->port));
-    //server_sd6.sin6_addr = inet_pton(info->ip,NULL,NULL);
-    if ((connect(server_fd, (struct sockaddr *)&server_sd6, sizeof(server_sd6))) < 0)
+    const char *ip6str = "::2";
+    struct in6_addr result;
+    if (inet_pton(AF_INET6, ip6str, &result) == 1)
     {
-      printf("server connection not established");
+      
+      printf("IPv6 Success!\n");
     }
+    else
+    {
+      printf("IPv6 Failed\n");
+    }
+
+    // lo que habia antes
+    // memset(&server_sd6, 0, sizeof(server_sd6));
+    // inet_pton(AF_INET6, info->ip, &(server_sd6.sin6_addr));
+    // server_sd6.sin6_family = AF_INET6;
+    // server_sd6.sin6_port = htons(atoi(info->port));
+    // //server_sd6.sin6_addr = inet_pton(info->ip,NULL,NULL);
+    // if ((connect(server_fd, (struct sockaddr *)&server_sd6, sizeof(server_sd6))) < 0)
+    // {
+    //   printf("server connection not established");
+    // }
   }
   printf("server socket connected\n");
   struct parser *pop3_parser = pop3_parser_init();
@@ -129,19 +141,22 @@ void *runSocket(void *vargp)
   int trans_start = -1;
   int trans_end = -1;
 
-  int sender_pipe[2],receiver_pipe[2];
-      int resp = create_transformation(sender_pipe,receiver_pipe);
-      if(resp == 1)
-      {
-        printf("An error has ocurred");
-        return 1;
-      }
+  int sender_pipe[2], receiver_pipe[2];
+  int resp = create_transformation(sender_pipe, receiver_pipe);
+  if (resp == 1)
+  {
+    printf("An error has ocurred");
+    return 1;
+  }
 
   while (1)
   {
     //recieve response from server
 
     memset(&buffer, '\0', sizeof(buffer));
+    // printf("BUFFER ANTES: %s SIZE: %d\n",buffer,bytes);
+    int count = 0;
+
     do
     {
 
@@ -150,9 +165,11 @@ void *runSocket(void *vargp)
 
       if (bytes <= 0)
       {
+        
       }
       else
       {
+
         while (buffer[buffer_pos] != 0)
         {
           event = pop3_parser_feed(pop3_parser, buffer[buffer_pos]);
@@ -169,17 +186,22 @@ void *runSocket(void *vargp)
 
         if (trans_start != -1)
         {
-          write(sender_pipe[1] , buffer+trans_start , trans_end-trans_start);
-          read(receiver_pipe[0],answer,trans_end-trans_start);
-          printf("%s\n",answer );
-          write(info->client_fd, answer, trans_end-trans_start);
+          write(sender_pipe[1], buffer + trans_start, trans_end - trans_start);
+          read(receiver_pipe[0], answer, trans_end - trans_start);
+          printf("%s\n", answer);
+          write(info->client_fd, answer, trans_end - trans_start);
         }
-        else{
+        else
+        {
           // send response back to client
           write(info->client_fd, buffer, bytes);
           fputs(buffer, stdout);
         }
-
+      }
+      count++;
+      if (count == 2)
+      {
+        exit;
       }
       //printf("1 %d\n", event != NULL && event != END_SINGLELINE && event->next == NULL);
     } while (event != NULL && event->type != END_SINGLELINE && event->next == NULL);
@@ -292,14 +314,14 @@ int checkArg(char *argument, int *expecting_data)
 int main(int argc, char *argv[])
 {
   //Definition of variables
-  struct    sockaddr_in proxy_sd;
-  struct    sockaddr_in6 proxy_sd6;
+  struct sockaddr_in proxy_sd;
+  struct sockaddr_in6 proxy_sd6;
   pthread_t tid;
-  int       ip_type, res, expecting_data, is_valid, proxy_fd, client_fd;
-  char      port[100], ip[100], proxy_port[100];
-  char     *hostname = calloc(15, sizeof(char));
-  char     *options[10]; // Array for inserted options (by client)
-  char     *data[10];    // Array where each position belongs to the position of the
+  int ip_type, res, expecting_data, is_valid, proxy_fd, client_fd;
+  char port[100], ip[100], proxy_port[100];
+  char *hostname = calloc(15, sizeof(char));
+  char *options[10]; // Array for inserted options (by client)
+  char *data[10];    // Array where each position belongs to the position of the
                      // options
 
   // Set default values for Server Port and proxy Port
@@ -335,7 +357,7 @@ int main(int argc, char *argv[])
   {
     expecting_data = 0;
     for (int i = 1, j = 0; i < argc - 1; i++)
-    {                                              // Iterate for each argument
+    { // Iterate for each argument
       //is_valid is 1 if its data or0 if its an option
       is_valid = checkArg(argv[i], &expecting_data);
       if (is_valid == REQUIRED)
@@ -437,7 +459,7 @@ int main(int argc, char *argv[])
   printf("proxy port is %s", proxy_port);
   printf("\n");
   //socket variables
-  proxy_fd  = 0;
+  proxy_fd = 0;
   client_fd = 0;
 
   // add this line only if server exits when client exits
