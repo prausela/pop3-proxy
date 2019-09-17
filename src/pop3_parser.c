@@ -95,21 +95,21 @@ static void
 parse_sl(struct parser_event *ret, const uint8_t c)
 {
 	ret->type = PARSE_SL;
-	ret->n = 0;
+	ret->n    = 0;
 }
 
 static void
 parse_dot_stuffed(struct parser_event *ret, const uint8_t c)
 {
 	ret->type = PARSE_DOT_STUFFED;
-	ret->n = 0;
+	ret->n 		= 0;
 }
 
 static void
 parse_cmd(struct parser_event *ret, const uint8_t c)
 {
 	ret->type = PARSE_CMD;
-	ret->n = 0;
+	ret->n 		= 0;
 }
 
 static const struct parser_state_transition ST_INIT[] = {
@@ -144,29 +144,29 @@ static const struct parser_state_transition *pop3_states[] = {
 
 static struct parser_definition pop3_definition = {
 	.states_count = N(pop3_states),
-	.states = pop3_states,
-	.states_n = pop3_states_n,
-	.start_state = INIT,
+	.states 			= pop3_states,
+	.states_n 		= pop3_states_n,
+	.start_state 	= INIT,
 };
 
 struct parser *curr_parser = NULL;
-char cmd[] = {0, 0, 0, 0, 0};
-size_t cmd_len = 0;
-bool has_args = false;
-int cmd_type = NOT_CMD;
-bool answer_status = false;
+char cmd[] 					= {0, 0, 0, 0, 0};
+size_t cmd_len 			= 0;
+bool has_args 			= false;
+int cmd_type 				= NOT_CMD;
+bool answer_status 	= false;
 
 void pop3_parser_reset(struct parser *p)
 {
 	parser_reset(p);
-	curr_parser = NULL;
-	cmd[0] = 0;
-	cmd[1] = 0;
-	cmd[2] = 0;
-	cmd[3] = 0;
-	cmd[4] = 0;
-	cmd_len = 0;
-	has_args = false;
+	curr_parser 	= NULL;
+	cmd[0] 				= 0;
+	cmd[1] 				= 0;
+	cmd[2] 				= 0;
+	cmd[3] 				= 0;
+	cmd[4] 				= 0;
+	cmd_len 			= 0;
+	has_args 			= false;
 	answer_status = false;
 }
 
@@ -185,41 +185,41 @@ pop3_parser_feed(struct parser *p, const uint8_t c)
 		event = parser_feed(p, c);
 		switch (event->type)
 		{
-		case PARSE_SL:
-			curr_parser = pop3_singleline_response_parser_init();
-			break;
-		case PARSE_CMD:
-			curr_parser = pop3_command_parser_init();
-			break;
-		default:
-			return event;
+			case PARSE_SL:
+				curr_parser = pop3_singleline_response_parser_init();
+				break;
+			case PARSE_CMD:
+				curr_parser = pop3_command_parser_init();
+				break;
+			default:
+				return event;
 		}
 	}
 	event = parser_feed(curr_parser, c);
 	switch (event->type)
 	{
-	case BUFFER_CMD:
-		cmd[cmd_len] = toupper(event->data[0]);
-		cmd_len++;
-		break;
-	case HAS_ARGS:
-		has_args = true;
-		break;
-	case SET_CMD:
-		cmd_type = get_command_type(cmd);
-		curr_parser = NULL;
-		break;
-	case OK_RESP:
-		answer_status = true;
-		break;
-	case END_SINGLELINE:
-		if (answer_status && (cmd_type == MULTILINE || (cmd_type == OVERLOADED && !has_args)))
-		{
-			curr_parser = pop3_multiline_response_parser_init();
-			ignore(event, c);
-		}
-		answer_status = false;
-		break;
+		case BUFFER_CMD:
+			cmd[cmd_len] = toupper(event->data[0]);
+			cmd_len++;
+			break;
+		case HAS_ARGS:
+			has_args = true;
+			break;
+		case SET_CMD:
+			cmd_type 		= get_command_type(cmd);
+			curr_parser = NULL;
+			break;
+		case OK_RESP:
+			answer_status = true;
+			break;
+		case END_SINGLELINE:
+			if (answer_status && (cmd_type == MULTILINE || (cmd_type == OVERLOADED && !has_args)))
+			{
+				curr_parser = pop3_multiline_response_parser_init();
+				ignore(event, c);
+			}
+			answer_status = false;
+			break;
 	}
 	return event;
 }
@@ -230,10 +230,12 @@ int get_command_type(char *cmd)
 	{
 		return MULTILINE;
 	}
+
 	if (is_in_string_array(cmd, overloaded_commands))
 	{
 		return OVERLOADED;
 	}
+	
 	return SINGLELINE;
 }
 

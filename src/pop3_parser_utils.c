@@ -6,6 +6,5 @@
 void
 ignore(struct parser_event *ret, const uint8_t c){
 	ret->type 		= IGNORE;
-	ret->n 			= 0;
+	ret->n 			  = 0;
 }
-

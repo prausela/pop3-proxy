@@ -18,7 +18,7 @@ int hostname_to_ip(char *hostname , char *ip)
 	int rv;
 
 	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET; // use AF_INET6 to force IPv6
+	hints.ai_family   = AF_INET; // use AF_INET6 to force IPv6
 	hints.ai_socktype = SOCK_STREAM;
 
 	if ((rv = getaddrinfo( hostname , HTTP , &hints , &servinfo)) != 0)

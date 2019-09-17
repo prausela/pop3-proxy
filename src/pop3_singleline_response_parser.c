@@ -38,7 +38,7 @@
 
 /**	enum pop3_singleline_response_event_type {
  *		IGNORE 			= 0,
- *	 	TRAPPED 		= 1,	
+ *	 	TRAPPED 		= 1,
  *		OK_RESP 		= 2,
  *		ERR_RESP 		   ,
  *		END_SINGLELINE 	   ,
@@ -48,19 +48,19 @@
 static void
 ok_resp(struct parser_event *ret, const uint8_t c){
 	ret->type 	= OK_RESP;
-	ret->n		= 0;
+	ret->n			= 0;
 }
 
 static void
 err_resp(struct parser_event *ret, const uint8_t c){
 	ret->type 	= ERR_RESP;
-	ret->n 		= 0;
+	ret->n 			= 0;
 }
 
 static void
 end_singleline(struct parser_event *ret, const uint8_t c){
 	ret->type 	= END_SINGLELINE;
-	ret->n 		= 0;
+	ret->n 			= 0;
 }
 
 /** ~~STAT TRANSITIONS~~
@@ -109,7 +109,7 @@ end_singleline(struct parser_event *ret, const uint8_t c){
  *		n 		🡢 0
  *		data 	🡢 ~
  *
- * 		Example:		
+ * 		Example:
  * 			  ↓
  * 			+\r\n
  *
@@ -123,7 +123,7 @@ end_singleline(struct parser_event *ret, const uint8_t c){
  *		n 		🡢 0
  *		data 	🡢 ~
  *
- * 		Example:		
+ * 		Example:
  * 			↓
  * 			Hi\r\n
  *
@@ -177,7 +177,7 @@ static const struct parser_state_transition ST_STAT [] = {
  *		n 		🡢 0
  *		data 	🡢 ~
  *
- * 		Example:		
+ * 		Example:
  * 			  ↓
  * 			+\r\n
  *
@@ -224,7 +224,7 @@ static const struct parser_state_transition ST_OK [] = {
  *		n 		🡢 0
  *		data 	🡢 ~
  *
- * 		Example:	
+ * 		Example:
  * 			  ↓                   ↓
  * 			-\r\n
  *
@@ -265,7 +265,7 @@ static const struct parser_state_transition ST_ERR [] = {
  *		n 		🡢 0
  *		data 	🡢 ~
  *
- * 		Example:		
+ * 		Example:
  * 			    ↓
  * 			+OK\r\n (This could be the response of NOOP command)
  * 											  ↓
@@ -353,8 +353,8 @@ static const size_t pop3_singleline_response_states_n [] = {
 };
 
 static const struct parser_state_transition *pop3_singleline_response_states [] = {
-    ST_TRAP,
-    ST_STAT,
+  ST_TRAP,
+  ST_STAT,
 	ST_OK,
 	ST_ERR,
 	ST_MSG,
@@ -389,7 +389,7 @@ static const struct parser_state_transition *pop3_singleline_response_states [] 
 
 static struct parser_definition pop3_singleline_response_definition = {
 	.states_count	= N(pop3_singleline_response_states),
-	.states 		= pop3_singleline_response_states,
+	.states 			= pop3_singleline_response_states,
 	.states_n 		= pop3_singleline_response_states_n,
 	.start_state 	= STAT,
 };

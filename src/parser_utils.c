@@ -18,7 +18,7 @@
 void
 ignore(struct parser_event *ret, const uint8_t c){
 	ret->type 		= IGNORE;
-	ret->n 			= 0;
+	ret->n 			  = 0;
 }
 
 /** This event's intention of purpose is to TRAP the input given.
@@ -33,7 +33,7 @@ ignore(struct parser_event *ret, const uint8_t c){
 void
 trap(struct parser_event *ret, const uint8_t c){
 	ret->type 		= TRAPPED;
-	ret->n 			= 0;
+	ret->n 			  = 0;
 }
 
 /** This event's intention of purpose is to signal that the current
@@ -48,7 +48,7 @@ trap(struct parser_event *ret, const uint8_t c){
 void
 final(struct parser_event *ret, const uint8_t c){
 	ret->type 		= FINAL;
-	ret->n 			= 0;
+	ret->n 			  = 0;
 }
 
 /** ~~TRAP STATE TRANSITIONS~~

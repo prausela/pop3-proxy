@@ -39,9 +39,9 @@ parser_init(const unsigned *classes,
     if (ret != NULL)
     {
         memset(ret, 0, sizeof(*ret));
-        ret->classes = classes;
-        ret->def = def;
-        ret->state = def->start_state;
+        ret->classes  = classes;
+        ret->def      = def;
+        ret->state    = def->start_state;
     }
     return ret;
 }
@@ -54,15 +54,12 @@ void parser_reset(struct parser *p)
 struct parser_event *
 parser_feed(struct parser *p, const uint8_t c)
 {
-    const unsigned type = p->classes[c];
-
-    p->e1.next = p->e2.next = 0;
-
+    const unsigned type                         = p->classes[c];
+    p->e1.next = p->e2.next                     = 0;
     const struct parser_state_transition *state = p->def->states[p->state];
+    const size_t n                              = p->def->states_n[p->state];
+    bool matched                                = false;
 
-    const size_t n = p->def->states_n[p->state];
-
-    bool matched = false;
     for (unsigned i = 0; i < n; i++)
     {
 

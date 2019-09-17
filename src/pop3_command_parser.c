@@ -43,7 +43,7 @@
 static void
 buffer_cmd(struct parser_event *ret, const uint8_t c){
 	ret->type 		= BUFFER_CMD;
-	ret->n 			= 1;
+	ret->n 			  = 1;
 	ret->data[0] 	= c;
 }
 
@@ -64,7 +64,7 @@ has_args(struct parser_event *ret, const uint8_t c){
 static void
 set_cmd(struct parser_event *ret, const uint8_t c){
 	ret->type 		= SET_CMD;
-	ret->n 			= 0;
+	ret->n 			  = 0;
 }
 
 /**
@@ -74,19 +74,19 @@ set_cmd(struct parser_event *ret, const uint8_t c){
 static void
 bad_cmd(struct parser_event *ret, const uint8_t c){
 	ret->type 		= BAD_CMD;
-	ret->n 			= 0;
+	ret->n 			  = 0;
 }
 
 /** ~~KWRD TRANSITIONS~~
  *
  *                 '\r'
  *        +-------------------+
- *        |   ' '             v  
+ *        |   ' '             v
  *     +----+     +---+      +--+
  * +-->|KWRD|---->|ARG|      |CR|
  *     +----+     +---+      +--+
  *     |    ^
- *     +----+ 
+ *     +----+
  *      ANY
  *
  * KWRD	 ANY🡢 KWRD :
@@ -128,7 +128,7 @@ static const struct parser_state_transition ST_KWRD [] =  {
 /** ~~ARG TRANSITIONS~~
  *
  *
- * 
+ *
  *                      '\r'
  *                +---+----->+--+
  *                |ARG|      |CR|
@@ -167,9 +167,9 @@ static const struct parser_state_transition ST_ARG [] =  {
 /** ~~CR TRANSITIONS~~
  *
  *
- *        
  *
- * 
+ *
+ *
  *                               '\n' +------+
  *                           +--+     |+----+|
  *                           |CR+---->||CRLF||
@@ -292,7 +292,7 @@ static const struct parser_state_transition *pop3_command_states [] = {
 
 static struct parser_definition pop3_command_definition = {
 	.states_count	= N(pop3_command_states),
-	.states 		= pop3_command_states,
+	.states 		  = pop3_command_states,
 	.states_n 		= pop3_command_states_n,
 	.start_state 	= KWRD,
 };
