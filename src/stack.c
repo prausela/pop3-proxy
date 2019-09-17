@@ -38,7 +38,8 @@ void push(Stack stack, char* data, ssize_t data_len){
 }
 
 void pop(Stack stack, char* data, ssize_t *data_len){
-	strncpy(stack->top->data, data, stack->top->data_len);
+	strncpy(data, stack->top->data, stack->top->data_len);
+	*data_len = stack->top->data_len;
 	free(stack->top->data);
 	StackNode aux = stack->top->next;
 	free(stack->top);
