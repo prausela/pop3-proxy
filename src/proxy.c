@@ -145,6 +145,7 @@ inline static char *get_event_type(unsigned type)
                   trans_end = buffer_pos;
                 }
                 buffer_pos++;
+                printf("This is the event: %s\n", get_event_type(event->type));
                 printf("2\n");
               }
                 

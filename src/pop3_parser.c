@@ -88,6 +88,7 @@ enum pop3_command_types
 	MULTILINE = 77,
 	SINGLELINE = 78,
 	OVERLOADED = 79,
+	NOT_CMD = 80,
 };
 
 static void
@@ -152,7 +153,7 @@ struct parser *curr_parser = NULL;
 char cmd[] = {0, 0, 0, 0, 0};
 size_t cmd_len = 0;
 bool has_args = false;
-int cmd_type;
+int cmd_type = NOT_CMD;
 bool answer_status = false;
 
 void pop3_parser_reset(struct parser *p)
@@ -195,6 +196,7 @@ pop3_parser_feed(struct parser *p, const uint8_t c)
 		}
 	}
 	event = parser_feed(curr_parser, c);
+	printf("CMD:%s\tCMD_TYPE:%d\n", cmd, cmd_type);
 	switch (event->type)
 	{
 	case BUFFER_CMD:
@@ -212,11 +214,14 @@ pop3_parser_feed(struct parser *p, const uint8_t c)
 		answer_status = true;
 		break;
 	case END_SINGLELINE:
-		if (answer_status && (cmd_type == MULTILINE || (cmd_type == OVERLOADED && has_args)))
+		printf("LOOK AT ME: %d ans: %d ml: %d ov: %d %d\n", answer_status && (cmd_type == MULTILINE || (cmd_type == OVERLOADED && has_args)), answer_status, cmd_type == MULTILINE, cmd_type == OVERLOADED, has_args);
+		if (answer_status && (cmd_type == MULTILINE || (cmd_type == OVERLOADED && !has_args)))
 		{
 			curr_parser = pop3_multiline_response_parser_init();
-			ignore(event, c);
+			printf("YAY\n");
+			//ignore(event, c);
 		}
+		answer_status = false;
 		break;
 	}
 	return event;
