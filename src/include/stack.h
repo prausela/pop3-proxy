@@ -11,4 +11,6 @@ void push(Stack stack, char* data, ssize_t data_len);
 
 void pop(Stack stack, char* data, ssize_t *data_len);
 
+void free_stack(Stack stack);
+
 #endif

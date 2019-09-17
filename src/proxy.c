@@ -182,14 +182,18 @@ void *runSocket(void *vargp)
             trans_end = buffer_pos;
           }
           buffer_pos++;
+          printf("EVENT %s\n", get_event_type(event->type));
         }
 
         if (trans_start != -1)
         {
-          write(sender_pipe[1], buffer + trans_start, trans_end - trans_start);
-          read(receiver_pipe[0], answer, trans_end - trans_start);
+          write(info->client_fd, buffer, bytes - trans_start);
+          write(sender_pipe[1], buffer + trans_start, trans_end - trans_start +1);
+          read(receiver_pipe[0], answer, trans_end - trans_start +1);
           printf("%s\n", answer);
-          write(info->client_fd, answer, trans_end - trans_start);
+          write(info->client_fd, answer, trans_end - trans_start +1);
+          trans_start = -1;
+          trans_end = -1;
         }
         else
         {

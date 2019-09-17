@@ -9,6 +9,7 @@ int main(void){
 	push(stack, HOLA, 5);
 	pop(stack, buff, &h);
 	printf("%s %d\n", buff, h);
+	printf("sjdknfjsdnkjsnf\n");
 	free_stack(stack);
 	return 0;
 }
