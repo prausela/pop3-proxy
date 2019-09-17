@@ -139,12 +139,12 @@ void *runSocket(void *vargp)
   printf("server socket connected\n");
   struct parser *pop3_parser = pop3_parser_init();
   struct parser_event *event = NULL;
-  int buffer_pos = 0;
-  int trans_start = -1;
-  int trans_end = -1;
-
+  int buffer_pos             = 0;
+  int trans_start            = -1;
+  int trans_end              = -1;
+  int resp                   = create_transformation(sender_pipe, receiver_pipe);
   int sender_pipe[2], receiver_pipe[2];
-  int resp = create_transformation(sender_pipe, receiver_pipe);
+
   if (resp == 1)
   {
     printf("An error has ocurred");
@@ -161,17 +161,11 @@ void *runSocket(void *vargp)
 
     do
     {
-
       buffer_pos = 0;
-      bytes = read(server_fd, buffer, sizeof(buffer));
+      bytes      = read(server_fd, buffer, sizeof(buffer));
 
-      if (bytes <= 0)
+      if (bytes > 0)
       {
-
-      }
-      else
-      {
-
         while (buffer[buffer_pos] != 0)
         {
           event = pop3_parser_feed(pop3_parser, buffer[buffer_pos]);
@@ -213,22 +207,17 @@ void *runSocket(void *vargp)
     pop3_parser_reset(pop3_parser);
     do
     {
-
       //receive data from client
       memset(&buffer, '\0', sizeof(buffer));
       buffer_pos = 0;
-      bytes = read(info->client_fd, buffer, sizeof(buffer));
-      if (bytes <= 0)
-      {
-      }
-      else
+      bytes      = read(info->client_fd, buffer, sizeof(buffer));
+      if (bytes > 0)
       {
         while (buffer[buffer_pos] != 0)
         {
           event = pop3_parser_feed(pop3_parser, buffer[buffer_pos]);
           buffer_pos++;
         }
-
         // send data to main server
         write(server_fd, buffer, bytes);
         fputs(buffer, stdout);
@@ -347,7 +336,7 @@ int main(int argc, char *argv[])
   else if (res == IPV6)
   {
     socket_ip_type = IPV6;
-    ip_type = IPV6;
+    ip_type        = IPV6;
     strcpy(ip, argv[argc - 1]);
   }
   else
@@ -457,7 +446,7 @@ int main(int argc, char *argv[])
   printf("proxy port is %s", proxy_port);
   printf("\n");
   //socket variables
-  proxy_fd = 0;
+  proxy_fd  = 0;
   client_fd = 0;
 
   // add this line only if server exits when client exits
@@ -489,9 +478,9 @@ int main(int argc, char *argv[])
   if (ip_type == IPV4)
   {
     memset(&proxy_sd, 0, sizeof(proxy_sd));
-    proxy_sd.sin_family = AF_INET;
-    proxy_sd.sin_port = htons(atoi(proxy_port));
-    proxy_sd.sin_addr.s_addr = INADDR_ANY;
+    proxy_sd.sin_family         = AF_INET;
+    proxy_sd.sin_port           = htons(atoi(proxy_port));
+    proxy_sd.sin_addr.s_addr    = INADDR_ANY;
     if ((bind(proxy_fd, (struct sockaddr *)&proxy_sd, sizeof(proxy_sd))) < 0)
     {
       printf("Failed to bind a socket");
@@ -501,8 +490,8 @@ int main(int argc, char *argv[])
   {
     memset(&proxy_sd6, 0, sizeof(proxy_sd6));
     proxy_sd6.sin6_family = AF_INET6;
-    proxy_sd6.sin6_port = htons(atoi(proxy_port));
-    proxy_sd6.sin6_addr = in6addr_any;
+    proxy_sd6.sin6_port   = htons(atoi(proxy_port));
+    proxy_sd6.sin6_addr   = in6addr_any;
     if ((bind(proxy_fd, (struct sockaddr *)&proxy_sd6, sizeof(proxy_sd6))) < 0)
     {
       printf("Failed to bind a socket");
