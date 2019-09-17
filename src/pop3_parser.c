@@ -3,9 +3,9 @@
 #define MAX_KEYWORD_COMMAND_LENGTH 4
 
 /** ~~OVERLOADED COMMANDS~~
- * This type of commands respond differently depending on whether 
+ * This type of commands respond differently depending on whether
  * arguments are supplied or not.
- * 
+ *
  * {KEYWORD} {CR}{LF}		🡢 MULTILINE COMMAND
  * {KEYWORD} {ARG} {CR}{LF}	🡢 SINGLELINE COMMAND
  *
@@ -176,7 +176,7 @@ pop3_parser_init(void)
 	return parser_init(parser_no_classes(), &pop3_definition);
 }
 
-const struct parser_event *
+struct parser_event *
 pop3_parser_feed(struct parser *p, const uint8_t c)
 {
 	struct parser_event *event;

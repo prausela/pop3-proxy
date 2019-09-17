@@ -9,11 +9,12 @@
 #include <stdbool.h>
 #include <inttypes.h>
 #include <string.h>
+#include <ctype.h>
 
 struct parser *
 pop3_parser_init(void);
 
-const struct parser_event *
+struct parser_event *
 pop3_parser_feed(struct parser *p, const uint8_t c);
 
 int get_command_type(char *cmd);

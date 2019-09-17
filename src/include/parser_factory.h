@@ -81,7 +81,7 @@ void parser_reset(struct parser *p);
  * de parsing. Los eventos son reusado entre llamadas por lo que si se desea
  * capturar los datos se debe clonar.
  */
-const struct parser_event *
+struct parser_event *
 parser_feed(struct parser *p, const uint8_t c);
 
 /**

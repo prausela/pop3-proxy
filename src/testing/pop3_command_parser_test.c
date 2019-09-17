@@ -16,6 +16,8 @@ static char* get_event_type(unsigned type){
 			return "SET_CMD";
 		case BAD_CMD:
 			return "BAD_CMD";
+		default:
+			return NULL;
 	}
 }
 

@@ -10,7 +10,8 @@ static char* get_event_type(unsigned type){
 			return "IGNORE";
 		case DAT_STUFFED:
 			return "DAT_STUFFED";
-		
+		default:
+			return NULL;
 	}
 }
 

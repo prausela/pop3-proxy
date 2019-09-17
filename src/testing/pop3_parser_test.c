@@ -26,6 +26,8 @@ inline static char *get_event_type(unsigned type)
 		return "ERR_RESP";
 	case END_SINGLELINE:
 		return "END_SINGLELINE";
+	default:
+		return NULL;
 	}
 }
 

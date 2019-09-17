@@ -59,13 +59,11 @@ inline static char *get_event_type(unsigned type)
     return ERR_RESP_MESSAGE;
   case END_SINGLELINE:
     return END_SINGLELINE_MESSAGE;
+  default:
+    return NULL;
   }
-}
 
-// Notas: Tiene que haber un boolean que diga si se ingreso una opcion antes.
-// De ser asi, podemos procesar si esta bien o no el dato que ingresaron despues.
-// Tambien podria haber otro boolean para decirnos si esa opcion requiere o no de un dato.
-// Puede haber una funcion FILL en la cual le pases el dato y la variable donde guardarlo.
+}
 
 // A thread function
 // A thread for each client request
@@ -81,7 +79,6 @@ void *runSocket(void *vargp)
   //code to connect to main server via this proxy server
   int server_fd = 0;
   struct sockaddr_in server_sd;
-  struct sockaddr_in6 server_sd6;
   // create a socket
   if (socket_ip_type == IPV4)
   {
@@ -100,8 +97,8 @@ void *runSocket(void *vargp)
   {
     memset(&server_sd, 0, sizeof(server_sd));
     // set socket variables
-    server_sd.sin_family = AF_INET;
-    server_sd.sin_port = htons(atoi(info->port));
+    server_sd.sin_family      = AF_INET;
+    server_sd.sin_port        = htons(atoi(info->port));
     server_sd.sin_addr.s_addr = inet_addr(info->ip);
     //connect to main server from this proxy server
     if ((connect(server_fd, (struct sockaddr *)&server_sd, sizeof(server_sd))) < 0)
@@ -111,11 +108,14 @@ void *runSocket(void *vargp)
   }
   else
   {
+    exit(1);
+    /*
+    IPV6 NOT WORKING
     const char *ip6str = "::2";
     struct in6_addr result;
     if (inet_pton(AF_INET6, ip6str, &result) == 1)
     {
-      
+
       printf("IPv6 Success!\n");
     }
     else
@@ -133,6 +133,8 @@ void *runSocket(void *vargp)
     // {
     //   printf("server connection not established");
     // }
+    */
+
   }
   printf("server socket connected\n");
   struct parser *pop3_parser = pop3_parser_init();
@@ -146,7 +148,7 @@ void *runSocket(void *vargp)
   if (resp == 1)
   {
     printf("An error has ocurred");
-    return 1;
+    exit(1);
   }
 
   while (1)
@@ -165,7 +167,7 @@ void *runSocket(void *vargp)
 
       if (bytes <= 0)
       {
-        
+
       }
       else
       {
@@ -182,7 +184,6 @@ void *runSocket(void *vargp)
             trans_end = buffer_pos;
           }
           buffer_pos++;
-          printf("EVENT %s\n", get_event_type(event->type));
         }
 
         if (trans_start != -1)
@@ -205,9 +206,9 @@ void *runSocket(void *vargp)
       count++;
       if (count == 2)
       {
-        exit;
+        printf("An error has ocurred, please try again\n");
+        exit(1);
       }
-      //printf("1 %d\n", event != NULL && event != END_SINGLELINE && event->next == NULL);
     } while (event != NULL && event->type != END_SINGLELINE && event->next == NULL);
     pop3_parser_reset(pop3_parser);
     do
@@ -230,7 +231,6 @@ void *runSocket(void *vargp)
 
         // send data to main server
         write(server_fd, buffer, bytes);
-
         fputs(buffer, stdout);
         fflush(stdout);
       }
@@ -383,24 +383,18 @@ int main(int argc, char *argv[])
         printf("Invalid argument type\n");
         return 1;
       }
-      else
-      {
-        //printf("%s\n",argv[i]);
-      }
     }
   }
 
-  printf("Testing database and processing your options.......\n");
   for (int i = 0; i < argc - 2; i++)
   {
-    //printf("%s\t%s\n",options[i], data[i]);
     if (options[i] != NULL)
     {
       switch (options[i][1])
       {
       case 'e':
       {
-        printf("Esta funcion esta siendo desarrollada.\n");
+        printf("This function is being developed.\n");
         break;
       }
       case 'h':
@@ -414,22 +408,22 @@ int main(int argc, char *argv[])
       }
       case 'L':
       {
-        printf("Esta funcion esta siendo desarrollada.\n");
+        printf("This function is being developed.\n");
         break;
       }
       case 'm':
       {
-        printf("Esta funcion esta siendo desarrollada.\n");
+        printf("This function is being developed.\n");
         break;
       }
       case 'M':
       {
-        printf("Esta funcion esta siendo desarrollada.\n");
+        printf("This function is being developed.\n");
         break;
       }
       case 'o':
       {
-        printf("Esta funcion esta siendo desarrollada.\n");
+        printf("This function is being developed.\n");
         break;
       }
       case 'p':
@@ -444,7 +438,7 @@ int main(int argc, char *argv[])
       }
       case 't':
       {
-        printf("Esta funcion esta siendo desarrollada.\n");
+        printf("This function is being developed.\n");
         break;
       }
       case 'v':

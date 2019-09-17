@@ -16,6 +16,8 @@ static char* get_event_type(unsigned type){
 			return "TRAPPED";
 		case END_SINGLELINE:
 			return "END_SINGLELINE";
+		default:
+			return NULL;
 	}
 }
 

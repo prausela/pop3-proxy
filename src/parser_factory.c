@@ -51,13 +51,13 @@ void parser_reset(struct parser *p)
     p->state = p->def->start_state;
 }
 
-const struct parser_event *
+struct parser_event *
 parser_feed(struct parser *p, const uint8_t c)
 {
     const unsigned type = p->classes[c];
 
     p->e1.next = p->e2.next = 0;
-            
+
     const struct parser_state_transition *state = p->def->states[p->state];
 
     const size_t n = p->def->states_n[p->state];
