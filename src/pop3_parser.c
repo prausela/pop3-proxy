@@ -199,7 +199,7 @@ pop3_parser_feed(struct parser *p, const uint8_t c)
 	switch (event->type)
 	{
 	case BUFFER_CMD:
-		cmd[cmd_len] = event->data[0];
+		cmd[cmd_len] = toupper(event->data[0]);
 		cmd_len++;
 		break;
 	case HAS_ARGS:
