@@ -10,10 +10,8 @@
 #include <arpa/inet.h>
 #include "include/pop3_parser.h"
 #include "include/global_strings.h"
+#include "include/lib.h"
 
-#define INVALID -1
-#define REQUIRED 1
-#define NOT_REQUIRED 2
 #define IPV4 1
 #define IPV6 2
 
@@ -22,7 +20,7 @@ int socket_ip_type = IPV4; //By default IPV4
 
 int hostname_to_ip(char *, char *);
 int is_valid_ip_address(char *);
-int checkArg(char *argument, int *expecting_data);
+int command_line_parser(int argc,char **argv,char * proxy_port,char * port);
 int create_transformation(int *sender_pipe, int *receiver_pipe);
 // A structure to maintain client fd, and server ip address and port address
 // client will establish connection to server using given IP and port
@@ -144,7 +142,7 @@ void *runSocket(void *vargp)
   int trans_end              = -1;
   int sender_pipe[2], receiver_pipe[2];
   int resp                   = create_transformation(sender_pipe, receiver_pipe);
-  
+
   if (resp == 1)
   {
     printf("An error has ocurred");
@@ -156,7 +154,7 @@ void *runSocket(void *vargp)
     //recieve response from server
 
     memset(&buffer, '\0', sizeof(buffer));
-    // printf("BUFFER ANTES: %s SIZE: %d\n",buffer,bytes);
+     printf("BUFFER ANTES: %s SIZE: %d\n",buffer,bytes);
     int count = 0;
 
     do
@@ -218,6 +216,7 @@ void *runSocket(void *vargp)
           event = pop3_parser_feed(pop3_parser, buffer[buffer_pos]);
           buffer_pos++;
         }
+        printf("%s\n",buffer);
         // send data to main server
         write(server_fd, buffer, bytes);
         fputs(buffer, stdout);
@@ -229,79 +228,6 @@ void *runSocket(void *vargp)
   return NULL;
 }
 
-int checkArg(char *argument, int *expecting_data)
-{
-  if (argument[0] == '-')
-  {
-    switch (argument[1])
-    {
-    case 'e':
-    {
-      *expecting_data = REQUIRED;
-      break;
-    }
-    case 'h':
-    {
-      *expecting_data = NOT_REQUIRED;
-      break;
-    }
-    case 'l':
-    {
-      *expecting_data = REQUIRED;
-      break;
-    }
-    case 'L':
-    {
-      *expecting_data = REQUIRED;
-      break;
-    }
-    case 'm':
-    {
-      *expecting_data = REQUIRED;
-      break;
-    }
-    case 'M':
-    {
-      *expecting_data = REQUIRED;
-      break;
-    }
-    case 'o':
-    {
-      *expecting_data = REQUIRED;
-      break;
-    }
-    case 'p':
-    {
-      *expecting_data = REQUIRED;
-      break;
-    }
-    case 'P':
-    {
-      *expecting_data = REQUIRED;
-      break;
-    }
-    case 't':
-    {
-      *expecting_data = REQUIRED;
-      break;
-    }
-    case 'v':
-    {
-      *expecting_data = NOT_REQUIRED;
-      break;
-    }
-    default:
-    {
-      return -1;
-    }
-    }
-    return 1;
-  }
-  else
-  {
-    return 0;
-  }
-}
 
 // main entry point
 int main(int argc, char *argv[])
@@ -346,100 +272,9 @@ int main(int argc, char *argv[])
     strcpy(ip, hostname);
   }
 
-  if (argc > 2)
-  {
-    expecting_data = 0;
-    for (int i = 1, j = 0; i < argc - 1; i++)
-    { // Iterate for each argument
-      //is_valid is 1 if its data or0 if its an option
-      is_valid = checkArg(argv[i], &expecting_data);
-      if (is_valid == REQUIRED)
-      {
-        options[j] = calloc(1, sizeof(char *));
-        options[j] = argv[i];
-        if (expecting_data == REQUIRED)
-        {
-          data[j] = calloc(1, sizeof(char *));
-          data[j] = argv[i + 1];
-        }
-        else if (expecting_data == NOT_REQUIRED)
-        {
-        }
-        j++;
-      }
-      else if (is_valid == INVALID)
-      {
-        printf("Invalid argument type\n");
-        return 1;
-      }
-    }
-  }
-
-  for (int i = 0; i < argc - 2; i++)
-  {
-    if (options[i] != NULL)
-    {
-      switch (options[i][1])
-      {
-      case 'e':
-      {
-        printf("This function is being developed.\n");
-        break;
-      }
-      case 'h':
-      {
-        printf("OPCIONES:\n -e  archivo-de-error\n\tEspecifica  el  archivo  donde se redirecciona stderr de las ejecuciones de los filtros, por defecto el archivo es /dev/null.\n -h  Imprime la ayuda y termina\n -l  Direccion-pop3\n\tEstablece la direccion donde servirAi el proxy. Por defecto escucha en todas las interfaces.\n -L  Direccion de management\n\tEstablece la direccion donde donde servira el servicio de management. Por defecto escucha agonicamente en loopback.\n -p  Puerto-local\n\tPuerto TCP donde donde escuchara por conexiones entrantes pop3. Por defecto el valor es 1110\n -P  Puerto-origen Puerto TCP donde se encuentra el servidor POP3 en el servidor origen. Por defecto el valor es 110.\n -t cmd\n\t Comando utilizado para las transformaciones externas. Compatible con system(3). La seccion filtros describe como es la interaccion entre pop3filter y el comando filtro. Por defecto no se aplica ninguna transformacion.\n -v\n\tImprime informacion sobre la version y termina\n");
-        return 1;
-      }
-      case 'l':
-      {
-        break;
-      }
-      case 'L':
-      {
-        printf("This function is being developed.\n");
-        break;
-      }
-      case 'm':
-      {
-        printf("This function is being developed.\n");
-        break;
-      }
-      case 'M':
-      {
-        printf("This function is being developed.\n");
-        break;
-      }
-      case 'o':
-      {
-        printf("This function is being developed.\n");
-        break;
-      }
-      case 'p':
-      {
-        strcpy(proxy_port, data[i]);
-        break;
-      }
-      case 'P':
-      {
-        strcpy(port, data[i]);
-        break;
-      }
-      case 't':
-      {
-        printf("This function is being developed.\n");
-        break;
-      }
-      case 'v':
-      {
-        printf("Version 1.0.0\n");
-        return 1;
-      }
-      default:
-      {
-      }
-      }
-    }
+  /** Command line parser for terminal        **/
+  if (!command_line_parser(argc,argv,proxy_port,port)) {
+    exit(1);
   }
 
   printf("server IP : %s and port %s ", ip, port);
