@@ -11,6 +11,7 @@
 #include "include/pop3_parser.h"
 #include "include/global_strings.h"
 #include "include/lib.h"
+#include <signal.h>
 
 #define IPV4 1
 #define IPV6 2
@@ -228,10 +229,45 @@ void *runSocket(void *vargp)
   return NULL;
 }
 
+static void (*sigint_handler)(int) = NULL;
+static void (*sigquit_handler)(int) = NULL;
+static void (*sigkill_handler)(int) = NULL;
+static void (*sigterm_handler)(int) = NULL;
+
+void end_process_handler(int signal){
+  printf("Hello\n");
+  /*switch(signal){
+    case SIGINT:
+      sigint_handler(signal);
+      break;
+    case SIGQUIT:
+      sigquit_handler(signal);
+      break;
+    case SIGKILL:
+      sigkill_handler(signal);
+      break;
+    case SIGTERM:
+      sigterm_handler(signal);
+      break;
+  }*/
+  exit(1);
+}
 
 // main entry point
 int main(int argc, char *argv[])
 {
+  struct sigaction end_process;
+  struct sigaction old_action;
+  sigfillset(&end_process.sa_mask);
+  end_process.sa_handler = end_process_handler;
+  sigaction(SIGINT, &end_process, &old_action);
+  sigint_handler = old_action.sa_handler;
+  sigaction(SIGQUIT, &end_process, &old_action);
+  sigquit_handler = old_action.sa_handler;
+  sigaction(SIGKILL, &end_process, &old_action);
+  sigkill_handler = old_action.sa_handler;
+  sigaction(SIGTERM, &end_process, &old_action);
+  sigterm_handler = old_action.sa_handler;
   //Definition of variables
   struct sockaddr_in proxy_sd;
   struct sockaddr_in6 proxy_sd6;
