@@ -156,7 +156,7 @@ void *runSocket(void *vargp)
 
     memset(&buffer, '\0', sizeof(buffer));
      printf("BUFFER ANTES: %s SIZE: %d\n",buffer,bytes);
-    int count = 0;
+    //int count = 0;
 
     do
     {
@@ -178,9 +178,11 @@ void *runSocket(void *vargp)
           }
           buffer_pos++;
         }
-
+        // PLEASE FIX ME
+/*
         if (trans_start != -1)
         {
+          
           write(info->client_fd, buffer, bytes - trans_start);
           write(sender_pipe[1], buffer + trans_start, trans_end - trans_start +1);
           read(receiver_pipe[0], answer, trans_end - trans_start +1);
@@ -188,20 +190,21 @@ void *runSocket(void *vargp)
           write(info->client_fd, answer, trans_end - trans_start +1);
           trans_start = -1;
           trans_end = -1;
+
         }
         else
-        {
+        {*/
           // send response back to client
           write(info->client_fd, buffer, bytes);
           fputs(buffer, stdout);
-        }
+        //}
       }
-      count++;
+      /*count++;
       if (count == 2)
       {
         printf("An error has ocurred, please try again\n");
         exit(1);
-      }
+      }*/
     } while (event != NULL && event->type != END_SINGLELINE && event->next == NULL);
     pop3_parser_reset(pop3_parser);
     do
