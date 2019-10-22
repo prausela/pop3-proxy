@@ -12,3 +12,4 @@ clean:
 	$(RM) pop3_singleline_response_parser
 	$(RM) pop3_multiline_response_parser
 	$(RM) pop3_parser
+	$(RM) testing_transformations

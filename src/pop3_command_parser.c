@@ -292,7 +292,7 @@ static const struct parser_state_transition *pop3_command_states [] = {
 
 static struct parser_definition pop3_command_definition = {
 	.states_count	= N(pop3_command_states),
-	.states 		  = pop3_command_states,
+	.states 		= pop3_command_states,
 	.states_n 		= pop3_command_states_n,
 	.start_state 	= KWRD,
 };
