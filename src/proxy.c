@@ -15,6 +15,7 @@
 
 #define IPV4 1
 #define IPV6 2
+#define _GNU_SOURCE
 
 //Global variables
 int socket_ip_type = IPV4; //By default IPV4

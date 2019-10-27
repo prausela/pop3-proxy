@@ -179,6 +179,7 @@ pop3_parser_init(void)
 struct parser_event *
 pop3_parser_feed(struct parser *p, const uint8_t c)
 {
+	bool is_retr_top=false;
 	struct parser_event *event;
 	if (curr_parser == NULL)
 	{
@@ -207,6 +208,9 @@ pop3_parser_feed(struct parser *p, const uint8_t c)
 			break;
 		case SET_CMD:
 			cmd_type 		= get_command_type(cmd);
+			if(strcmp(cmd,"RETR") || strcmp(cmd,"TOP")){
+				is_retr_top=true;
+			}
 			curr_parser = NULL;
 			break;
 		case OK_RESP:
@@ -220,6 +224,10 @@ pop3_parser_feed(struct parser *p, const uint8_t c)
 			}
 			answer_status = false;
 			break;
+		case DAT_STUFFED:
+			if(is_retr_top){
+				event->type= INTERNET_MSG_DATA;
+			}
 	}
 	return event;
 }

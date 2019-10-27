@@ -12,6 +12,7 @@ enum pop3_event_type
 	PARSE_SL,
 	PARSE_DOT_STUFFED,
 	PARSE_CMD,
+	INTERNET_MSG_DATA
 };
 
 #endif
