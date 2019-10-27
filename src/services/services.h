@@ -4,5 +4,6 @@
 int is_valid_ip_address(char *ipAddress);
 int hostname_to_ip(char * hostname, char *ip);
 int create_transformation(int * sender_pipe, int * receiver_pipe);
+int encrypt(char *source , char *encrypted_string);
 
 #endif
