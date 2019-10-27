@@ -18,6 +18,8 @@ static char* get_event_type(unsigned type){
 			return "DAT_STUFFED";
 		case DAT_STUFFED_END:
 			return "DAT_STUFFED_END";
+        case DAT_STUFFED_DOT:
+            return "DAT_STUFFED_DOT";
 		default:
 			return NULL;
 	}
@@ -35,10 +37,15 @@ int encrypt(char *source , char *encrypted_string)
     int    index            = 0;    
 	while(*source != 0 && !end){
 		event = parser_feed(parser, *source);
+        printf("%s\n", source);
+		printf("TYPE: %s\nDATA: %c\nN:   %d\n", get_event_type(event->type), event->n > 0 ? (char) event->data[0] : '~', event->n);
+		getchar();
 		if(strcmp(get_event_type(event->type),"DAT_STUFFED_END") == 0){
             end=TRUE;
         }else{
-            encrypted_string[index++] = event->data[0];
+            if(!strcmp(get_event_type(event->type),"DAT_STUFFED_DOT") == 0){
+                encrypted_string[index++] = event->data[0];
+            }
         }
 		source++;
 	}

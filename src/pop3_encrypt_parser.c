@@ -47,6 +47,14 @@ dat_stuffed(struct parser_event *ret, const uint8_t c){
 	 // ret->next       = dat_stuffed_end;
 
 }
+static void 
+dat_stuffed_dot(struct parser_event *ret, const uint8_t c){
+    printf("--------------$$-------------------");
+	ret->type		  = DAT_STUFFED_DOT;
+	ret->n 		  	= 1;
+	ret->data[0] 	= c;
+
+}
 
 /** ~~DOT_DATA TRANSITIONS~~
  *
@@ -162,7 +170,7 @@ static const struct parser_state_transition ST_CR [] =  {
  */
 
 static const struct parser_state_transition ST_CRLF [] =  {
-		{.when = '.',        .dest = CRLFDOT,            .act1 = dat_stuffed,	},
+		{.when = '.',        .dest = CRLFDOT,            .act1 = dat_stuffed	},
 		{.when = ANY,        .dest = DOT_DATA,           .act1 = dat_stuffed	},
 
 };
@@ -218,6 +226,7 @@ static const struct parser_state_transition ST_CRLF [] =  {
 
 static const struct parser_state_transition ST_CRLFDOT [] =  {
 		{.when = '\r',         .dest = CRLFDOTCR,         .act1 = dat_stuffed,	},
+        {.when = '.',         .dest = DOT_DATA,        .act1 = dat_stuffed_dot, },
 		{.when = ANY,          .dest = DOT_DATA,           .act1 =  dat_stuffed,	},
 };
 
