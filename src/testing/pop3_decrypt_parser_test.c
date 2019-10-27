@@ -24,9 +24,9 @@ static char* get_event_type(unsigned type){
 }
 
 int main(int argc, char *argv[]){
-    char *to_analyse = "HOLA \r\n.. como\r\n.....\r\nEstas\r\n.\rYo Bien\r\n.\r\n\nPEPE";
-    char * encrypted_message = malloc(strlen(to_analyse) + 1);
-    encrypt(to_analyse,encrypted_message);
+    char *to_analyse = ".HOLA \r\n.como\r\n..\r\nEstas\r\n.\rYo Bien\r\n";
+    char * encrypted_message = malloc(strlen(to_analyse) + 4);
+    decrypt(to_analyse,encrypted_message);
     printf("%s",encrypted_message);
 
 }

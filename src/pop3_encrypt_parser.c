@@ -49,11 +49,9 @@ dat_stuffed(struct parser_event *ret, const uint8_t c){
 }
 static void 
 dat_stuffed_dot(struct parser_event *ret, const uint8_t c){
-    printf("--------------$$-------------------");
 	ret->type		  = DAT_STUFFED_DOT;
 	ret->n 		  	= 1;
 	ret->data[0] 	= c;
-
 }
 
 /** ~~DOT_DATA TRANSITIONS~~
