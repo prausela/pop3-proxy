@@ -29,32 +29,32 @@ static char* get_event_type(unsigned type){
  * source is the current string
  * encrypted_string is where the result of the string should be
  * */
-int decrypt(char *source , char *encrypted_string)
+int decrypt(char *source , char *decrypted_string)
 {
 	struct parser_event *event;
 	struct parser *parser   = pop3_encrypt_parser_init();
     int    end              = FALSE;
     int    index            = 0;   
     printf("%s\n", source);
-    printf("--------------------------------------------\n"); 
+    printf("--------------------------------------------\n");
+    if(source[index]=='.')
+    {
+        decrypted_string[index++] = '.';
+    }
 	while(*source != 0 && !end){
 		event = parser_feed(parser, *source);
         /*printf("%s\n", source);
 		printf("TYPE: %s\nDATA: %c\nN:   %d\n", get_event_type(event->type), event->n > 0 ? (char) event->data[0] : '~', event->n);
 		getchar();*/
-		if(strcmp(get_event_type(event->type),"DAT_STUFFED_END") == 0){
-            end=TRUE;
-        }else{
-            if(strcmp(get_event_type(event->type),"DAT_STUFFED_DOT") == 0){
-                encrypted_string[index++] = '.';
-            }
-            encrypted_string[index++] = event->data[0];
+		if(strcmp(get_event_type(event->type),"DAT_STUFFED_DOT") == 0){
+            decrypted_string[index++] = '.';
         }
+        decrypted_string[index++] = event->data[0];
 		source++;
 	}
-        encrypted_string[index++] = '.';
-        encrypted_string[index++] = '\r';
-        encrypted_string[index++] = '\n';
+        decrypted_string[index++] = '.';
+        decrypted_string[index++] = '\r';
+        decrypted_string[index++] = '\n';
         parser_destroy(parser);
         return 0;
 }

@@ -308,7 +308,6 @@ static const struct parser_state_transition ST_CRLFDOTCR [] =  {
 static const struct parser_state_transition ST_CRLFDOTCRLF [] =  {
 		{.when = ANY,        .dest = CRLFDOTCRLF,       .act1 = ignore	},
 };
-//TODO: ACA ARRIBA DEBERIA BORRAR LAS ULTIMAS 3 char's
 
 
 
