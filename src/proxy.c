@@ -181,7 +181,7 @@ void *runSocket(void *vargp)
         }
         // PLEASE FIX ME
 /*
-        if (trans_start != -1)
+        if (event->type==INTERNET_MSG_DATA)
         {
           
           write(info->client_fd, buffer, bytes - trans_start);
