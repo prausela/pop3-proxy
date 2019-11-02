@@ -8,8 +8,8 @@
  * header en particular.
  *
  */
-#include "../../include/parser_factory.h"
-#include "../../include/parser_utils.h"
+#include "parser.h"
+
 
 /** tipo de eventos de un mensaje mime */
 struct parser;

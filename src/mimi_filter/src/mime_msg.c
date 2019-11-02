@@ -1,5 +1,4 @@
-#include "../../include/parser_factory.h"
-#include "../../include/parser_utils.h"
+#include "parser.h"
 #include "mime_chars.h"
 #include "mime_msg.h"
 
@@ -116,6 +115,8 @@ unexpected(struct parser_event *ret, const uint8_t c) {
     ret->data[0] = c;
 }
 
+//hacer newline y crlf?
+
 ///////////////////////////////////////////////////////////////////////////////
 // Transiciones
 
@@ -218,6 +219,7 @@ const struct parser_definition *
 mime_message_parser(void) {
     return &definition;
 }
+
 
 const char *
 mime_msg_event(enum mime_msg_event_type type) {

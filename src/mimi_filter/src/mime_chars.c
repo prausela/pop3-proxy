@@ -1,5 +1,5 @@
 #include "mime_chars.h"
-
+//no tocar
 static unsigned classes[256];
 
 /** inicializa la caracterización de cada byte */
