@@ -92,6 +92,7 @@ static void
 wait(struct parser_event *ret, const uint8_t c) {
     ret->type    = MIME_MSG_WAIT;
     ret->n       = 0;
+    ret->data[0] = c;
 }
 
 static void

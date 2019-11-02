@@ -49,7 +49,7 @@ struct ctx {
      * a Content-Type?. Utilizando dentro msg para los field-name.
      */
     bool           *msg_content_type_field_detected;
-    int            *process_modification_mail;
+    uint8_t            *process_modification_mail;
 };
 
 static bool T = true;
@@ -73,6 +73,7 @@ content_type_header(struct ctx *ctx, const uint8_t c) {
                 ctx->msg_content_type_field_detected = &F;
                 break;
         }
+        
         e = e->next;
     } while (e != NULL);
 }
@@ -101,27 +102,34 @@ content_type_value(struct ctx *ctx, const uint8_t c) {
 static void
 mime_msg(struct ctx *ctx, const uint8_t c) {
     const struct parser_event* e = parser_feed(ctx->msg, c);
-
     do {
         debug("1.   msg", mime_msg_event, e);
         int aux;
+        printf("data= %p\n",ctx->process_modification_mail);
+        printf("Current letter: %c\n",e->data[0]);
+        printf("cuurent point letter: %c\n",ctx->process_modification_mail[0]);
         switch(e->type) {
             case MIME_MSG_NAME:
                 if( ctx->msg_content_type_field_detected == 0
                 || *ctx->msg_content_type_field_detected) {
                     for(int i = 0; i < e->n; i++) {
                         content_type_header(ctx, e->data[i]);
+                        printf("Current letter: %c\n",e->data[0]);
+                        (ctx->process_modification_mail)[0]=e->data[0];
+                        (ctx->process_modification_mail)++;
                     }
+                }else{
+                    (ctx->process_modification_mail)[0]=e->data[0];
+                        (ctx->process_modification_mail)++;
                 }
-                ctx->process_modification_mail=e->data[0];
-                (ctx->process_modification_mail)++;
+                
                
                 break;
             case MIME_MSG_NAME_END:
                 // lo dejamos listo para el próximo header
                 parser_reset(ctx->ctype_header);
                 parser_reset(ctx->ctype_value);
-                ctx->process_modification_mail=e->data[0];
+                (ctx->process_modification_mail)[0]=e->data[0];
                 (ctx->process_modification_mail)++;
                 break;
             case MIME_MSG_VALUE:
@@ -131,20 +139,20 @@ mime_msg(struct ctx *ctx, const uint8_t c) {
                         content_type_value(ctx, e->data[i]);
                     }
                 }
-                ctx->process_modification_mail=e->data[0];
+                (ctx->process_modification_mail)[0]=e->data[0];
                 (ctx->process_modification_mail)++;
                 break;
             case MIME_MSG_VALUE_END:
                 // si parseabamos Content-Type ya terminamos
                 ctx->msg_content_type_field_detected = 0;
-                ctx->process_modification_mail=e->data[0];
+                (ctx->process_modification_mail)[0]=e->data[0];
                 (ctx->process_modification_mail)++;
                 break;
             case MIME_MSG_BODY:
                 printf("WUUUU ENTRE");
                 break;
             default:
-                ctx->process_modification_mail=e->data[0];
+                (ctx->process_modification_mail)[0]=e->data[0];
                 (ctx->process_modification_mail)++;
                 break;
         }
@@ -165,6 +173,8 @@ pop3_multi(struct ctx *ctx, const uint8_t c) {
                 }
                 break;
             case POP3_MULTI_WAIT:
+                (ctx->process_modification_mail)[0]=e->data[0];
+                //(ctx->process_modification_mail)++;
                 // nada para hacer mas que esperar
                 break;
             case POP3_MULTI_FIN:
