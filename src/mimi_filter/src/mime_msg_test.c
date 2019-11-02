@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <check.h>
 
-#include "parser.h"
+#include "../../include/parser_factory.h"
+#include "../../include/parser_utils.h"
 #include "mime_chars.h"
 #include "mime_msg.h"
 
@@ -76,7 +77,7 @@ START_TEST (test_mime_normal) {
     assert_eq_one    (MIME_MSG_VALUE,     'y',  e->next);
     ck_assert_ptr_eq (0,   e->next->next);
 
-    e = parser_feed  (p, '\r');
+    e = parser_feed  (p, '\r');parser
     assert_eq_empty  (MIME_MSG_WAIT,          e);
     ck_assert_ptr_eq (0,   e->next);
 
