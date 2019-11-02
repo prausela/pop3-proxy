@@ -7,6 +7,7 @@ all: proxy.c
 	gcc -o pop3_decrypt_parser parser_factory.c services/decrypt.c testing/pop3_decrypt_parser_test.c pop3_decrypt_parser.c parser_utils.c -g
 	gcc -o pop3_parser parser_factory.c parser_utils.c  pop3_singleline_response_parser.c pop3_multiline_response_parser.c pop3_parser.c testing/pop3_parser_test.c pop3_command_parser.c -g
 	gcc -Wall -o testing_transformations testing/transformation_testing.c services/transformations.c
+	gcc -Wall -o mime_filter ./mimi_filter/src/mime_chars.c ./mimi_filter/src/mime_msg.c ./mimi_filter/src/parser_utils.c ./mimi_filter/src/parser.c ./mimi_filter/src/pop3_multi.c ./mimi_filter/src/stripmime.c 
 
 clean:
 	$(RM) proxy
@@ -17,3 +18,4 @@ clean:
 	$(RM) pop3_decrypt_parser
 	$(RM) pop3_parser
 	$(RM) testing_transformations
+	$(RM) mime_filter

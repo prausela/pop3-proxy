@@ -40,6 +40,11 @@ enum mime_msg_event_type {
 
     /* se recibió un caracter que no se esperaba */
     MIME_MSG_UNEXPECTED,
+    /* I Can't move to another Content-Type header/boundry  */
+    MIME_MSG_BODY_CR,
+
+    /*Only place where i can match for new boundaries */
+    MIME_MSG_BODY_NEWLINE,
 };
 
 /** la definición del parser */

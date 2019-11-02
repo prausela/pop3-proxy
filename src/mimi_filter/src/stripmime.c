@@ -139,6 +139,7 @@ pop3_multi(struct ctx *ctx, const uint8_t c) {
                 break;
         }
         e = e->next;
+        getchar();
     } while (e != NULL);
 }
 
