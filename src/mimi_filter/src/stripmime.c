@@ -7,7 +7,7 @@
 #include "pop3_multi.h"
 #include "mime_chars.h"
 #include "mime_msg.h"
-
+static char * filter_msg = "text/plain";
 /*
  * imprime información de debuging sobre un evento.
  *
@@ -43,6 +43,7 @@ struct ctx {
     struct parser* msg;
     /* detector de field-name "Content-Type" */
     struct parser* ctype_header;
+    struct parser* ctype_value;
 
     /* ¿hemos detectado si el field-name que estamos procesando refiere
      * a Content-Type?. Utilizando dentro msg para los field-name.
@@ -74,6 +75,22 @@ content_type_header(struct ctx *ctx, const uint8_t c) {
         e = e->next;
     } while (e != NULL);
 }
+static void
+content_type_value(struct ctx *ctx, const uint8_t c) {
+    const struct parser_event* e = parser_feed(ctx->ctype_value, c);
+    do {
+        debug("3.typehr", parser_utils_strcmpi_event, e);
+        switch(e->type) {
+            case STRING_CMP_EQ:
+                printf("Hola");
+                break;
+            case STRING_CMP_NEQ:
+                printf("Chau");
+                break;
+        }
+        e = e->next;
+    } while (e != NULL);
+}
 
 /**
  * Procesa un mensaje `tipo-rfc822'.
@@ -86,6 +103,7 @@ mime_msg(struct ctx *ctx, const uint8_t c) {
 
     do {
         debug("1.   msg", mime_msg_event, e);
+        int aux;
         switch(e->type) {
             case MIME_MSG_NAME:
                 if( ctx->msg_content_type_field_detected == 0
@@ -94,17 +112,18 @@ mime_msg(struct ctx *ctx, const uint8_t c) {
                         content_type_header(ctx, e->data[i]);
                     }
                 }
+               
                 break;
             case MIME_MSG_NAME_END:
                 // lo dejamos listo para el próximo header
                 parser_reset(ctx->ctype_header);
-                ctx->msg_content_type_field_detected = NULL;
+                parser_reset(ctx->ctype_value);
                 break;
             case MIME_MSG_VALUE:
                 if(ctx->msg_content_type_field_detected != 0
-                && ctx->msg_content_type_field_detected) {
+                && ctx->msg_content_type_field_detected == &T) {
                     for(int i = 0; i < e->n; i++) {
-                        // TODO (juan) content_type_value(ctx, e->data[i]);
+                        content_type_value(ctx, e->data[i]);
                     }
                 }
                 break;
@@ -157,11 +176,14 @@ main(const int argc, const char **argv) {
     const unsigned int* no_class = parser_no_classes();
     struct parser_definition media_header_def =
             parser_utils_strcmpi("content-type");
+    struct parser_definition media_value_def =
+            parser_utils_strcmpi("text/plain");
 
     struct ctx ctx = {
         .multi        = parser_init(no_class, pop3_multi_parser()),
         .msg          = parser_init(init_char_class(), mime_message_parser()),
         .ctype_header = parser_init(no_class, &media_header_def),
+        .ctype_value  = parser_init(no_class, &media_value_def),
     };
 
     uint8_t data[4096];
@@ -176,5 +198,7 @@ main(const int argc, const char **argv) {
     parser_destroy(ctx.multi);
     parser_destroy(ctx.msg);
     parser_destroy(ctx.ctype_header);
+    parser_destroy(ctx.ctype_value);
     parser_utils_strcmpi_destroy(&media_header_def);
+    parser_utils_strcmpi_destroy(&media_value_def);
 }
