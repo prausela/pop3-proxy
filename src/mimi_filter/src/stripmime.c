@@ -49,6 +49,7 @@ struct ctx {
      * a Content-Type?. Utilizando dentro msg para los field-name.
      */
     bool           *msg_content_type_field_detected;
+    int            *process_modification_mail;
 };
 
 static bool T = true;
@@ -112,12 +113,16 @@ mime_msg(struct ctx *ctx, const uint8_t c) {
                         content_type_header(ctx, e->data[i]);
                     }
                 }
+                ctx->process_modification_mail=e->data[0];
+                (ctx->process_modification_mail)++;
                
                 break;
             case MIME_MSG_NAME_END:
                 // lo dejamos listo para el próximo header
                 parser_reset(ctx->ctype_header);
                 parser_reset(ctx->ctype_value);
+                ctx->process_modification_mail=e->data[0];
+                (ctx->process_modification_mail)++;
                 break;
             case MIME_MSG_VALUE:
                 if(ctx->msg_content_type_field_detected != 0
@@ -126,10 +131,21 @@ mime_msg(struct ctx *ctx, const uint8_t c) {
                         content_type_value(ctx, e->data[i]);
                     }
                 }
+                ctx->process_modification_mail=e->data[0];
+                (ctx->process_modification_mail)++;
                 break;
             case MIME_MSG_VALUE_END:
                 // si parseabamos Content-Type ya terminamos
                 ctx->msg_content_type_field_detected = 0;
+                ctx->process_modification_mail=e->data[0];
+                (ctx->process_modification_mail)++;
+                break;
+            case MIME_MSG_BODY:
+                printf("WUUUU ENTRE");
+                break;
+            default:
+                ctx->process_modification_mail=e->data[0];
+                (ctx->process_modification_mail)++;
                 break;
         }
         e = e->next;
@@ -177,23 +193,29 @@ main(const int argc, const char **argv) {
     struct parser_definition media_header_def =
             parser_utils_strcmpi("content-type");
     struct parser_definition media_value_def =
-            parser_utils_strcmpi("text/plain");
+            parser_utils_strcmpi(" text/plain");
 
     struct ctx ctx = {
-        .multi        = parser_init(no_class, pop3_multi_parser()),
-        .msg          = parser_init(init_char_class(), mime_message_parser()),
-        .ctype_header = parser_init(no_class, &media_header_def),
-        .ctype_value  = parser_init(no_class, &media_value_def),
+        .multi                      = parser_init(no_class, pop3_multi_parser()),
+        .msg                        = parser_init(init_char_class(), mime_message_parser()),
+        .ctype_header               = parser_init(no_class, &media_header_def),
+        .ctype_value                = parser_init(no_class, &media_value_def),  
     };
 
     uint8_t data[4096];
     int n;
     do {
         n = read(fd, data, sizeof(data));
+        ctx.process_modification_mail=data;
         for(ssize_t i = 0; i < n ; i++) {
             pop3_multi(&ctx, data[i]);
         }
     } while(n > 0);
+    int i=0;
+    while(data[i]!=0){
+        printf("%c",data[i++]);
+
+    }
 
     parser_destroy(ctx.multi);
     parser_destroy(ctx.msg);
