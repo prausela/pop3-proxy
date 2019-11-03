@@ -29,7 +29,7 @@ static char* get_event_type(unsigned type){
  * source is the current string
  * encrypted_string is where the result of the string should be
  * */
-int encrypt(char *source , char *encrypted_string)
+int pop3_encrypt(char *source , char *encrypted_string)
 {
 	struct parser_event *event;
 	struct parser *parser   = pop3_encrypt_parser_init();

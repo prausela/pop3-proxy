@@ -183,7 +183,7 @@ void *runSocket(void *vargp)
 /*
         if (event->type==INTERNET_MSG_DATA)
         {
-          
+
           write(info->client_fd, buffer, bytes - trans_start);
           write(sender_pipe[1], buffer + trans_start, trans_end - trans_start +1);
           read(receiver_pipe[0], answer, trans_end - trans_start +1);

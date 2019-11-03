@@ -18,7 +18,7 @@ int main(){
     printf("An error has ocurred");
     return 1;
   }
- /* char message1[68000] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam odio quam, blandit sed facilisis bibendum, volutpat id quam. Nullam condimentum nisi vel ultrices interdum. Ut vel dolor non erat placerat hendrerit vitae eget felis. Suspendisse rhoncus viverra nunc, et fringilla turpis varius et. Pellentesque luctus luctus nulla ac bibendum. Aenean molestie vitae nisl ut tincidunt. Donec vulputate, neque vitae ultrices accumsan, felis massa placerat nunc, sed ultrices urna turpis id dolor. Nunc et augue diam. Phasellus finibus laoreet lorem ac varius. Sed condimentum lobortis justo eu eleifend. Fusce nisi tellus, vehicula in venenatis eget, placerat non nibh. Maecenas viverra volutpat consectetur. Maecenas in bibendum urna. Donec ac diam auctor, imperdiet libero non, facilisis massa. Maecenas dapibus hendrerit sagittis.
+ /*char message1[68000] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam odio quam, blandit sed facilisis bibendum, volutpat id quam. Nullam condimentum nisi vel ultrices interdum. Ut vel dolor non erat placerat hendrerit vitae eget felis. Suspendisse rhoncus viverra nunc, et fringilla turpis varius et. Pellentesque luctus luctus nulla ac bibendum. Aenean molestie vitae nisl ut tincidunt. Donec vulputate, neque vitae ultrices accumsan, felis massa placerat nunc, sed ultrices urna turpis id dolor. Nunc et augue diam. Phasellus finibus laoreet lorem ac varius. Sed condimentum lobortis justo eu eleifend. Fusce nisi tellus, vehicula in venenatis eget, placerat non nibh. Maecenas viverra volutpat consectetur. Maecenas in bibendum urna. Donec ac diam auctor, imperdiet libero non, facilisis massa. Maecenas dapibus hendrerit sagittis.
 
 Vestibulum eleifend hendrerit lectus id tincidunt. Quisque vulputate eleifend hendrerit. Nulla tortor leo, lacinia ut mi nec, tempus sollicitudin nisl. Praesent egestas semper dignissim. Nulla accumsan libero sit amet justo rhoncus condimentum. Mauris ut est et nisl sodales venenatis. Donec diam metus, ornare vel suscipit eget, volutpat eu mauris. Cras vitae fermentum risus, in aliquam ante. Pellentesque id condimentum elit. Nunc porttitor justo et purus pretium elementum eu eu nunc. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Cras a odio in quam laoreet aliquam. Curabitur sit amet egestas ipsum. Suspendisse potenti. Nam porttitor ex vitae lorem convallis, ac condimentum ante scelerisque. Proin ultrices consequat felis et pulvinar.
 
@@ -231,7 +231,7 @@ Sed sollicitudin turpis quis ipsum ultricies maximus. Aenean auctor lectus sem, 
 Pellentesque ex nibh, venenatis eu gravida id, ornare a nisl. Integer at lorem vel tortor pharetra pellentesque. Praesent iaculis pretium convallis. Donec nisl elit, porttitor at felis nec, dignissim pellentesque erat. Vestibulum interdum rutrum nulla sit amet sollicitudin. Phasellus eu nunc nec metus feugiat hendrerit euismod sed ex. Sed euismod eget libero eu mollis. Curabitur tristique eu libero eu pharetra. Curabitur quis auctor felis. Pellentesque nec fringilla mi. In iaculis, orci non lobortis mattis, eros mauris mattis mi, ac rhoncus dui massa sit amet nisi. Morbi imperdiet ligula leo, sit amet cursus dui aliquam a. Sed urna purus, gravida at mattis at, fringilla nec felis. Curabitur sed est turpis. Morbi a placerat sem.
 
 Donec eleifend, mi sed vulputate aliquam, nisi dui pharetra neque, non commodo ante neque id metus. Quisque sed quam in ipsum bibendum tristique. Nam semper suscipit metus, vel ornare turpis tempor vitae. In vulputate sit amet turpis eu euismod. Fusce sed ligula nec nunc consectetur cursus quis ac ex. Nullam efficitur convallis magna eget tincidunt. Aenean egestas leo sed eros molestie, at gravida est efficitur. Cras eu tristique orci. Fusce vulputate, orci ac maximus interdum, metus nisl molestie risus, nec accumsan felis sem vitae diam. Etiam placerat nisi interdum ex elementum, vel efficitur justo efficitur. Fusce eget feugiat orci, nec laoreet leo. Fusce euismod, lorem nec venenatis lobortis, elit lorem dapibus mi, ac efficitur sapien odio nec ligula. Aliquam imperdiet, ligula consectetur ultrices facilisis, nisi mi finibus nibh, sit amet ornare amet.";
-  */while(1){
+  while(1){
     sleep(2);
     printf("Writing to pipe:\n");
     write(sender_pipe[1],message1,68000);
@@ -241,5 +241,5 @@ Donec eleifend, mi sed vulputate aliquam, nisi dui pharetra neque, non commodo a
     read(receiver_pipe[0],message,68000);
     printf("Lei: %s\n", message);
   }
-
+*/
 }

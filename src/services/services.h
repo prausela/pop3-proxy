@@ -4,7 +4,7 @@
 int is_valid_ip_address(char *ipAddress);
 int hostname_to_ip(char * hostname, char *ip);
 int create_transformation(int * sender_pipe, int * receiver_pipe);
-int encrypt(char *source , char *encrypted_string);
+int pop3_encrypt(char *source , char *encrypted_string);
 int decrypt(char *source , char *decrypted_string);
 
 #endif
