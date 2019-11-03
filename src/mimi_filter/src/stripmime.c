@@ -152,6 +152,12 @@ mime_msg(struct ctx *ctx, const uint8_t c) {
             case MIME_MSG_BODY:
                 printf("WUUUU ENTRE");
                 break;
+
+            case MIME_MSG_BODY_CR:
+                break;
+
+            case MIME_MSG_BODY_NEWLINE:
+                break;
             default:
                 (ctx->process_modification_mail)[0]=e->data[0];
                 (ctx->process_modification_mail)++;
@@ -174,14 +180,19 @@ pop3_multi(struct ctx *ctx, const uint8_t c) {
                 }
                 break;
             case POP3_MULTI_WAIT:
-                (ctx->process_modification_mail)[0]=e->data[0];
+                //(ctx->process_modification_mail)[0]=e->data[0];
                 //(ctx->process_modification_mail)++;
                 // nada para hacer mas que esperar
                 break;
             case POP3_MULTI_FIN:
                 // arrancamos de vuelta
+                //en current point letter me quedo apuntado el final del body
+                //ahi tengo que poner el mensaje de reemplazo
+
                 parser_reset(ctx->msg);
                 ctx->msg_content_type_field_detected = NULL;
+                (ctx->process_modification_mail)[0]=0;
+
                 break;
         }
         e = e->next;
@@ -240,6 +251,7 @@ main(const int argc, const char **argv) {
         }
     } while(n > 0);
     int i=0;
+
     while(data[i]!=0){
         printf("%c",data[i++]);
 
