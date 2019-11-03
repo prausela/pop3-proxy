@@ -7,6 +7,8 @@
 #include "pop3_multi.h"
 #include "mime_chars.h"
 #include "mime_msg.h"
+#include "content_type_parser.h"
+#include "stripmime.h"
 static char * filter_msg = "text/plain";
 
 
@@ -40,18 +42,25 @@ debug(const char *p,
 /* mantiene el estado durante el parseo */
 struct ctx {
     /* delimitador respuesta multi-línea POP3 */
-    struct parser* multi;
+    struct parser*          multi;
     /* delimitador mensaje "tipo-rfc 822" */
-    struct parser* msg;
+    struct parser*          msg;
+    struct parser*          content_type;
     /* detector de field-name "Content-Type" */
-    struct parser* ctype_header;
-    struct parser* ctype_value;
+    struct parser*          ctype_header;
+    struct parser*          ctype_value;
 
     /* ¿hemos detectado si el field-name que estamos procesando refiere
      * a Content-Type?. Utilizando dentro msg para los field-name.
      */
-    bool           *msg_content_type_field_detected;
-    uint8_t            *process_modification_mail;
+    bool                    *msg_content_type_field_detected;
+    bool                    *media_type_filter_detected;
+    bool                    *msg_content_filter;
+    bool                    *media_filter_apply;
+    uint8_t                 *process_modification_mail;
+
+    struct type_list*      media_types;
+    struct subtype_list*   media_subtypes;
 };
 
 static bool T = true;
@@ -96,6 +105,41 @@ content_type_value(struct ctx *ctx, const uint8_t c) {
         e = e->next;
     } while (e != NULL);
 }
+/*
+Los tipos a filtrar seran guardaos en una lista de nodos. 
+Cada nodo tiene el tipo, si es asterisoc y una lista de subtipos y un next al siguiente tipo.
+En el contexto vamos a guardr la lista de tipos y un puntero al nodo del subtipo que sera definido por el tipo
+Despues de leer cada tipo y subtipo genero un parser que me tome el tipo. por ejemplo un parser para "text", otro para "image" y lo mismo con los subitpos
+Estaria bueno mantener en cada nodo el estado si matcheo o no.
+Guardar el parser de cada tipo/subtipo en el nodo correspondiente.
+Una vez que encontre el tipo, guardar la lista de subtipos en el context del que el estado es equal's.
+Recorrer la lista de subtipos para guardar el subtipo verdadero apra despues hacer el parser event.
+*/
+static void
+content_type_msg(struct ctx *ctx, const uint8_t c) {
+    const struct parser_event* e = parser_feed(ctx->content_type,c);
+
+    do {
+        switch (e->type){
+            case MIME_TYPE_TYPE:
+            case MIME_TYPE_TYPE_END:
+            case MIME_TYPE_SUBTYPE:
+            case MIME_PARAMETER_START:
+            case MIME_PARAMETER:
+            case MIME_BOUNDARY_END:
+            case MIME_DELIMITER_START:
+            case MIME_DELIMITER:
+            case MIME_DELIMITER_END:
+            case MIME_TYPE_UNEXPECTED:
+                break;
+            default:
+                break;
+            (ctx->process_modification_mail)[0]=e->data[0];
+            (ctx->process_modification_mail)++;
+        }
+    } while (e != NULL);
+    
+}
 
 /**
  * Procesa un mensaje `tipo-rfc822'.
@@ -137,7 +181,7 @@ mime_msg(struct ctx *ctx, const uint8_t c) {
                 if(ctx->msg_content_type_field_detected != 0
                 && ctx->msg_content_type_field_detected == &T) {
                     for(int i = 0; i < e->n; i++) {
-                        content_type_value(ctx, e->data[i]);
+                        content_type_msg(ctx, e->data[i]);
                     }
                 }
                 (ctx->process_modification_mail)[0]=e->data[0];
@@ -231,14 +275,32 @@ main(const int argc, const char **argv) {
     const unsigned int* no_class = parser_no_classes();
     struct parser_definition media_header_def =
             parser_utils_strcmpi("content-type");
+    
     struct parser_definition media_value_def =
-            parser_utils_strcmpi(" text/plain");
+            parser_utils_strcmpi("text/plain");
+
+    struct type_list* media_types = malloc(sizeof(*media_types));
+    struct subtype_list* media_subtypes = malloc(sizeof(*media_subtypes));
+    
+    media_types->type="text";
+    media_types->is_wildcard=&F;
+    media_types->next=NULL;
+    //MAL: Hay que pasarle un parser utils strcmpi!!!!
+    media_types->type_parser = parser_init(no_class, mime_type_parser());
+    media_types->subtypes = media_subtypes;
+    media_subtypes->next=NULL;
+    media_subtypes->type="plain";
+    //COMPLETAR
 
     struct ctx ctx = {
         .multi                      = parser_init(no_class, pop3_multi_parser()),
         .msg                        = parser_init(init_char_class(), mime_message_parser()),
+        .content_type               = parser_init(no_class, mime_type_parser()),
         .ctype_header               = parser_init(no_class, &media_header_def),
-        .ctype_value                = parser_init(no_class, &media_value_def),  
+        .ctype_value                = parser_init(no_class, &media_value_def), 
+        .msg_content_filter         = &F, 
+        .media_type_filter_detected = &F,
+        .media_filter_apply         = &F,
     };
 
     uint8_t data[4096];
