@@ -199,11 +199,10 @@ printctx(struct ctx *ctx){
             printf("message CT detected FALSE\n");
         }
     }
-    else
-    {
+    else{
         printf("message CT detected NULL\n");
     }          
-        printf("data= %p\n",ctx->process_modification_mail);
+    printf("data= %p\n",ctx->process_modification_mail);
         printf("current point letter: %c\n",ctx->process_modification_mail[0]);
 }
 

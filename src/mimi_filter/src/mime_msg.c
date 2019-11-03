@@ -111,7 +111,7 @@ body(struct parser_event *ret, const uint8_t c) {
 }
 
 static void
-body_cr(struct parser_event *ret, const uint8_t c) {
+body_crlf(struct parser_event *ret, const uint8_t c) {
     ret->type    = MIME_MSG_BODY_CR;
     ret->n       = 1;
     ret->data[0] = c;
@@ -189,7 +189,7 @@ static const struct parser_state_transition ST_VALUE_CRLF_CR[] =  {
 };
 
 static const struct parser_state_transition ST_BODY[] =  {
-    {.when = '\r',       .dest=BODY_CR,          .act1 = body_cr,},
+    {.when = '\r',       .dest=BODY_CR,          .act1 = body_crlf,},
     {.when = ANY,        .dest = BODY,           .act1 = body,},
 };
 
@@ -277,6 +277,14 @@ mime_msg_event(enum mime_msg_event_type type) {
             break;
         case MIME_MSG_UNEXPECTED:
             ret = "unexepected(c)";
+            break;
+        case MIME_MSG_BODY_CR:
+            ret = "body_cr(c)";
+            break;
+        case MIME_MSG_BODY_NEWLINE:
+            ret = "body_newline(c)";
+            break;
+        default:
             break;
     }
     return ret;
