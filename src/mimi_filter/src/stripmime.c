@@ -8,6 +8,8 @@
 #include "mime_chars.h"
 #include "mime_msg.h"
 static char * filter_msg = "text/plain";
+
+
 /*
  * imprime información de debuging sobre un evento.
  *
@@ -54,7 +56,8 @@ struct ctx {
 
 static bool T = true;
 static bool F = false;
-
+void 
+printctx(struct ctx *ctx);
 /* Detecta si un header-field-name equivale a Content-Type.
  * Deja el valor en `ctx->msg_content_type_field_detected'. Tres valores
  * posibles: NULL (no tenemos información suficiente todavia, por ejemplo
@@ -105,16 +108,14 @@ mime_msg(struct ctx *ctx, const uint8_t c) {
     do {
         debug("1.   msg", mime_msg_event, e);
         int aux;
-        printf("data= %p\n",ctx->process_modification_mail);
-        printf("Current letter: %c\n",e->data[0]);
-        printf("cuurent point letter: %c\n",ctx->process_modification_mail[0]);
+        printf("Current letter parser feed: %c\n",e->data[0]);
+        printctx(ctx);
         switch(e->type) {
             case MIME_MSG_NAME:
                 if( ctx->msg_content_type_field_detected == 0
                 || *ctx->msg_content_type_field_detected) {
                     for(int i = 0; i < e->n; i++) {
                         content_type_header(ctx, e->data[i]);
-                        printf("Current letter: %c\n",e->data[0]);
                         (ctx->process_modification_mail)[0]=e->data[0];
                         (ctx->process_modification_mail)++;
                     }
@@ -145,8 +146,8 @@ mime_msg(struct ctx *ctx, const uint8_t c) {
             case MIME_MSG_VALUE_END:
                 // si parseabamos Content-Type ya terminamos
                 ctx->msg_content_type_field_detected = 0;
-                (ctx->process_modification_mail)[0]=e->data[0];
-                (ctx->process_modification_mail)++;
+                // (ctx->process_modification_mail)[0]=e->data[0];
+                // (ctx->process_modification_mail)++;
                 break;
             case MIME_MSG_BODY:
                 printf("WUUUU ENTRE");
@@ -186,6 +187,24 @@ pop3_multi(struct ctx *ctx, const uint8_t c) {
         e = e->next;
         getchar();
     } while (e != NULL);
+}
+
+void 
+printctx(struct ctx *ctx){
+    if(ctx->msg_content_type_field_detected != 0){
+        if(ctx->msg_content_type_field_detected == &T){
+            printf("message CT detected TRUE\n");
+        }
+        else{
+            printf("message CT detected FALSE\n");
+        }
+    }
+    else
+    {
+        printf("message CT detected NULL\n");
+    }          
+        printf("data= %p\n",ctx->process_modification_mail);
+        printf("current point letter: %c\n",ctx->process_modification_mail[0]);
 }
 
 int
