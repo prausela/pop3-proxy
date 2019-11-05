@@ -55,7 +55,7 @@ Para correr el pop3 command test
 
 
 ## Referencias
-Stack.c: https://www.geeksforgeeks.org/
+Stack.c: 
 
 ## Authors
 

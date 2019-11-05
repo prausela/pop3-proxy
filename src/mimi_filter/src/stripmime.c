@@ -1,15 +1,5 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdbool.h>
-#include <stdlib.h>
-
-#include "parser_utils.h"
-#include "pop3_multi.h"
-#include "mime_chars.h"
-#include "mime_msg.h"
-#include "content_type_parser.h"
 #include "stripmime.h"
+
 static char * filter_msg = "text/plain";
 
 
@@ -51,6 +41,12 @@ struct ctx {
     struct parser*          ctype_header;
     struct parser*          ctype_value;
 
+    //parsea la palabra boundary en el header
+    struct parser*          boundary;
+
+    //pusheo los boundaries encontrados
+    struct stack*           boundary_stack;
+
     /* ¿hemos detectado si el field-name que estamos procesando refiere
      * a Content-Type?. Utilizando dentro msg para los field-name.
      */
@@ -60,8 +56,25 @@ struct ctx {
     bool                    *media_filter_apply;
     uint8_t                 *process_modification_mail;
 
+    //se declaro un boundry en el header?
+    bool                    *boundary_detected;
+
+    //el ultimo caracter leido en el body es un -?
+    bool                    *is_middle_dash;
+
+    //los ultimos dos leidos son --?
+    bool                    *double_middle_dash;
+
+    //esa linea puede ser un boundry? Si no arranca con - la linea, lo pongo en false
+    bool                    *possible_boundary;
+    
+
     struct type_list*      media_types;
     struct subtype_list*   media_subtypes;
+
+    //cambiar y hacer con linked list pero no me salia
+    char                   possible_boundary_string[10];
+
 };
 
 static bool T = true;
@@ -88,6 +101,28 @@ content_type_header(struct ctx *ctx, const uint8_t c) {
         }
         
         e = e->next;
+    } while (e != NULL);
+}
+
+/* Detecta un boundary */
+static void boundary_analizer(struct ctx * ctx, const uint8_t c) {
+    const struct parser_event * e = parser_feed(ctx->boundary, c);
+
+    do {
+
+        switch (e->type) {
+            case STRING_CMP_EQ:
+                ctx->boundary_detected = &T;
+                break;
+            case STRING_CMP_NEQ:
+                ctx->boundary_detected = &F;
+                break;
+            default:
+                break;
+        }
+
+        e = e->next;
+
     } while (e != NULL);
 }
 static void
@@ -203,7 +238,7 @@ content_type_msg(struct ctx* ctx, const uint8_t c) {
                     }
                 }
                 break;
-            case MIME_PARAMETER_START:
+             case MIME_PARAMETER_START:
             case MIME_PARAMETER:
             case MIME_BOUNDARY_END:
             case MIME_DELIMITER_START:
@@ -221,6 +256,18 @@ content_type_msg(struct ctx* ctx, const uint8_t c) {
     
 }
 
+
+/*
+Los tipos a filtrar seran guardaos en una lista de nodos. 
+Cada nodo tiene el tipo, si es asterisoc y una lista de subtipos y un next al siguiente tipo.
+En el contexto vamos a guardr la lista de tipos y un puntero al nodo del subtipo que sera definido por el tipo
+Despues de leer cada tipo y subtipo genero un parser que me tome el tipo. por ejemplo un parser para "text", otro para "image" y lo mismo con los subitpos
+Estaria bueno mantener en cada nodo el estado si matcheo o no.
+Guardar el parser de cada tipo/subtipo en el nodo correspondiente.
+Una vez que encontre el tipo, guardar la lista de subtipos en el context del que el estado es equal's.
+Recorrer la lista de subtipos para guardar el subtipo verdadero apra despues hacer el parser event.
+*/
+
 /**
  * Procesa un mensaje `tipo-rfc822'.
  * Si reconoce un al field-header-name Content-Type lo interpreta.
@@ -229,6 +276,10 @@ content_type_msg(struct ctx* ctx, const uint8_t c) {
 static void
 mime_msg(struct ctx *ctx, const uint8_t c) {
     const struct parser_event* e = parser_feed(ctx->msg, c);
+    //para no entrar a -- si estoy parada ahi
+    int set=0;
+    int i=0;
+
     do {
         debug("1.   msg", mime_msg_event, e);
         printf("Current letter parser feed: %c\n",e->data[0]);
@@ -258,7 +309,7 @@ mime_msg(struct ctx *ctx, const uint8_t c) {
                 if(ctx->msg_content_type_field_detected != 0
                 && ctx->msg_content_type_field_detected == &T) {
                     for(int i = 0; i < e->n; i++) {
-                        content_type_msg(ctx, e->data[i]);
+                        content_type_value(ctx, e->data[i]);
                     }
                 }
                 (ctx->process_modification_mail)[0]=e->data[0];
@@ -271,18 +322,77 @@ mime_msg(struct ctx *ctx, const uint8_t c) {
                 // (ctx->process_modification_mail)++;
                 break;
             case MIME_MSG_BODY:
-                if(*ctx->media_filter_apply){
-                    fprintf(stderr,"error");
-                }else{
-                    (ctx->process_modification_mail)[0]=e->data[0];
-                    (ctx->process_modification_mail)++;
+            printf("Mime Body\n");
+                if(ctx->boundary_detected!=0 && ctx->boundary_detected==&T){
+                    printf("No deberia entrar\n");
+                    if(e->data[0]=='-'){
+                        //tengo que setear el possible boundry cuando arranca la linea
+                        ctx->possible_boundary=&T;
+                        if(ctx->possible_boundary!=0 && ctx->possible_boundary==&T){
+                            if(ctx->is_middle_dash!=0 && ctx->is_middle_dash==&T){
+                                //consegui dos guiones juntos, guardo todo lo que 
+                                //sigue (hasta el new line) para compararlo con el ultimo del stack,
+                                ctx->double_middle_dash=&T;
+                            }
+                        }
+                    }
+                    //se me va a poner el - en el possible string, sacarlo.
+                    if(ctx->double_middle_dash!=0 && ctx->double_middle_dash==&T){
+                        printf("No deberia entrar x2\n");
+
+                        int i=0;
+                        while(ctx->possible_boundary_string[i] != 0){
+                            i++;
+                        }
+                        ctx->possible_boundary_string[i++]=e->data[0];
+                        ctx->possible_boundary_string[i]=0;
+                        i=0;
+                        printf("String armandose:");
+                        while(ctx->possible_boundary_string[i] != 0){
+                            printf("%c",ctx->possible_boundary_string[i]);
+                            i++;
+                        }
+                        printf("\n");
+                    }
+                
                 }
+                if(e->data[0]=='-'){
+                    printf("No deberia entrar x3\n");
+                    ctx->is_middle_dash=&T;
+                }
+                else
+                {
+                    ctx->is_middle_dash=&F;                
+                }              
                 break;
 
             case MIME_MSG_BODY_CR:
                 break;
 
             case MIME_MSG_BODY_NEWLINE:
+                if(ctx->double_middle_dash!=0 && ctx->double_middle_dash==&T){
+                    printf("Boundry String: ");
+                    while(ctx->possible_boundary_string[i] != 0){
+                        printf("%c",ctx->possible_boundary_string[i]);
+                        i++;
+                    }
+                    printf("\n");
+                }
+                i=0;
+                while(ctx->possible_boundary_string[i] != 0){
+                    (ctx->process_modification_mail)[0]=ctx->possible_boundary_string[i];
+                    (ctx->process_modification_mail)++;
+                    i++;
+                }  
+                i=0;
+                while(ctx->possible_boundary_string[i] != 0){
+                    ctx->possible_boundary_string[i++]=0;
+                }
+                
+                ctx->is_middle_dash=&F;
+                ctx->double_middle_dash=&F;
+                ctx->possible_boundary=&F;
+            
                 break;
             default:
                 (ctx->process_modification_mail)[0]=e->data[0];
@@ -297,6 +407,10 @@ mime_msg(struct ctx *ctx, const uint8_t c) {
 static void
 pop3_multi(struct ctx *ctx, const uint8_t c) {
     const struct parser_event* e = parser_feed(ctx->multi, c);
+    // printf("STRING en pop3: ");
+    // for(int i=0;i<10;i++){
+    //     printf("%d",ctx->possible_boundry_string[i]);
+    // }
     do {
         debug("0. multi", pop3_multi_event,  e);
         switch (e->type) {
@@ -312,9 +426,7 @@ pop3_multi(struct ctx *ctx, const uint8_t c) {
                 break;
             case POP3_MULTI_FIN:
                 // arrancamos de vuelta
-                //en current point letter me quedo apuntado el final del body
-                //ahi tengo que poner el mensaje de reemplazo
-
+                
                 parser_reset(ctx->msg);
                 parser_reset(ctx->content_type);
                 ctx->msg_content_type_field_detected = NULL;
@@ -377,6 +489,8 @@ main(const int argc, const char **argv) {
     media_subtypes->is_wildcard=&F;
     media_subtypes->type_parser = parser_init(no_class,&subtype1);
 
+
+
     struct ctx ctx = {
         .multi                      = parser_init(no_class, pop3_multi_parser()),
         .msg                        = parser_init(init_char_class(), mime_message_parser()),
@@ -388,6 +502,10 @@ main(const int argc, const char **argv) {
         .media_filter_apply         = &F,
         .media_types                = media_types,
         .media_subtypes             = NULL,
+        .boundary_detected           = &F,
+        .possible_boundary_string    = {0,0,0,0,0,0,0,0,0,0},
+        .boundary_detected           = &T,
+        .double_middle_dash         = &F,
     };
     
     uint8_t data[4096];
@@ -413,3 +531,4 @@ main(const int argc, const char **argv) {
     parser_utils_strcmpi_destroy(&media_header_def);
     parser_utils_strcmpi_destroy(&media_value_def);
 }
+
