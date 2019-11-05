@@ -38,5 +38,6 @@ enum mime_type_event_type {
 };
 
 const struct parser_definition * mime_type_parser(void);
-
+const char * 
+content_type_msg_event(enum mime_type_event_type type);
 #endif

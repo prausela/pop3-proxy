@@ -173,3 +173,42 @@ static struct parser_definition definition = {
 const struct parser_definition * mime_type_parser(void) {
     return &definition;
 }
+
+
+const char * 
+content_type_msg_event(enum mime_type_event_type type){
+    const char *ret;
+    switch(type) {
+        case MIME_TYPE_TYPE:
+          ret = "type(c)";
+          break;
+        case MIME_TYPE_TYPE_END:
+            ret = "type_end('/')";
+            break;
+        case MIME_TYPE_SUBTYPE:
+            ret = "subtype(c)";
+            break;
+        case MIME_PARAMETER_START:
+            ret = "param_start(;)";
+            break;
+        case MIME_PARAMETER:
+            ret = "param(c)";
+            break;
+        case MIME_BOUNDARY_END:
+            ret = "bound_end(=)";
+            break;
+        case MIME_DELIMITER_START:
+            ret = "del_start(\")";
+            break;
+        case MIME_DELIMITER:
+            ret = "del(c)";
+            break;
+        case MIME_DELIMITER_END:
+            ret = "del_end(\")";
+            break;
+        default:
+            ret = "error";
+            break;
+    }
+    return ret;
+}

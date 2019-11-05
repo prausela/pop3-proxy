@@ -10,10 +10,8 @@ struct type_list
 {
     /** Media type name */
     char* type;
-    /** Flag to check if types is a wildcard */
-    bool* is_wildcard;
     /** Status to check if the string matched the parser */
-    uint8_t status;
+    struct parser_event* event;
     /* Parser that checks if the name matched the input*/
     struct parser* type_parser;
     /** lista de eventos: si es diferente de null ocurrieron varios eventos */
@@ -28,8 +26,9 @@ struct subtype_list
 {
     /** Media substype name */
     char* type;
+    bool* is_wildcard;
     /** Status to check if the string matched the parser */
-    uint8_t status;
+    struct parser_event* event;
     /* Parser that checks if the name matched the input*/
     struct parser* type_parser;
     /** lista de eventos: si es diferente de null ocurrieron varios eventos */

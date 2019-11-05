@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "parser_utils.h"
 #include "pop3_multi.h"
@@ -105,6 +106,68 @@ content_type_value(struct ctx *ctx, const uint8_t c) {
         e = e->next;
     } while (e != NULL);
 }
+
+static void
+content_subtype_match(struct ctx* ctx,const uint8_t c){
+    struct subtype_list* subtype_list = ctx->media_subtypes;
+    struct parser_event * current;
+    if(subtype_list->is_wildcard != 0 && *subtype_list->is_wildcard){
+        current             = malloc(sizeof(*current));
+        current->type       = STRING_CMP_EQ;
+        current->data[0]    = c;
+        current->n          = 1;
+    } else {
+        subtype_list->event = parser_feed(subtype_list->type_parser,c);
+        current             = subtype_list->event;
+
+        while (subtype_list->next != NULL) {
+            subtype_list        = subtype_list->next;
+            subtype_list->event = parser_feed(subtype_list->type_parser,c);
+
+            if(subtype_list->event->type == STRING_CMP_EQ){
+                current = subtype_list->event;
+            }
+        }
+    }
+    if(current->type == STRING_CMP_EQ){
+        //Match found!
+        ctx->media_filter_apply = &T;
+    }else{
+        //Overwriting just in case
+        ctx->media_filter_apply = &F;
+    }
+}
+
+static void
+content_type_match(struct ctx* ctx,const uint8_t c){
+    struct type_list* type_list = ctx->media_types;
+    if(type_list == NULL){
+       //TODO: Error handling!!
+       return;
+    }
+    
+    /* Leave in current*/
+    struct parser_event * current;
+    type_list->event = parser_feed(type_list->type_parser,c);
+    current = type_list->event;
+    
+    while(type_list->next != NULL){
+        type_list=type_list->next;
+        type_list->event = parser_feed(type_list->type_parser,c);
+        if(type_list->event->type == STRING_CMP_EQ){
+            current = type_list->event;
+        }
+    }
+    if(current->type == STRING_CMP_EQ){
+        //Match found!
+        ctx->media_type_filter_detected = &T;
+        ctx->media_subtypes = type_list->subtypes;
+    }else{
+        //Overwriting just in case
+        ctx->media_type_filter_detected = &F;
+    }
+}
+
 /*
 Los tipos a filtrar seran guardaos en una lista de nodos. 
 Cada nodo tiene el tipo, si es asterisoc y una lista de subtipos y un next al siguiente tipo.
@@ -116,14 +179,30 @@ Una vez que encontre el tipo, guardar la lista de subtipos en el context del que
 Recorrer la lista de subtipos para guardar el subtipo verdadero apra despues hacer el parser event.
 */
 static void
-content_type_msg(struct ctx *ctx, const uint8_t c) {
+content_type_msg(struct ctx* ctx, const uint8_t c) {
     const struct parser_event* e = parser_feed(ctx->content_type,c);
-
+    debug("5.   ct_type", content_type_msg_event, e);
+    fprintf(stderr,"Current letter parser feed: %c\n",e->data[0]);
     do {
         switch (e->type){
             case MIME_TYPE_TYPE:
+                for(int i = 0; i < e->n; i++) {
+                    content_type_match(ctx, e->data[i]);
+                }
+                break;
             case MIME_TYPE_TYPE_END:
+                //Aca encontre el /
+                if(!(*ctx->media_type_filter_detected)){
+                    //Nothing to be done here! HELP
+                }
+                break;
             case MIME_TYPE_SUBTYPE:
+                if(*ctx->media_type_filter_detected){
+                    for(int i = 0;i < e->n;i++){
+                        content_subtype_match(ctx, e->data[0]);
+                    }
+                }
+                break;
             case MIME_PARAMETER_START:
             case MIME_PARAMETER:
             case MIME_BOUNDARY_END:
@@ -137,6 +216,7 @@ content_type_msg(struct ctx *ctx, const uint8_t c) {
             (ctx->process_modification_mail)[0]=e->data[0];
             (ctx->process_modification_mail)++;
         }
+        e = e->next;
     } while (e != NULL);
     
 }
@@ -151,7 +231,6 @@ mime_msg(struct ctx *ctx, const uint8_t c) {
     const struct parser_event* e = parser_feed(ctx->msg, c);
     do {
         debug("1.   msg", mime_msg_event, e);
-        int aux;
         printf("Current letter parser feed: %c\n",e->data[0]);
         printctx(ctx);
         switch(e->type) {
@@ -167,8 +246,6 @@ mime_msg(struct ctx *ctx, const uint8_t c) {
                     (ctx->process_modification_mail)[0]=e->data[0];
                         (ctx->process_modification_mail)++;
                 }
-                
-               
                 break;
             case MIME_MSG_NAME_END:
                 // lo dejamos listo para el próximo header
@@ -194,7 +271,12 @@ mime_msg(struct ctx *ctx, const uint8_t c) {
                 // (ctx->process_modification_mail)++;
                 break;
             case MIME_MSG_BODY:
-                printf("WUUUU ENTRE");
+                if(*ctx->media_filter_apply){
+                    fprintf(stderr,"error");
+                }else{
+                    (ctx->process_modification_mail)[0]=e->data[0];
+                    (ctx->process_modification_mail)++;
+                }
                 break;
 
             case MIME_MSG_BODY_CR:
@@ -234,6 +316,7 @@ pop3_multi(struct ctx *ctx, const uint8_t c) {
                 //ahi tengo que poner el mensaje de reemplazo
 
                 parser_reset(ctx->msg);
+                parser_reset(ctx->content_type);
                 ctx->msg_content_type_field_detected = NULL;
                 (ctx->process_modification_mail)[0]=0;
 
@@ -282,27 +365,31 @@ main(const int argc, const char **argv) {
     struct type_list* media_types = malloc(sizeof(*media_types));
     struct subtype_list* media_subtypes = malloc(sizeof(*media_subtypes));
     
-    media_types->type="text";
-    media_types->is_wildcard=&F;
+    struct parser_definition type1 =
+            parser_utils_strcmpi("text");
+    struct parser_definition subtype1 =
+            parser_utils_strcmpi("plain");
+
     media_types->next=NULL;
-    //MAL: Hay que pasarle un parser utils strcmpi!!!!
-    media_types->type_parser = parser_init(no_class, mime_type_parser());
+    media_types->type_parser = parser_init(no_class, &type1);
     media_types->subtypes = media_subtypes;
     media_subtypes->next=NULL;
-    media_subtypes->type="plain";
-    //COMPLETAR
+    media_subtypes->is_wildcard=&F;
+    media_subtypes->type_parser = parser_init(no_class,&subtype1);
 
     struct ctx ctx = {
         .multi                      = parser_init(no_class, pop3_multi_parser()),
         .msg                        = parser_init(init_char_class(), mime_message_parser()),
-        .content_type               = parser_init(no_class, mime_type_parser()),
+        .content_type               = parser_init(init_char_class(), mime_type_parser()),
         .ctype_header               = parser_init(no_class, &media_header_def),
         .ctype_value                = parser_init(no_class, &media_value_def), 
         .msg_content_filter         = &F, 
         .media_type_filter_detected = &F,
         .media_filter_apply         = &F,
+        .media_types                = media_types,
+        .media_subtypes             = NULL,
     };
-
+    
     uint8_t data[4096];
     int n;
     do {
