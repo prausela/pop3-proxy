@@ -40,6 +40,8 @@ uint8_t list_head(list *list, bool removeFromList);
 void list_tail(list *list, void *element);
 list* list_empty(list *list);
 char* list_return_string(list *list);
+uint8_t list_peek(list *list);
+char* list_ret_end_string(list *list1);
 
  
 #endif

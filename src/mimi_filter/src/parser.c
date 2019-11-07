@@ -46,6 +46,10 @@ parser_reset(struct parser *p) {
     p->state   = p->def->start_state;
 }
 
+void parser_set_state(struct parser *p,unsigned state){
+    p->state=state;
+}
+
 const struct parser_event *
 parser_feed(struct parser *p, const uint8_t c) {
     const unsigned type = p->classes[c];
@@ -88,4 +92,6 @@ const unsigned *
 parser_no_classes(void) {
     return classes;
 }
+
+
 

@@ -1,6 +1,7 @@
 #include "stripmime.h"
 #include <string.h>
 
+
 /*
  * imprime información de debuging sobre un evento.
  *
@@ -100,6 +101,21 @@ struct ctx
 static bool T = true;
 static bool F = false;
 void printctx(struct ctx *ctx);
+static void
+reset_parser_types_and_subtypes(struct ctx *ctx){
+    ctx->media_subtypes = NULL;
+    struct subtype_list *media_subtypes;
+    struct type_list *media_types = ctx->media_types;
+    while(media_types!=NULL){
+        parser_reset(media_types->type_parser);
+        media_subtypes   = media_types->subtypes;
+        while(media_subtypes != NULL){
+            parser_reset(media_types->type_parser);
+            media_subtypes = media_subtypes->next;
+        }
+        media_types = media_types->next;
+    }
+}
 /* Detecta si un header-field-name equivale a Content-Type.
  * Deja el valor en `ctx->msg_content_type_field_detected'. Tres valores
  * posibles: NULL (no tenemos información suficiente todavia, por ejemplo
@@ -179,7 +195,7 @@ boundary_charset_match(struct ctx *ctx, const uint8_t c)
     {
         fprintf(stderr, "LA CONCHA DE LA LORAAAA");
         ctx->multipart_section = &T;
-        ctx->boundary_detected=&T;
+        ctx->boundary_detected = &T;
     }
     else if (charset_parser_evt->type == STRING_CMP_EQ)
     {
@@ -389,10 +405,12 @@ content_type_msg(struct ctx *ctx, const uint8_t c)
             }
             break;
         case MIME_DELIMITER_END:
-            //printf("list return string %s\n",list_return_string(ctx->boundary_name));
+            printf("list return string %s\n", list_return_string(ctx->boundary_name));
+            printf("list return string2 %s\n", list_return_string(ctx->boundary_name));
+
             stack_push(ctx->boundry_stack, list_return_string(ctx->boundary_name));
             printf("STACK PEEK: %s\n", stack_peek(ctx->boundry_stack));
-            ctx->boundary_name=list_empty(ctx->boundary_name);
+            ctx->boundary_name = list_empty(ctx->boundary_name);
             if (ctx->multipart_section != NULL && *ctx->media_filter_apply && !*ctx->multipart_section)
             {
             }
@@ -437,7 +455,7 @@ static void
 mime_msg(struct ctx *ctx, const uint8_t c)
 {
     const struct parser_event *e = parser_feed(ctx->msg, c);
-    
+
     do
     {
         debug("1.   msg", mime_msg_event, e);
@@ -489,61 +507,66 @@ mime_msg(struct ctx *ctx, const uint8_t c)
             // (ctx->process_modification_mail)[0]=e->data[0];
             // (ctx->process_modification_mail)++;
             break;
+        case MIME_MSG_BODY_START:
+            (ctx->process_modification_mail)[0] = e->data[0];
+            (ctx->process_modification_mail)++;
+            (ctx->process_modification_mail)[0] = e->data[1];
+            (ctx->process_modification_mail)++;
+            break;
         case MIME_MSG_BODY:
             if (!*ctx->media_filter_apply)
             {
                 (ctx->process_modification_mail)[0] = e->data[0];
                 (ctx->process_modification_mail)++;
             }
-            
-                if (ctx->boundary_detected != 0 && ctx->boundary_detected == &T)
-                {
-                    if (e->data[0] == '-')
-                    {
-                        printf("LEO GUION\n");
-                        //tengo que setear el possible boundry cuando arranca la linea
-                        ctx->possible_boundary = &T;
-                        if (ctx->possible_boundary != 0 && ctx->possible_boundary == &T)
-                        {
-                            if (ctx->is_middle_dash != 0 && ctx->is_middle_dash == &T)
-                            {
-                                //consegui dos guiones juntos, guardo todo lo que
-                                //sigue (hasta el new line) para compararlo con el ultimo del stack,
-                                ctx->double_middle_dash = &T;
-                            }
-                        }
-                    }
-                    //estoy leyendo un boundary name?
-                    if (ctx->double_middle_dash != 0 && ctx->double_middle_dash == &T)
-                    {
-                        //si leo un - y es el primero, no lo pongo en el string
-                        if (!(e->data[0] == '-' && list_size(ctx->possible_boundary_string) == 0))
-                        {
-                            list_append(ctx->possible_boundary_string, e->data[0]);
-                        }
-                        //si encuentro un -- al final, prendo bool que encontre el boundary name end
-                        if (e->data[0] == '-' && list_size(ctx->possible_boundary_string) != 0)
-                        {
-                            (ctx->process_modification_mail)--;
-                            if (ctx->process_modification_mail[0] == '-')
-                            {
-                                //encontre dos -- al final
-                                ctx->boundary_end = &T;
-                            }
-                            (ctx->process_modification_mail)++;
-                        }
-                    }
-                }
 
+            if (ctx->boundary_detected != 0 && ctx->boundary_detected == &T)
+            {
                 if (e->data[0] == '-')
                 {
-                    ctx->is_middle_dash = &T;
+                    printf("LEO GUION\n");
+                    //tengo que setear el possible boundry cuando arranca la linea
+                    ctx->possible_boundary = &T;
+                    if (ctx->possible_boundary != 0 && ctx->possible_boundary == &T)
+                    {
+                        if (ctx->is_middle_dash != 0 && ctx->is_middle_dash == &T)
+                        {
+                            //consegui dos guiones juntos, guardo todo lo que
+                            //sigue (hasta el new line) para compararlo con el ultimo del stack,
+                            ctx->double_middle_dash = &T;
+                        }
+                    }
                 }
-                else
+                //estoy leyendo un boundary name?
+                if (ctx->double_middle_dash != 0 && ctx->double_middle_dash == &T)
                 {
-                    ctx->is_middle_dash = &F;
+                    //si leo un - y es el primero, no lo pongo en el string
+                    if (!(e->data[0] == '-' && list_size(ctx->possible_boundary_string) == 0))
+                    {
+                        list_append(ctx->possible_boundary_string, e->data[0]);
+                    }
+                    //si encuentro un -- al final, prendo bool que encontre el boundary name end
+                    if (e->data[0] == '-' && list_size(ctx->possible_boundary_string) != 0)
+                    {
+
+                        if (list_peek(ctx->possible_boundary_string) == '-')
+                        {
+                            //encontre dos -- al final
+                            ctx->boundary_end = &T;
+                        }
+                    }
                 }
-            
+            }
+
+            if (e->data[0] == '-')
+            {
+                ctx->is_middle_dash = &T;
+            }
+            else
+            {
+                ctx->is_middle_dash = &F;
+            }
+
             break;
 
         case MIME_MSG_BODY_CR:
@@ -552,6 +575,7 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                 (ctx->process_modification_mail)[0] = e->data[0];
                 (ctx->process_modification_mail)++;
             }
+
             break;
 
         case MIME_MSG_BODY_NEWLINE:
@@ -560,18 +584,19 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                 (ctx->process_modification_mail)[0] = e->data[0];
                 (ctx->process_modification_mail)++;
             }
-            else
+
+            if (ctx->double_middle_dash != 0 && ctx->double_middle_dash == &T)
             {
-                if (ctx->double_middle_dash != 0 && ctx->double_middle_dash == &T)
-                {   printf("possible_boundary_string: %s\n",list_return_string(ctx->possible_boundary_string));
-                    printf("stack peek: %s\n",stack_peek(ctx->boundry_stack));
+                printf("possible_boundary_string: %s lenght: %d\n", list_return_string(ctx->possible_boundary_string), list_size(ctx->possible_boundary_string));
+                printf("stack peek: %s lenght: %d\n", stack_peek(ctx->boundry_stack), strlen(stack_peek(ctx->boundry_stack)));
 
-
-                    if (strcmp(list_return_string(ctx->possible_boundary_string), stack_peek(ctx->boundry_stack)) == 0)
+                if ((strcmp(list_return_string(ctx->possible_boundary_string), stack_peek(ctx->boundry_stack)) == 0) && ctx->boundary_end != &T)
+                {
+                    printf("ENTROOO \n");
+                    //el possible boundry string coincidio con el del stack
+                    //lo agrego al body
+                    if (*ctx->media_filter_apply)
                     {
-                        printf("ENTROOO \n");
-                        //el possible boundry string coincidio con el del stack
-                        //lo agrego al body
                         while (list_size(ctx->possible_boundary_string) >= 1)
                         {
 
@@ -579,23 +604,51 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                             list_head(ctx->possible_boundary_string, true);
                             (ctx->process_modification_mail)++;
                         }
-                        ctx->possible_boundary_string = list_empty(ctx->possible_boundary_string);
                     }
+                    ctx->possible_boundary_string = list_empty(ctx->possible_boundary_string);
+                    parser_set_state(ctx->msg, MIME_MSG_NAME);
+                   reset_parser_types_and_subtypes(ctx);
+                    parser_reset(ctx->content_type);
                 }
-                if (ctx->boundary_end != 0 && ctx->boundary_end == &T)
-                {
-                    if (strcmp(list_return_string(ctx->possible_boundary_string), stack_peek(ctx->boundry_stack)) == 0)
-                    {
-                        printf("encontro el fin del boundary\n");
-                        stack_pop(ctx->boundry_stack);
-                        ctx->possible_boundary_string = list_empty(ctx->possible_boundary_string);
-                    }
-                }
-
-                ctx->is_middle_dash = &F;
-                ctx->double_middle_dash = &F;
-                ctx->possible_boundary = &F;
             }
+            if (ctx->boundary_end != 0 && ctx->boundary_end == &T)
+            {
+                printf("entro a end!\n");
+                printf("possible_boundary_string: %s lenght: %d\n", list_ret_end_string(ctx->possible_boundary_string), list_size(ctx->possible_boundary_string));
+                printf("stack peek: %s lenght: %d\n", stack_peek(ctx->boundry_stack), strlen(stack_peek(ctx->boundry_stack)));
+
+                if (strcmp(list_ret_end_string(ctx->possible_boundary_string), stack_peek(ctx->boundry_stack)) == 0)
+                {
+                    printf("encontro el fin del boundary\n");
+                    //lo escribo en el body
+                    if (*ctx->media_filter_apply)
+                    {
+                        (ctx->process_modification_mail)[0] = '-';
+                        (ctx->process_modification_mail)++;
+
+                        (ctx->process_modification_mail)[0] = '-';
+                        (ctx->process_modification_mail)++;
+
+                        while (list_size(ctx->possible_boundary_string) >= 1)
+                        {
+
+                            (ctx->process_modification_mail)[0] = list_head(ctx->possible_boundary_string, false);
+                            list_head(ctx->possible_boundary_string, true);
+                            (ctx->process_modification_mail)++;
+                        }
+                    }
+                    (ctx->process_modification_mail)[0] = '\n';
+                    (ctx->process_modification_mail)++;
+                    stack_pop(ctx->boundry_stack);
+                    ctx->possible_boundary_string = list_empty(ctx->possible_boundary_string);
+                    ctx->media_filter_apply=&F;
+                }
+            }
+
+            ctx->is_middle_dash = &F;
+            ctx->double_middle_dash = &F;
+            ctx->possible_boundary = &F;
+
             break;
         default:
             (ctx->process_modification_mail)[0] = e->data[0];
@@ -662,31 +715,53 @@ void printctx(struct ctx *ctx)
     }
     printf("data= %p\n", ctx->process_modification_mail);
     printf("current point letter: %c\n", ctx->process_modification_mail[0]);
-    if(ctx->media_filter_apply!=0 && ctx->media_filter_apply==&T){
+    if (ctx->media_filter_apply != 0 && ctx->media_filter_apply == &T)
+    {
         printf("media filter: TRUE\n");
     }
-    else{
+    else
+    {
         printf("media filter: FALSE\n");
     }
-    if(ctx->double_middle_dash!=0 && ctx->double_middle_dash==&T){
+    if (ctx->double_middle_dash != 0 && ctx->double_middle_dash == &T)
+    {
         printf("Double middle dash: TRUE\n");
     }
-    else{
+    else
+    {
         printf("Double middle dash: FALSE\n");
     }
-    if(ctx->is_middle_dash!=0 && ctx->is_middle_dash==&T){
+    if (ctx->is_middle_dash != 0 && ctx->is_middle_dash == &T)
+    {
         printf("middle dash: TRUE\n");
     }
-    else{
+    else
+    {
         printf("middle dash: FALSE\n");
     }
-    if(ctx->boundary_detected!=0 && ctx->boundary_detected==&T){
+    if (ctx->boundary_detected != 0 && ctx->boundary_detected == &T)
+    {
         printf("boundary detected: TRUE\n");
     }
-    else{
+    else
+    {
         printf("boundary detected: FALSE\n");
     }
+    if (ctx->boundary_end != 0 && ctx->boundary_end == &T)
+    {
+        printf("boundary end: TRUE\n");
+    }
+    else
+    {
+        printf("boundary end: FALSE\n");
+    }
+    if (stack_size(ctx->boundry_stack) != 0)
+    {
+        printf("Boundary stack peek: %s\n", stack_peek(ctx->boundry_stack));
+    }
 }
+
+
 
 int main(const int argc, const char **argv)
 {
