@@ -2,9 +2,8 @@
 #include <stdlib.h>
 #include <signal.h>
 
-#include "socks5.h"
-#include "socks5nio.h"
-#include "socks5suscriptor.h"
+#include "pop3_admin_nio.h"
+#include "pop3_suscriptor.h"
 
 bool done = false;
  
@@ -33,12 +32,19 @@ init_suscription_service(const int server, const char **err_msg){
 	}
 
 	//Suscription for accepts
-	const struct fd_handler socksv5 = {
-		.handle_read       = socksv5_passive_accept,
+	/*const struct fd_handler pop3 = {
+		.handle_read       = pop3_passive_accept,
+		.handle_write      = NULL,
+		.handle_close      = NULL, // nada que liberar
+	};*/
+
+	const struct fd_handler pop3_admin = {
+		.handle_read       = pop3_admin_passive_accept,
 		.handle_write      = NULL,
 		.handle_close      = NULL, // nada que liberar
 	};
-	ss = selector_register(selector, server, &socksv5,
+
+	ss = selector_register(selector, server, &pop3_admin,
 											  OP_READ, NULL);
 	if(ss != SELECTOR_SUCCESS) {
 		*err_msg = "registering fd";
@@ -62,6 +68,6 @@ term_suscription_service:
 		selector_destroy(selector);
 	}
 	selector_close();
-	socksv5_pool_destroy();
+	destroy_suscription_pool();
 	return ss;
 }

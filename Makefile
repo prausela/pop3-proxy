@@ -1,5 +1,5 @@
 all:
-	gcc -o proxy main.c selector.c socks5.c socks5nio.c stm.c request.c netutils.c buffer.c hello.c socks5suscriptor.c -lpthread
+	gcc -o pop3filter main.c selector.c stm.c netutils.c buffer.c parser_factory.c pop3_admin_nio.c parser_utils.c pop3_suscriptor.c -lpthread -g
 
 clean:
-	$(RM) proxy
+	$(RM) pop3filter
