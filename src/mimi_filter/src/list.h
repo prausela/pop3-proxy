@@ -38,5 +38,8 @@ int  list_size(list *list);
 void list_for_each(list *list, listIterator iterator);
 uint8_t list_head(list *list, bool removeFromList);
 void list_tail(list *list, void *element);
+list* list_empty(list *list);
+char* list_return_string(list *list);
+
  
 #endif

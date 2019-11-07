@@ -1,92 +1,76 @@
-#include <stdlib.h>
-
 #include "stack.h"
+ 
 
-static struct element * create_element(void * data) {
-    struct element * node = malloc(sizeof(*node));
-
-    if (node == NULL) {
-        return NULL;
-    }
-
-    node->data = data;
-    node->prev = NULL;
-
-    return node;
+stack* stack_new(freeFunction freeFn)
+{
+    stack *s = malloc(sizeof(stack));
+    s->logicalLength = 0;
+    s->tail = NULL;
+    s->freeFn = freeFn;
+    s->head = NULL;
+  return s;
 }
 
-struct stack * stack_init() {
-    struct stack * new_stack = malloc(sizeof(*new_stack));
+void stack_destroy(stack *stack)
+{
+  stackNode *current;
+  while(stack->head != NULL) {
+    current = stack->head;
+    stack->head = current->next;
 
-    if (new_stack == NULL) {
-        return NULL;
-    }
-
-    new_stack->last = NULL;
-    new_stack->size = 0;
-
-    return new_stack;
+    //hacer free del element
+    free(current);
+  }
 }
 
-void * stack_push(struct stack * stack, void * data) {
-    if (data == NULL) {
-        return NULL;
-    }
+void stack_push(stack *stack, char* element)
+{
 
-    struct element * node = create_element(data);
+  stackNode *node = malloc(sizeof(stackNode));
+//   printf("STACK PUSH\n");
+//   printf("ELEM SIZE %ld\nString: %s\n",strlen(element),element);
+  //node->data=element;
+  node->data=malloc(strlen(element));
+//   printf("NODE DATA LENGHT1: %ld\n",strlen(node->data));
+  memcpy(node->data, element,strlen(element));//+1 del \0?
+  node->data[strlen(element)]=0;
+//   printf("NODE DATA LENGHT: %ld\n",strlen(node->data));
+//   printf("NODE DATA %s\n",node->data);
+  node->next = NULL;
+  node->prev=NULL;
+          
+         
+  if(stack->logicalLength == 0) {
+    stack->head = stack->tail = node;
 
-    if (node == NULL) {
-        return NULL;
-    }
-
-    if (stack->last == NULL) {
-        stack->last = node;
-    } else {
-        struct element * prev_last = stack->last;
-        stack->last = node;
-        node->prev = prev_last;
-    }
-
-    stack->size++;
-
-    return data;
+  } else {
+      node->prev=stack->tail;
+    stack->tail->next = node;
+    stack->tail = node;
+  }
+    stack->logicalLength++;
 }
 
-void * stack_pop(struct stack * stack) {
-    if (stack->size == 0) {
-        return NULL;
-    }
-
-    void *              ret     = stack->last->data;
-    struct element *    node    = stack->last;
-
-    stack->last = stack->last->prev;
-
+char* stack_pop(stack *stack)
+{
+ if(stack->logicalLength==0){
+     return NULL;
+ }
+    char* elem=stack->tail->data;
+    
+    stackNode* node=stack->tail;
+    stack->tail=stack->tail->prev;
     free(node);
+    stack->logicalLength--;
+    return elem;
+  }
 
-    stack->size--;
 
-    return ret;
+int stack_size(stack *stack)
+{
+  return stack->logicalLength;
 }
 
-void * stack_peek(struct stack * stack) {
-    if (stack->last == NULL) {
-        return NULL;
-    }
-
-    return stack->last->data;
-}
-
-void stack_destroy(struct stack * stack) {
-
-    struct element * curr = stack->last;
-    struct element * aux;
-
-    while (curr != NULL) {
-        aux = curr->prev;
-        free(curr);
-        curr = aux;
-    }
-
-    free(stack);
+char* stack_peek(stack *stack){
+    return stack->tail->data;
 }

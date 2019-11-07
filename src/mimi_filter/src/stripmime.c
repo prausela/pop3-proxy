@@ -46,14 +46,20 @@ struct ctx {
     //parsea la palabra boundary en el header
     struct parser*          boundary;
 
-    //pusheo los boundaries encontrados
-    struct stack*           boundary_stack;
-
+    
     struct parser*          boundary_parser_detector;
     struct parser*          charset_parser_detector;
 
    //lista que guarda una linea del body que puede ser bundary
     list*           possible_boundary_string;
+
+    //guarda un boundary name visto en el header para pushearlo al stack
+    list*           boundary_name;
+
+    //stack que guarda el boundry name encontrado en el header
+    stack*          boundry_stack;
+
+
 
     /* ¿hemos detectado si el field-name que estamos procesando refiere
      * a Content-Type?. Utilizando dentro msg para los field-name.
@@ -338,7 +344,8 @@ content_type_msg(struct ctx* ctx, const uint8_t c) {
             case MIME_DELIMITER:
                 if(ctx->multipart_section != NULL){
                     if (*ctx->multipart_section) {
-                        //encontre un boundary (deberia pushear al stack!)
+                        //encontre un boundary, lo pusheo al stack!
+                        list_append(ctx->boundary_name,e->data[0]);
                     }else{
                         //Estoy en una seccion normal!
                         if(*ctx->media_filter_apply){
@@ -348,9 +355,13 @@ content_type_msg(struct ctx* ctx, const uint8_t c) {
                         }
                     }
                 }
+                break;
             case MIME_DELIMITER_END:
-                if(ctx->multipart_section != NULL && *ctx->media_filter_apply && !*ctx->multipart_section){
-                    
+                //printf("list return string %s\n",list_return_string(ctx->boundary_name));
+                stack_push(ctx->boundry_stack,list_return_string(ctx->boundary_name));
+                printf("STACK PEEK: %s\n",stack_peek(ctx->boundry_stack));
+
+                if(ctx->multipart_section != NULL && *ctx->media_filter_apply && !*ctx->multipart_section){ 
                 }
                 break;
             case MIME_TYPE_UNEXPECTED:
@@ -605,7 +616,6 @@ main(const int argc, const char **argv) {
     media_subtypes->type_parser = parser_init(no_class,&subtype1);
 
 
-
     struct ctx ctx = {
         .multi                      = parser_init(no_class, pop3_multi_parser()),
         .msg                        = parser_init(init_char_class(), mime_message_parser()),
@@ -625,8 +635,9 @@ main(const int argc, const char **argv) {
         .boundary_parser_detector   = parser_init(no_class, &boundary_parser),
         .charset_parser_detector    = parser_init(no_class, &charset_parser),
         .msg_content_transfer_encoding_field_detected = NULL,
+        .boundry_stack              = stack_new(NULL),
+        .boundary_name              = list_new(sizeof(uint8_t),NULL),
     };
-    
     uint8_t data[4096],transformed[4096];
     memset(transformed, '\0', sizeof(transformed));
     int n;

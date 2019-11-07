@@ -17,10 +17,14 @@ void list_destroy(list *list)
   while(list->head != NULL) {
     current = list->head;
     list->head = current->next;
-
-    
     free(current);
   }
+}
+
+list* list_empty(list *list){
+  int elem=list->elementSize;
+  list_destroy(list);
+  return list_new(elem,NULL);
 }
 
 void list_append(list *list, uint8_t element)
@@ -28,21 +32,15 @@ void list_append(list *list, uint8_t element)
 
   listNode *node = malloc(sizeof(listNode));
   node->data=element;
-            printf("murio\n\n");
 
   node->next = NULL;
-          printf("murio2\n\n");
-          printf("Data pointer: %c\n",element);
 
-         
   if(list->logicalLength == 0) {
     list->head = list->tail = node;
   } else {
     list->tail->next = node;
     list->tail = node;
   }
-            printf("murio4\n\n");
-
   list->logicalLength++;
 }
 
@@ -66,4 +64,16 @@ uint8_t list_head(list *list, bool removeFromList)
 int list_size(list *list)
 {
   return list->logicalLength;
+}
+
+char* list_return_string(list *list){
+  int size=list_size(list);
+  char* ret=malloc(list_size(list));
+  int i=0;
+  while(i<size){
+    ret[i]=list_head(list,false);
+    list_head(list,true);
+    i++;
+  }
+  return ret;
 }
