@@ -55,7 +55,7 @@ Para correr el pop3 command test
 
 
 ## Referencias
-Stack.c: 
+Stack y List:  https://pseudomuto.com/2013/05/implementing-a-generic-linked-list-in-c/
 
 ## Authors
 
