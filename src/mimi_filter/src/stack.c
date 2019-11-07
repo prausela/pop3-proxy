@@ -1,73 +1,92 @@
-// C program for array implementation of stack 
-#include <limits.h> 
-#include <stdio.h> 
-#include <stdlib.h> 
+#include <stdlib.h>
 
-// A structure to represent a stack 
-struct Stack { 
-	int top; 
-	unsigned capacity; 
-	int* array; 
-}; 
+#include "stack.h"
 
-// function to create a stack of given capacity. It initializes size of 
-// stack as 0 
-struct Stack* createStack(unsigned capacity) 
-{ 
-	struct Stack* stack = (struct Stack*)malloc(sizeof(struct Stack)); 
-	stack->capacity = capacity; 
-	stack->top = -1; 
-	stack->array = (int*)malloc(stack->capacity * sizeof(int)); 
-	return stack; 
-} 
+static struct element * create_element(void * data) {
+    struct element * node = malloc(sizeof(*node));
 
-// Stack is full when top is equal to the last index 
-int isFull(struct Stack* stack) 
-{ 
-	return stack->top == stack->capacity - 1; 
-} 
+    if (node == NULL) {
+        return NULL;
+    }
 
-// Stack is empty when top is equal to -1 
-int isEmpty(struct Stack* stack) 
-{ 
-	return stack->top == -1; 
-} 
+    node->data = data;
+    node->prev = NULL;
 
-// Function to add an item to stack. It increases top by 1 
-void push(struct Stack* stack, int item) 
-{ 
-	if (isFull(stack)) 
-		return; 
-	stack->array[++stack->top] = item; 
-	printf("%d pushed to stack\n", item); 
-} 
+    return node;
+}
 
-// Function to remove an item from stack. It decreases top by 1 
-int pop(struct Stack* stack) 
-{ 
-	if (isEmpty(stack)) 
-		return INT_MIN; 
-	return stack->array[stack->top--]; 
-} 
+struct stack * stack_init() {
+    struct stack * new_stack = malloc(sizeof(*new_stack));
 
-// Function to return the top from stack without removing it 
-int peek(struct Stack* stack) 
-{ 
-	if (isEmpty(stack)) 
-		return INT_MIN; 
-	return stack->array[stack->top]; 
-} 
+    if (new_stack == NULL) {
+        return NULL;
+    }
 
-// Driver program to test above functions 
-int main() 
-{ 
-	struct Stack* stack = createStack(100); 
+    new_stack->last = NULL;
+    new_stack->size = 0;
 
-	push(stack, 10); 
-	push(stack, 20); 
-	push(stack, 30); 
+    return new_stack;
+}
 
-	printf("%d popped from stack\n", pop(stack)); 
+void * stack_push(struct stack * stack, void * data) {
+    if (data == NULL) {
+        return NULL;
+    }
 
-	return 0; 
-} 
+    struct element * node = create_element(data);
+
+    if (node == NULL) {
+        return NULL;
+    }
+
+    if (stack->last == NULL) {
+        stack->last = node;
+    } else {
+        struct element * prev_last = stack->last;
+        stack->last = node;
+        node->prev = prev_last;
+    }
+
+    stack->size++;
+
+    return data;
+}
+
+void * stack_pop(struct stack * stack) {
+    if (stack->size == 0) {
+        return NULL;
+    }
+
+    void *              ret     = stack->last->data;
+    struct element *    node    = stack->last;
+
+    stack->last = stack->last->prev;
+
+    free(node);
+
+    stack->size--;
+
+    return ret;
+}
+
+void * stack_peek(struct stack * stack) {
+    if (stack->last == NULL) {
+        return NULL;
+    }
+
+    return stack->last->data;
+}
+
+void stack_destroy(struct stack * stack) {
+
+    struct element * curr = stack->last;
+    struct element * aux;
+
+    while (curr != NULL) {
+        aux = curr->prev;
+        free(curr);
+        curr = aux;
+    }
+
+    free(stack);
+}
