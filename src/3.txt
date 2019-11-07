@@ -1,11 +1,33 @@
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="MP_/XAkM/CBycDJWEUGbQ_LLaw3"
+
+--MP_/XAkM/CBycDJWEUGbQ_LLaw3
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Disposition: inline
 
-A VER LO DEL PU.NTO
---MICADIOsa
-hola como estas
---otroBoun
+Un png, un jpgeg
+--MP_/XAkM/CBycDJWEUGbQ_LLaw3
+Content-Type: image/png
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=favicon.png
 
-.
+SoikTdsxlfYa6cTn5KOu0XYenqwcvKS9JJePzmx9IPD8FXsIeAh4CPzvCfwjwAByxCObPlxpSQAA
+AABJRU5ErkJggg==
+
+--MP_/XAkM/CBycDJWEUGbQ_LLaw3
+Content-Type: image/jpeg
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=favicon.jpg
+
+T7pFOxOoyOGxFex1jLozsZtYUfI4Fql/uHYkjhwei+QBwgK1WY1td3o1N7jdtK6cr78dPxo8lFzV
+F5uEodq2EgvlBSApxSQpJ+yjzzzpo+jUBemaAwmzQfcKOjeatN4sNzZInF4i/opDVejJpXbLSP/Z
+
+--MP_/XAkM/CBycDJWEUGbQ_LLaw3
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=hola.txt
+
+hola mundo!
+
+--MP_/XAkM/CBycDJWEUGbQ_LLaw3--
