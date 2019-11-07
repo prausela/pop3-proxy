@@ -179,6 +179,7 @@ boundary_charset_match(struct ctx *ctx, const uint8_t c)
     {
         fprintf(stderr, "LA CONCHA DE LA LORAAAA");
         ctx->multipart_section = &T;
+        ctx->boundary_detected=&T;
     }
     else if (charset_parser_evt->type == STRING_CMP_EQ)
     {
@@ -494,8 +495,7 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                 (ctx->process_modification_mail)[0] = e->data[0];
                 (ctx->process_modification_mail)++;
             }
-            else
-            {
+            
                 if (ctx->boundary_detected != 0 && ctx->boundary_detected == &T)
                 {
                     if (e->data[0] == '-')
@@ -543,7 +543,7 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                 {
                     ctx->is_middle_dash = &F;
                 }
-            }
+            
             break;
 
         case MIME_MSG_BODY_CR:
@@ -707,13 +707,13 @@ int main(const int argc, const char **argv)
     struct parser_definition content_transfer_encoding_header_def =
         parser_utils_strcmpi("content-transfer-encoding");
     struct parser_definition media_value_def =
-        parser_utils_strcmpi("image/png");
+        parser_utils_strcmpi("text/plain");
 
     struct type_list *media_types = malloc(sizeof(*media_types));
     struct subtype_list *media_subtypes = malloc(sizeof(*media_subtypes));
 
-    struct parser_definition type1 = parser_utils_strcmpi("image");
-    struct parser_definition subtype1 = parser_utils_strcmpi("png");
+    struct parser_definition type1 = parser_utils_strcmpi("text");
+    struct parser_definition subtype1 = parser_utils_strcmpi("plain");
     struct parser_definition boundary_parser = parser_utils_strcmpi("boundary");
     struct parser_definition charset_parser = parser_utils_strcmpi("charset");
 
