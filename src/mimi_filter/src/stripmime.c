@@ -101,16 +101,18 @@ struct ctx
 static bool T = true;
 static bool F = false;
 void printctx(struct ctx *ctx);
+
 static void
 reset_parser_types_and_subtypes(struct ctx *ctx){
     ctx->media_subtypes = NULL;
     struct subtype_list *media_subtypes;
     struct type_list *media_types = ctx->media_types;
     while(media_types!=NULL){
+
         parser_reset(media_types->type_parser);
         media_subtypes   = media_types->subtypes;
         while(media_subtypes != NULL){
-            parser_reset(media_types->type_parser);
+            parser_reset(media_subtypes->type_parser);
             media_subtypes = media_subtypes->next;
         }
         media_types = media_types->next;
@@ -277,6 +279,11 @@ content_subtype_match(struct ctx *ctx, const uint8_t c)
         //Go back and replace whatever to text/plain
         //                    replace_to_plain_text(ctx,c);
     }
+    else if (current->type == STRING_CMP_NEQ)
+    {
+        printf("NOT EQ\n");
+        ctx->media_filter_apply = &F;
+    }
     else
     {
         //Overwriting just in case
@@ -314,6 +321,11 @@ content_type_match(struct ctx *ctx, const uint8_t c)
         fprintf(stderr, "WUUUU");
         ctx->media_type_filter_detected = &T;
         ctx->media_subtypes = type_list->subtypes;
+    }
+    else if (current->type == STRING_CMP_NEQ)
+    {
+        printf("NOT EQ\n");
+        ctx->media_type_filter_detected = &F;
     }
     else
     {
@@ -597,6 +609,11 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                     //lo agrego al body
                     if (*ctx->media_filter_apply)
                     {
+                        (ctx->process_modification_mail)[0] = '-';
+                        (ctx->process_modification_mail)++;
+
+                        (ctx->process_modification_mail)[0] = '-';
+                        (ctx->process_modification_mail)++;
                         while (list_size(ctx->possible_boundary_string) >= 1)
                         {
 
@@ -604,9 +621,12 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                             list_head(ctx->possible_boundary_string, true);
                             (ctx->process_modification_mail)++;
                         }
+                        (ctx->process_modification_mail)[0] = '\n';
+                    (ctx->process_modification_mail)++;
                     }
                     ctx->possible_boundary_string = list_empty(ctx->possible_boundary_string);
                     parser_set_state(ctx->msg, MIME_MSG_NAME);
+                    ctx->media_filter_apply=&F;
                    reset_parser_types_and_subtypes(ctx);
                     parser_reset(ctx->content_type);
                 }
@@ -692,7 +712,7 @@ pop3_multi(struct ctx *ctx, const uint8_t c)
             break;
         }
         e = e->next;
-        getchar();
+        //getchar();
     } while (e != NULL);
 }
 
