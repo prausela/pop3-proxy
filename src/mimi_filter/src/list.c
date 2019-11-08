@@ -67,12 +67,16 @@ int list_size(list *list)
 }
 
 char* list_return_string(list *list1){
+  printf("List_ret_string size: %d\n",list1->logicalLength);
+  printf("SIZE %d\n",list_size(list1));
   int size=list_size(list1);
   char* ret=malloc(list_size(list1));
-  listNode *curr=list1->head;
+  listNode *curr=malloc(sizeof(listNode));
+  curr=list1->head;
 
   int i=0;
   while(i<size){
+    printf("entra while\n");
     ret[i]=curr->data;
     curr=curr->next;
     i++;
@@ -84,6 +88,7 @@ uint8_t list_peek(list *list){
   return list->tail->data;
 }
 
+//retorna el string sin los ultimos -- para compararlo con el name laido en el boundary
 char* list_ret_end_string(list *list1){
   int size=list_size(list1);
   char* ret=malloc(list_size(list1));

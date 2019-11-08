@@ -567,6 +567,10 @@ mime_msg(struct ctx *ctx, const uint8_t c)
             // si parseabamos Content-Type ya terminamos
             ctx->msg_content_type_field_detected = 0;
             ctx->msg_content_transfer_encoding_field_detected = 0;
+            //ver si va aca!
+                    parser_reset(ctx->boundary);
+                    ctx->boundary_detected=&F;
+
 
             break;
         case MIME_MSG_BODY_START:
@@ -591,7 +595,9 @@ mime_msg(struct ctx *ctx, const uint8_t c)
             }
 
             if (ctx->boundary_detected != 0 && ctx->boundary_detected == &T)
-            {
+            {                    
+                printf("Possible boundary: %s\n",list_return_string(ctx->possible_boundary_string));
+
                 if (e->data[0] == '-')
                 {
                     printf("LEO GUION\n");
@@ -610,21 +616,22 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                 //estoy leyendo un boundary name?
                 if (ctx->double_middle_dash != 0 && ctx->double_middle_dash == &T)
                 {
-                    //si leo un - y es el primero, no lo pongo en el string
-                    if (!(e->data[0] == '-' && list_size(ctx->possible_boundary_string) == 0))
-                    {
-                        list_append(ctx->possible_boundary_string, e->data[0]);
-                    }
                     //si encuentro un -- al final, prendo bool que encontre el boundary name end
                     if (e->data[0] == '-' && list_size(ctx->possible_boundary_string) != 0)
                     {
-
+                        printf("LIST PEEK: %c\n",list_peek(ctx->possible_boundary_string));
                         if (list_peek(ctx->possible_boundary_string) == '-')
                         {
                             //encontre dos -- al final
                             ctx->boundary_end = &T;
                         }
                     }
+                    //si leo un - y es el primero, no lo pongo en el string
+                    if (!(e->data[0] == '-' && list_size(ctx->possible_boundary_string) == 0))
+                    {
+                        list_append(ctx->possible_boundary_string, e->data[0]);
+                    }
+                    
                 }
             }
 
@@ -685,6 +692,7 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                     ctx->possible_boundary_string = list_empty(ctx->possible_boundary_string);
                     parser_set_state(ctx->msg, MIME_MSG_NAME);
                     ctx->media_filter_apply=&F;
+                    
                     reset_parser_types_and_subtypes(ctx);
                     ctx->msg_content_transfer_encoding_field_detected = NULL;
                     parser_reset(ctx->content_type);
@@ -771,7 +779,7 @@ pop3_multi(struct ctx *ctx, const uint8_t c)
             break;
         }
         e = e->next;
-        //getchar();
+        getchar();
     } while (e != NULL);
 }
 
@@ -866,8 +874,8 @@ int main(const int argc, const char **argv)
     struct type_list *media_types = malloc(sizeof(*media_types));
     struct subtype_list *media_subtypes = malloc(sizeof(*media_subtypes));
 
-    struct parser_definition type1 = parser_utils_strcmpi("image");
-    struct parser_definition subtype1 = parser_utils_strcmpi("jpeg");
+    struct parser_definition type1 = parser_utils_strcmpi("text");
+    struct parser_definition subtype1 = parser_utils_strcmpi("plain");
     struct parser_definition boundary_parser = parser_utils_strcmpi("boundary");
     struct parser_definition charset_parser = parser_utils_strcmpi("charset");
 
