@@ -72,6 +72,7 @@ struct ctx
     bool *msg_content_type_field_detected;
     bool *media_type_filter_detected;
     bool *msg_content_filter;
+    bool *replace_content_type;
     //borrar ese body?
     bool *media_filter_apply;
     //es multipart? (busco o no boundary)
@@ -101,6 +102,16 @@ struct ctx
 static bool T = true;
 static bool F = false;
 void printctx(struct ctx *ctx);
+
+static void
+insert_text(struct ctx *ctx, char * text){
+    int i = 0;
+    while(text[i] != 0){
+        ctx->process_modification_mail[0] = text[i];
+        (ctx->process_modification_mail)++;
+        i++;
+    }
+}
 
 static void
 reset_parser_types_and_subtypes(struct ctx *ctx){
@@ -148,7 +159,6 @@ content_transfer_encoding_header(struct ctx *ctx, const uint8_t c)
         {
         case STRING_CMP_EQ:
             ctx->msg_content_transfer_encoding_field_detected = &T;
-            fprintf(stderr, "UYYAAA");
             break;
         case STRING_CMP_NEQ:
             ctx->msg_content_transfer_encoding_field_detected = &F;
@@ -289,6 +299,7 @@ content_subtype_match(struct ctx *ctx, const uint8_t c)
         //Match found!
         ctx->media_filter_apply = &T;
         fprintf(stderr, "Encontre un match!\n");
+        ctx->replace_content_type = &T;
         //Go back and replace whatever to text/plain
         //                    replace_to_plain_text(ctx,c);
     }
@@ -386,6 +397,12 @@ content_type_msg(struct ctx *ctx, const uint8_t c)
                 for (int i = 0; i < e->n; i++)
                 {
                     content_subtype_match(ctx, e->data[0]);
+                }
+                if(ctx->media_filter_apply != 0 && *ctx->media_filter_apply){
+                    /*while(ctx->process_modification_mail[0] != ' '){
+                        (ctx->process_modification_mail)--;
+                    }
+                    insert_text(ctx, "text/plain");*/
                 }
             }
             break;
@@ -513,6 +530,10 @@ mime_msg(struct ctx *ctx, const uint8_t c)
             parser_reset(ctx->ctransfer_encoding_header);
             (ctx->process_modification_mail)[0] = e->data[0];
             (ctx->process_modification_mail)++;
+            if(ctx->msg_content_transfer_encoding_field_detected != 0
+            && *ctx->msg_content_transfer_encoding_field_detected && *ctx->media_filter_apply){
+                insert_text(ctx," 8BIT");
+            }
             break;
         case MIME_MSG_VALUE:
             if (ctx->msg_content_type_field_detected != 0 && ctx->msg_content_type_field_detected == &T && !*ctx->media_filter_apply)
@@ -522,8 +543,22 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                     content_type_msg(ctx, e->data[i]);
                 }
             }
-            (ctx->process_modification_mail)[0] = e->data[0];
-            (ctx->process_modification_mail)++;
+            if(ctx->msg_content_transfer_encoding_field_detected != 0
+            && *ctx->msg_content_transfer_encoding_field_detected && *ctx->media_filter_apply){
+
+            }else{
+                if(*ctx->replace_content_type){
+                    while(ctx->process_modification_mail[0] != ' '){
+                        (ctx->process_modification_mail)--;
+                    }
+                    insert_text(ctx, " text/plain");
+                    ctx->replace_content_type = &F;
+                }else{
+                    (ctx->process_modification_mail)[0] = e->data[0];
+                    (ctx->process_modification_mail)++;
+                }
+            }
+            
             break;
         case MIME_MSG_VALUE_END:
             // si parseabamos Content-Type ya terminamos
@@ -647,7 +682,8 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                     ctx->possible_boundary_string = list_empty(ctx->possible_boundary_string);
                     parser_set_state(ctx->msg, MIME_MSG_NAME);
                     ctx->media_filter_apply=&F;
-                   reset_parser_types_and_subtypes(ctx);
+                    reset_parser_types_and_subtypes(ctx);
+                    ctx->msg_content_transfer_encoding_field_detected = NULL;
                     parser_reset(ctx->content_type);
                 }
             }
@@ -732,7 +768,7 @@ pop3_multi(struct ctx *ctx, const uint8_t c)
             break;
         }
         e = e->next;
-        getchar();
+        //getchar();
     } while (e != NULL);
 }
 
@@ -827,8 +863,8 @@ int main(const int argc, const char **argv)
     struct type_list *media_types = malloc(sizeof(*media_types));
     struct subtype_list *media_subtypes = malloc(sizeof(*media_subtypes));
 
-    struct parser_definition type1 = parser_utils_strcmpi("text");
-    struct parser_definition subtype1 = parser_utils_strcmpi("plain");
+    struct parser_definition type1 = parser_utils_strcmpi("image");
+    struct parser_definition subtype1 = parser_utils_strcmpi("jpeg");
     struct parser_definition boundary_parser = parser_utils_strcmpi("boundary");
     struct parser_definition charset_parser = parser_utils_strcmpi("charset");
 
@@ -849,6 +885,7 @@ int main(const int argc, const char **argv)
         .msg_content_filter = &F,
         .media_type_filter_detected = &F,
         .media_filter_apply = &F,
+        .replace_content_type = &F,
         .media_types = media_types,
         .media_subtypes = NULL,
         .multipart_section = NULL,
