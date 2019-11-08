@@ -144,7 +144,6 @@ void print_filter_msg(struct ctx*ctx){
         ctx->process_modification_mail[0]=filter[i++];
         (ctx->process_modification_mail)++;
     }
-    free(filter);
 }
 /* Detecta si un header-field-name equivale a Content-Type.
  * Deja el valor en `ctx->msg_content_type_field_detected'. Tres valores
@@ -767,7 +766,7 @@ pop3_multi(struct ctx *ctx, const uint8_t c)
             parser_reset(ctx->content_type);
             ctx->msg_content_type_field_detected = NULL;
             ctx->msg_content_transfer_encoding_field_detected = NULL;
-rm valgrind.log*            (ctx->process_modification_mail)[0] = 0;
+            (ctx->process_modification_mail)[0] = 0;
 
             break;
         }
@@ -930,4 +929,12 @@ int main(const int argc, const char **argv)
     parser_destroy(ctx.ctype_value);
     parser_utils_strcmpi_destroy(&media_header_def);
     parser_utils_strcmpi_destroy(&media_value_def);
+    parser_destroy(ctx.ctransfer_encoding_header);
+    parser_utils_strcmpi_destroy(&content_transfer_encoding_header_def);
+    parser_destroy(ctx.boundary_parser_detector);
+    parser_utils_strcmpi_destroy(&boundary_parser);
+    //To be removed
+    parser_destroy(ctx.charset_parser_detector);
+    parser_utils_strcmpi_destroy(&charset_parser);
+    
 }
