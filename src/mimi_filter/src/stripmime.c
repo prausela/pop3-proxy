@@ -448,15 +448,19 @@ content_type_msg(struct ctx *ctx, const uint8_t c)
             }
             break;
         case MIME_DELIMITER_END:
-        printf("mime end:\n");
-            printf("list return string %s\n", list_return_string(ctx->boundary_name));
-            printf("list return string2 %s\n", list_return_string(ctx->boundary_name));
-
-            stack_push(ctx->boundry_stack, list_return_string(ctx->boundary_name));
-            printf("STACK PEEK: %s\n", stack_peek(ctx->boundry_stack));
-            ctx->boundary_name = list_empty(ctx->boundary_name);
-            if (ctx->multipart_section != NULL && *ctx->media_filter_apply && !*ctx->multipart_section)
+            if (ctx->boundary_detected != 0 && ctx->boundary_detected == &T)
             {
+
+                printf("mime end:\n");
+                printf("list return string %s\n", list_return_string(ctx->boundary_name));
+                printf("list return string2 %s\n", list_return_string(ctx->boundary_name));
+
+                stack_push(ctx->boundry_stack, list_return_string(ctx->boundary_name));
+                printf("STACK PEEK: %s\n", stack_peek(ctx->boundry_stack));
+                ctx->boundary_name = list_empty(ctx->boundary_name);
+                if (ctx->multipart_section != NULL && *ctx->media_filter_apply && !*ctx->multipart_section)
+                {
+                }
             }
             break;
         case MIME_TYPE_UNEXPECTED:
@@ -568,7 +572,7 @@ mime_msg(struct ctx *ctx, const uint8_t c)
             ctx->msg_content_transfer_encoding_field_detected = 0;
             //ver si va aca!
                     // parser_reset(ctx->boundary_parser_detector);
-                    // ctx->boundary_detected=&F;
+                    ctx->boundary_detected=&F;
 
 
             break;
@@ -593,14 +597,14 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                 (ctx->process_modification_mail)++;
             }
 
-            if (ctx->boundary_detected != 0 && ctx->boundary_detected == &T)
-            {                    
-                printf("Possible boundary: %s\n",list_return_string(ctx->possible_boundary_string));
+                               
 
                 if (e->data[0] == '-')
                 {
+                    printf("Possible boundary: %s\n",list_return_string(ctx->possible_boundary_string));
                     printf("LEO GUION\n");
                     //tengo que setear el possible boundry cuando arranca la linea
+                    
                     ctx->possible_boundary = &T;
                     if (ctx->possible_boundary != 0 && ctx->possible_boundary == &T)
                     {
@@ -632,7 +636,7 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                     }
                     
                 }
-            }
+            
 
             if (e->data[0] == '-')
             {
@@ -736,6 +740,7 @@ mime_msg(struct ctx *ctx, const uint8_t c)
             ctx->is_middle_dash = &F;
             ctx->double_middle_dash = &F;
             ctx->possible_boundary = &F;
+            ctx->boundary_end=&F;
 
             break;
         default:
@@ -780,7 +785,7 @@ pop3_multi(struct ctx *ctx, const uint8_t c)
             break;
         }
         e = e->next;
-        getchar();
+        //getchar();
     } while (e != NULL);
 }
 
