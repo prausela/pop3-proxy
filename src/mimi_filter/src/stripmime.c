@@ -44,17 +44,20 @@ struct ctx
     struct parser *multi;
     /* delimitador mensaje "tipo-rfc 822" */
     struct parser *msg;
+    /* delimitador para atributos del content-type y sus tipos  */
     struct parser *content_type;
     /* detector de field-name "Content-Type" */
     struct parser *ctype_header;
     /* detector de field-name "Content-Transfer_Encoding"  */
     struct parser *ctransfer_encoding_header;
+    //Not used atm...
     struct parser *ctype_value;
 
     //parsea la palabra boundary en el header
     struct parser *boundary;
-
+    /* delimitador para atributo boundary */
     struct parser *boundary_parser_detector;
+    //To be removed
     struct parser *charset_parser_detector;
 
     //lista que guarda una linea del body que puede ser bundary
@@ -141,6 +144,7 @@ void print_filter_msg(struct ctx*ctx){
         ctx->process_modification_mail[0]=filter[i++];
         (ctx->process_modification_mail)++;
     }
+    free(filter);
 }
 /* Detecta si un header-field-name equivale a Content-Type.
  * Deja el valor en `ctx->msg_content_type_field_detected'. Tres valores
@@ -763,7 +767,7 @@ pop3_multi(struct ctx *ctx, const uint8_t c)
             parser_reset(ctx->content_type);
             ctx->msg_content_type_field_detected = NULL;
             ctx->msg_content_transfer_encoding_field_detected = NULL;
-            (ctx->process_modification_mail)[0] = 0;
+rm valgrind.log*            (ctx->process_modification_mail)[0] = 0;
 
             break;
         }
