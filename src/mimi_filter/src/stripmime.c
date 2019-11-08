@@ -118,6 +118,19 @@ reset_parser_types_and_subtypes(struct ctx *ctx){
         media_types = media_types->next;
     }
 }
+
+void print_filter_msg(struct ctx*ctx){
+    char *filter=getenv("FILTER_MSG");
+    if(filter==NULL){
+        filter="MENSAJE DE REEMPLAZO";
+    }
+
+    int i=0;
+    while(filter[i]!=0){
+        ctx->process_modification_mail[0]=filter[i++];
+        (ctx->process_modification_mail)++;
+    }
+}
 /* Detecta si un header-field-name equivale a Content-Type.
  * Deja el valor en `ctx->msg_content_type_field_detected'. Tres valores
  * posibles: NULL (no tenemos información suficiente todavia, por ejemplo
@@ -516,14 +529,21 @@ mime_msg(struct ctx *ctx, const uint8_t c)
             // si parseabamos Content-Type ya terminamos
             ctx->msg_content_type_field_detected = 0;
             ctx->msg_content_transfer_encoding_field_detected = 0;
-            // (ctx->process_modification_mail)[0]=e->data[0];
-            // (ctx->process_modification_mail)++;
+
             break;
         case MIME_MSG_BODY_START:
             (ctx->process_modification_mail)[0] = e->data[0];
             (ctx->process_modification_mail)++;
             (ctx->process_modification_mail)[0] = e->data[1];
             (ctx->process_modification_mail)++;
+            if(*ctx->media_filter_apply){
+                print_filter_msg(ctx);
+                (ctx->process_modification_mail)[0] ='\r';
+            (ctx->process_modification_mail)++; 
+            (ctx->process_modification_mail)[0] = '\n';
+            (ctx->process_modification_mail)++;
+            }
+            
             break;
         case MIME_MSG_BODY:
             if (!*ctx->media_filter_apply)
@@ -712,7 +732,7 @@ pop3_multi(struct ctx *ctx, const uint8_t c)
             break;
         }
         e = e->next;
-        //getchar();
+        getchar();
     } while (e != NULL);
 }
 
