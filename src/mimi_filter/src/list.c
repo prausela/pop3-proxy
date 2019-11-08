@@ -67,8 +67,7 @@ int list_size(list *list)
 }
 
 char* list_return_string(list *list1){
-  printf("List_ret_string size: %d\n",list1->logicalLength);
-  printf("SIZE %d\n",list_size(list1));
+  
   int size=list_size(list1);
   char* ret=malloc(list_size(list1));
   listNode *curr=malloc(sizeof(listNode));
@@ -76,7 +75,6 @@ char* list_return_string(list *list1){
 
   int i=0;
   while(i<size){
-    printf("entra while\n");
     ret[i]=curr->data;
     curr=curr->next;
     i++;

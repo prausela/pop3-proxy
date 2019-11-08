@@ -76,5 +76,5 @@ int stack_size(stack *stack)
 
 char *stack_peek(stack *stack)
 {
-  return stack->head->data;
+  return stack->tail->data;
 }

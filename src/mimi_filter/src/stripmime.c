@@ -53,8 +53,6 @@ struct ctx
     //Not used atm...
     struct parser *ctype_value;
 
-    //parsea la palabra boundary en el header
-    struct parser *boundary;
     /* delimitador para atributo boundary */
     struct parser *boundary_parser_detector;
     //To be removed
@@ -450,6 +448,7 @@ content_type_msg(struct ctx *ctx, const uint8_t c)
             }
             break;
         case MIME_DELIMITER_END:
+        printf("mime end:\n");
             printf("list return string %s\n", list_return_string(ctx->boundary_name));
             printf("list return string2 %s\n", list_return_string(ctx->boundary_name));
 
@@ -568,8 +567,8 @@ mime_msg(struct ctx *ctx, const uint8_t c)
             ctx->msg_content_type_field_detected = 0;
             ctx->msg_content_transfer_encoding_field_detected = 0;
             //ver si va aca!
-                    parser_reset(ctx->boundary);
-                    ctx->boundary_detected=&F;
+                    // parser_reset(ctx->boundary_parser_detector);
+                    // ctx->boundary_detected=&F;
 
 
             break;
@@ -692,6 +691,8 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                     ctx->possible_boundary_string = list_empty(ctx->possible_boundary_string);
                     parser_set_state(ctx->msg, MIME_MSG_NAME);
                     ctx->media_filter_apply=&F;
+                     parser_reset(ctx->boundary_parser_detector);
+                    ctx->boundary_detected=&F;
                     
                     reset_parser_types_and_subtypes(ctx);
                     ctx->msg_content_transfer_encoding_field_detected = NULL;
