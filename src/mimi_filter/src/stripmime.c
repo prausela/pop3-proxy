@@ -974,9 +974,11 @@ int main(const int argc, const char **argv)
     }
 	if (flm == NULL) {
 		printf("No filter medias, please add one\n");
-		free(media_types);
-		return -1;
+        flm = "";
+        //TODO write in pipe the same message!!
+        //return 1;
 	}
+    add_media_type("message", "rfc822", media_types);
 	char * medias = malloc(strlen(flm) + 1);
 	if (medias == NULL) {
 		free(media_types);
@@ -991,7 +993,6 @@ int main(const int argc, const char **argv)
 	char * mime;
 	/*tomar primer media*/
 	current = strtok_r(medias, comma, &context);
-    int i = 0;
 	while (current != NULL) {
         fprintf(stderr,"%s",current);
 		char * aux = malloc(strlen(current) + 1);
@@ -1038,12 +1039,12 @@ int main(const int argc, const char **argv)
 		current = strtok_r(NULL, comma, &context);
         
 	}
+
     free(medias);
-    add_media_type("message", "rfc822", media_types);
-    // while(media_types_aux != NULL){
-    //     fprintf(stderr," dddd %s\n",media_types_aux->type);
-    //     media_types_aux=media_types_aux->next;
-    // }
+    while(media_types_aux != NULL){
+        fprintf(stderr," dddd %s\n",media_types_aux->type);
+        media_types_aux=media_types_aux->next;
+    }
 
 
     struct parser_definition boundary_parser = parser_utils_strcmpi("boundary");
