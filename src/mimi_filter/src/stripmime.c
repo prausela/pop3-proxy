@@ -460,7 +460,6 @@ content_type_msg(struct ctx *ctx, const uint8_t c)
                 for (int i = 0; i < e->n; i++)
                 {
                     content_subtype_match(ctx, e->data[0]);
-                    rfc822_header(ctx,e->data[i]);
                 }
                 if(ctx->media_filter_apply != 0 && *ctx->media_filter_apply){
                     /*while(ctx->process_modification_mail[0] != ' '){
@@ -469,6 +468,11 @@ content_type_msg(struct ctx *ctx, const uint8_t c)
                     insert_text(ctx, "text/plain");*/
                 }
             }
+            if(ctx->message_detected!=0 && ctx->message_detected==&T){
+                rfc822_header(ctx,e->data[0]);
+
+            }
+
             break;
         case MIME_PARAMETER_START:
             //Should i do smth here?
@@ -597,6 +601,8 @@ mime_msg(struct ctx *ctx, const uint8_t c)
             parser_reset(ctx->ctype_header);
             parser_reset(ctx->ctype_value);
             parser_reset(ctx->ctransfer_encoding_header);
+            parser_reset(ctx->message_type);
+            parser_reset(ctx->rfc822);
             (ctx->process_modification_mail)[0] = e->data[0];
             (ctx->process_modification_mail)++;
             if(ctx->msg_content_transfer_encoding_field_detected != 0
@@ -635,39 +641,48 @@ mime_msg(struct ctx *ctx, const uint8_t c)
             ctx->msg_content_transfer_encoding_field_detected = 0;
             ctx->boundary_detected=&F;
             if(ctx->rfc822_detected!=0 && ctx->rfc822_detected==&T){
+                printf("ENTROOOOOOOOOOOOOOOOOOOOOOOOOOO\n\n");
                 parser_set_state(ctx->msg,MIME_MSG_NAME);
-                ctx->rfc822_detected=&F;
+                //ctx->rfc822_detected=&F;
             }
             break;
         case MIME_MSG_BODY_START:
-            (ctx->process_modification_mail)[0] = e->data[0];
-            (ctx->process_modification_mail)++;
-            (ctx->process_modification_mail)[0] = e->data[1];
-            (ctx->process_modification_mail)++;
-            if(*ctx->media_filter_apply){
-                print_filter_msg(ctx);
-                (ctx->process_modification_mail)[0] ='\r';
-            (ctx->process_modification_mail)++; 
-            (ctx->process_modification_mail)[0] = '\n';
-            (ctx->process_modification_mail)++;
-            }
-            
-            break;
-        case MIME_MSG_BODY:
-            if (!*ctx->media_filter_apply)
+        if (*ctx->rfc822_detected)
             {
+                ctx->message_detected = &F;
+                ctx->rfc822_detected = &F;
+                fprintf(stderr,"MIME MSG BODY\n\n\n");
+                parser_reset(ctx->content_type);
+            }else{
+
                 (ctx->process_modification_mail)[0] = e->data[0];
                 (ctx->process_modification_mail)++;
+                (ctx->process_modification_mail)[0] = e->data[1];
+                (ctx->process_modification_mail)++;
+                if (*ctx->media_filter_apply)
+                {
+                    print_filter_msg(ctx);
+                    (ctx->process_modification_mail)[0] = '\r';
+                    (ctx->process_modification_mail)++;
+                    (ctx->process_modification_mail)[0] = '\n';
+                    (ctx->process_modification_mail)++;
+                }
             }
 
-                               
+            break;
+        case MIME_MSG_BODY:
+                if (!*ctx->media_filter_apply)
+                {
+                    (ctx->process_modification_mail)[0] = e->data[0];
+                    (ctx->process_modification_mail)++;
+                }
 
                 if (e->data[0] == '-')
                 {
-                    printf("Possible boundary: %s\n",list_return_string(ctx->possible_boundary_string));
+                    printf("Possible boundary: %s\n", list_return_string(ctx->possible_boundary_string));
                     printf("LEO GUION\n");
                     //tengo que setear el possible boundry cuando arranca la linea
-                    
+
                     ctx->possible_boundary = &T;
                     if (ctx->possible_boundary != 0 && ctx->possible_boundary == &T)
                     {
@@ -685,7 +700,7 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                     //si encuentro un -- al final, prendo bool que encontre el boundary name end
                     if (e->data[0] == '-' && list_size(ctx->possible_boundary_string) != 0)
                     {
-                        printf("LIST PEEK: %c\n",list_peek(ctx->possible_boundary_string));
+                        printf("LIST PEEK: %c\n", list_peek(ctx->possible_boundary_string));
                         if (list_peek(ctx->possible_boundary_string) == '-')
                         {
                             //encontre dos -- al final
@@ -697,21 +712,19 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                     {
                         list_append(ctx->possible_boundary_string, e->data[0]);
                     }
-                    
+                }
+
+                if (e->data[0] == '-')
+                {
+                    ctx->is_middle_dash = &T;
+                }
+                else
+                {
+                    ctx->is_middle_dash = &F;
                 }
             
 
-            if (e->data[0] == '-')
-            {
-                ctx->is_middle_dash = &T;
-            }
-            else
-            {
-                ctx->is_middle_dash = &F;
-            }
-
             break;
-
         case MIME_MSG_BODY_CR:
             if (!*ctx->media_filter_apply)
             {
@@ -849,7 +862,7 @@ pop3_multi(struct ctx *ctx, const uint8_t c)
             break;
         }
         e = e->next;
-        //getchar();
+        getchar();
     } while (e != NULL);
 }
 
@@ -915,6 +928,14 @@ void printctx(struct ctx *ctx)
     if (stack_size(ctx->boundry_stack) != 0)
     {
         printf("Boundary stack peek: %s\n", stack_peek(ctx->boundry_stack));
+    }
+    if (ctx->rfc822_detected != 0 && ctx->rfc822_detected== &T)
+    {
+        printf("rfc : TRUE\n");
+    }
+    else
+    {
+        printf("rfc: FALSE\n");
     }
 }
 
@@ -1034,7 +1055,7 @@ int main(const int argc, const char **argv)
 		printf("No filter medias, please add one\n");
         flm = "";
         //TODO write in pipe the same message!!
-        //return 1;
+        return 1;
 	}
 	char * medias = malloc(strlen(flm) + 1);
 	if (medias == NULL) {
