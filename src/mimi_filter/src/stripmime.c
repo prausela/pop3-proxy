@@ -327,11 +327,9 @@ content_type_match(struct ctx *ctx, const uint8_t c)
     }
 
     /* Leave in current*/
-    struct parser_event *current;
-    fprintf(stderr,"MESSIIII\n");
-    type_list->event = parser_feed(type_list->type_parser, c);
-    current = type_list->event;
+    struct parser_event *current = parser_feed(type_list->type_parser, c);
 
+        fprintf(stderr,"SSSSSSSSSSSSEEEEEEEEEEEEEEEE%s\n",type_list->type);
     while (type_list->next != NULL)
     {
         type_list = type_list->next;
@@ -859,10 +857,11 @@ void printctx(struct ctx *ctx)
 static void
 add_media_subtype(const char * subtype, struct subtype_list *media_subtypes){
     if(strcmp(subtype,"*") != 0){
-        const unsigned int *no_class        = parser_no_classes();
-        struct parser_definition subtype1   = parser_utils_strcmpi(subtype);
+        struct parser_definition * def      = malloc(sizeof(*def));
+        struct parser_definition aux        = parser_utils_strcmpi(subtype);
+        memcpy(def, &aux, sizeof(aux));
+        media_subtypes->type_parser            = parser_init(parser_no_classes(), def);
         media_subtypes->is_wildcard         = &F;
-        media_subtypes->type_parser         = parser_init(no_class, &subtype1);
         media_subtypes->subtype             = malloc(sizeof(subtype) + 1);
         strcpy(media_subtypes->subtype,subtype);
     }else{
@@ -875,10 +874,12 @@ add_media_subtype(const char * subtype, struct subtype_list *media_subtypes){
 static void
 add_media_type(const char * type, const char * subtype, struct type_list *media_types){
     if(media_types->type == NULL){    //Empty list
+        struct parser_definition * def = malloc(sizeof(*def));
+        struct parser_definition aux = parser_utils_strcmpi(type);
+        memcpy(def, &aux, sizeof(aux));
+        media_types->type_parser            = parser_init(parser_no_classes(), def);
+        
         struct subtype_list *media_subtypes = malloc(sizeof(*media_subtypes));
-        const unsigned int *no_class        = parser_no_classes();
-        struct parser_definition type1      = parser_utils_strcmpi(type);
-        media_types->type_parser            = parser_init(no_class, &type1);
         media_types->next                   = NULL;
         media_subtypes->next                = NULL;
         media_types->event                  = malloc(sizeof(*media_subtypes->event));
@@ -914,9 +915,12 @@ add_media_type(const char * type, const char * subtype, struct type_list *media_
         }else{
             //Agrego al final
             struct subtype_list *media_subtypes = malloc(sizeof(*media_subtypes));
-            const unsigned int *no_class        = parser_no_classes();
-            struct parser_definition type1      = parser_utils_strcmpi(type);
-            media_types->type_parser            = parser_init(no_class, &type1);
+
+            struct parser_definition * def      = malloc(sizeof(*def));
+            struct parser_definition aux        = parser_utils_strcmpi(type);
+            memcpy(def, &aux, sizeof(aux));
+            media_types->type_parser            = parser_init(parser_no_classes(), def);
+
             media_types->next                   = NULL;
             media_subtypes->next                = NULL;
             media_types->event                  = malloc(sizeof(*media_types->event));
