@@ -118,19 +118,25 @@ static void
 reset_parser_types_and_subtypes(struct ctx *ctx){
     ctx->media_subtypes = NULL;
     struct subtype_list *media_subtypes;
-    getchar();
+    //getchar();
     struct type_list *media_types = ctx->media_types;
     while(media_types!=NULL){
         fprintf(stderr,"\nENTROOOOOOO\n");
         parser_reset(media_types->type_parser);
         media_subtypes   = media_types->subtypes;
         while(media_subtypes != NULL){
-            parser_reset(media_subtypes->type_parser);
-            media_subtypes = media_subtypes->next;
+            if(*media_subtypes->is_wildcard){
+                media_subtypes = NULL;
+            }else{
+                parser_reset(media_subtypes->type_parser);
+                fprintf(stderr,"\nENTROOOOOOO\n");
+                media_subtypes = media_subtypes->next;
+            }
+            
         }
         media_types = media_types->next;
     }
-    getchar();
+    //getchar();
 }
 
 void print_filter_msg(struct ctx*ctx){
@@ -334,12 +340,15 @@ content_type_match(struct ctx *ctx, const uint8_t c)
     {
         fprintf(stderr, "SSSSSSSSSSSSEEEEEEEEEEEEEEEE%s\n", type_list->type);
         fprintf(stderr,"%c\n",c);
+        fprintf(stderr,"%d\n",current->type);
+
         if(type_list->type_parser==NULL){
             fprintf(stderr,"S NULL\n");
 
         }
         current = parser_feed(type_list->type_parser, c);
-        
+                fprintf(stderr,"%d\n",current->type);
+        fprintf(stderr,"HOLAAAAA %c\n",current->data[0]);
         if (current->type == STRING_CMP_EQ)
         {        fprintf(stderr,"entro ETSAS\n");
             
@@ -347,12 +356,13 @@ content_type_match(struct ctx *ctx, const uint8_t c)
             ctx->media_type_filter_detected = &T;
             ctx->media_subtypes = type_list->subtypes;
             return;
+        }else if (current->type == STRING_CMP_NEQ){
+            fprintf(stderr, "NEQ");
         }
         fprintf(stderr,"OLACOMO ETSAS\n");
         type_list = type_list->next;
     }
-    
-        ctx->media_type_filter_detected = &F;
+    ctx->media_type_filter_detected = &F;
     
 }
 
@@ -747,7 +757,7 @@ mime_msg(struct ctx *ctx, const uint8_t c)
         }
         e = e->next;
     } while (e != NULL);
-    getchar();
+    //getchar();
 }
 
 /* Delimita una respuesta multi-línea POP3. Se encarga del "byte-stuffing" */
@@ -893,7 +903,7 @@ add_media_type(const char * type, const char * subtype, struct type_list *media_
                 //Busco en subtipos
                 if(!*media_types->subtypes->is_wildcard){
                     struct subtype_list *media_subtypes = malloc(sizeof(*media_subtypes));
-                    media_subtypes->next                = media_types->next;
+                    media_subtypes->next                = media_types->subtypes->next;
                     media_types->subtypes               = media_subtypes;
                     strcpy(media_types->type,type);
                     add_media_subtype(subtype,media_types->subtypes);
@@ -906,7 +916,7 @@ add_media_type(const char * type, const char * subtype, struct type_list *media_
             //Es el ultimo!
             if(!*media_types->subtypes->is_wildcard){
                 struct subtype_list *media_subtypes = malloc(sizeof(*media_subtypes));
-                media_subtypes->next                = media_types->next;
+                media_subtypes->next                = media_types->subtypes->next;
                 media_types->subtypes               = media_subtypes;
                 strcpy(media_types->type,type);
                 add_media_subtype(subtype,media_types->subtypes);
@@ -915,11 +925,11 @@ add_media_type(const char * type, const char * subtype, struct type_list *media_
             //Agrego al final
             struct type_list *media_types_extra = malloc(sizeof(*media_types_extra));
             struct subtype_list *media_subtypes = malloc(sizeof(*media_subtypes));
-            
+
             struct parser_definition * def      = malloc(sizeof(*def));
-            struct parser_definition aux        = parser_utils_strcmpi(subtype);
+            struct parser_definition aux        = parser_utils_strcmpi(type);
             memcpy(def, &aux, sizeof(aux));
-            media_types_extra->type_parser            = parser_init(parser_no_classes(), def);
+            media_types_extra->type_parser      = parser_init(parser_no_classes(), def);
 
             media_types->next                   = media_types_extra;
             media_types_extra->next             = NULL;
@@ -1029,10 +1039,12 @@ int main(const int argc, const char **argv)
         
 	}
     free(medias);
+    add_media_type("message", "rfc822", media_types);
     // while(media_types_aux != NULL){
     //     fprintf(stderr," dddd %s\n",media_types_aux->type);
     //     media_types_aux=media_types_aux->next;
     // }
+
 
     struct parser_definition boundary_parser = parser_utils_strcmpi("boundary");
     struct parser_definition charset_parser = parser_utils_strcmpi("charset");
