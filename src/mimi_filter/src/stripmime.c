@@ -52,6 +52,11 @@ struct ctx
     struct parser *ctransfer_encoding_header;
     //Not used atm...
     struct parser *ctype_value;
+    /* detector de message type en header*/
+    struct parser *message_type;
+
+    /* detector de rfc822*/
+    struct parser *rfc822;
 
     /* delimitador para atributo boundary */
     struct parser *boundary_parser_detector;
@@ -95,6 +100,11 @@ struct ctx
 
     //encontre -- al final de un boundary
     bool *boundary_end;
+
+    //detecta un message en el header
+    bool *message_detected;
+    //detecta un rfc822 en el header
+    bool *rfc822_detected;
 
     struct type_list *media_types;
     struct subtype_list *media_subtypes;
@@ -192,6 +202,50 @@ content_type_header(struct ctx *ctx, const uint8_t c)
             break;
         case STRING_CMP_NEQ:
             ctx->msg_content_type_field_detected = &F;
+            break;
+        }
+
+        e = e->next;
+    } while (e != NULL);
+}
+
+//detecta message en el header
+static void
+message_header(struct ctx *ctx, const uint8_t c)
+{
+    const struct parser_event *e = parser_feed(ctx->message_type, c);
+    do
+    {
+        debug("7.typemessage", parser_utils_strcmpi_event, e);
+        switch (e->type)
+        {
+        case STRING_CMP_EQ:
+            ctx->message_detected = &T;
+            break;
+        case STRING_CMP_NEQ:
+            ctx->message_detected= &F;
+            break;
+        }
+
+        e = e->next;
+    } while (e != NULL);
+}
+
+//detecta rfc822 en el header
+static void
+rfc822_header(struct ctx *ctx, const uint8_t c)
+{
+    const struct parser_event *e = parser_feed(ctx->rfc822, c);
+    do
+    {
+        debug("8.type rfc822", parser_utils_strcmpi_event, e);
+        switch (e->type)
+        {
+        case STRING_CMP_EQ:
+            ctx->rfc822_detected = &T;
+            break;
+        case STRING_CMP_NEQ:
+            ctx->rfc822_detected= &F;
             break;
         }
 
@@ -390,6 +444,7 @@ content_type_msg(struct ctx *ctx, const uint8_t c)
             for (int i = 0; i < e->n; i++)
             {
                 content_type_match(ctx, e->data[i]);
+                message_header(ctx,e->data[i]);
             }
             break;
         case MIME_TYPE_TYPE_END:
@@ -405,6 +460,7 @@ content_type_msg(struct ctx *ctx, const uint8_t c)
                 for (int i = 0; i < e->n; i++)
                 {
                     content_subtype_match(ctx, e->data[0]);
+                    rfc822_header(ctx,e->data[i]);
                 }
                 if(ctx->media_filter_apply != 0 && *ctx->media_filter_apply){
                     /*while(ctx->process_modification_mail[0] != ' '){
@@ -577,11 +633,11 @@ mime_msg(struct ctx *ctx, const uint8_t c)
             // si parseabamos Content-Type ya terminamos
             ctx->msg_content_type_field_detected = 0;
             ctx->msg_content_transfer_encoding_field_detected = 0;
-            //ver si va aca!
-                    // parser_reset(ctx->boundary_parser_detector);
-                    ctx->boundary_detected=&F;
-
-
+            ctx->boundary_detected=&F;
+            if(ctx->rfc822_detected!=0 && ctx->rfc822_detected==&T){
+                parser_set_state(ctx->msg,MIME_MSG_NAME);
+                ctx->rfc822_detected=&F;
+            }
             break;
         case MIME_MSG_BODY_START:
             (ctx->process_modification_mail)[0] = e->data[0];
@@ -964,8 +1020,10 @@ int main(const int argc, const char **argv)
     struct parser_definition media_value_def =
         parser_utils_strcmpi("text/plain");
 
-    
-	struct type_list *media_types = malloc(sizeof(*media_types));
+    struct parser_definition message_type_def = parser_utils_strcmpi("message");
+    struct parser_definition rfc822_type_def = parser_utils_strcmpi("rfc822");
+
+    struct type_list *media_types = malloc(sizeof(*media_types));
 	struct type_list *media_types_aux=media_types;
 
     char * flm = getenv("FILTER_MEDIAS");
@@ -978,7 +1036,6 @@ int main(const int argc, const char **argv)
         //TODO write in pipe the same message!!
         //return 1;
 	}
-    add_media_type("message", "rfc822", media_types);
 	char * medias = malloc(strlen(flm) + 1);
 	if (medias == NULL) {
 		free(media_types);
@@ -1041,10 +1098,10 @@ int main(const int argc, const char **argv)
 	}
 
     free(medias);
-    while(media_types_aux != NULL){
-        fprintf(stderr," dddd %s\n",media_types_aux->type);
-        media_types_aux=media_types_aux->next;
-    }
+    // while(media_types_aux != NULL){
+    //     fprintf(stderr," dddd %s\n",media_types_aux->type);
+    //     media_types_aux=media_types_aux->next;
+    // }
 
 
     struct parser_definition boundary_parser = parser_utils_strcmpi("boundary");
@@ -1056,7 +1113,9 @@ int main(const int argc, const char **argv)
         .content_type = parser_init(init_char_class(), mime_type_parser()),
         .ctype_header = parser_init(no_class, &media_header_def),
         .ctype_value = parser_init(no_class, &media_value_def),
+        .message_type = parser_init(no_class, &message_type_def),
         .ctransfer_encoding_header = parser_init(no_class, &content_transfer_encoding_header_def),
+        .rfc822 = parser_init(no_class, &rfc822_type_def),
         .msg_content_filter = &F,
         .media_type_filter_detected = &F,
         .media_filter_apply = &F,
@@ -1073,6 +1132,8 @@ int main(const int argc, const char **argv)
         .boundry_stack = stack_new(NULL),
         .boundary_name = list_new(sizeof(uint8_t), NULL),
         .boundary_end = &F,
+        .message_detected=&F,
+        .rfc822_detected=&F,
     };
     uint8_t data[4096], transformed[4096];
     memset(transformed, '\0', sizeof(transformed));
