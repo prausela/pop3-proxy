@@ -11,12 +11,14 @@
 #include <pthread.h>
 
 #include <arpa/inet.h>
+#include <netinet/sctp.h>
 
 #include "../../include/buffer.h"
 
 #include "../../include/stm.h"
 #include "include/pop3_admin_nio.h"
 #include "../../../utils/include/netutils.h"
+#include "../../speedwagon/include/speedwagon_decoder.h"
 
 #define N(x) (sizeof(x)/sizeof((x)[0]))
 
@@ -40,7 +42,7 @@ struct pop3_admin {
 
 	bool 							authenticated;
 
-	uint8_t							buffer[2048];
+	uint8_t							buffer[MAX_BUFFER];
 
 	/** State Machines*/
 	struct state_machine			stm;
@@ -85,7 +87,6 @@ describe_states(void);
 /** crea un nuevo `struct socks5' */
 static struct pop3_admin *
 pop3_admin_new(int admin_fd) {
-
 	struct pop3_admin *ret;
 
 	if(pool == NULL) {
@@ -170,7 +171,6 @@ pop3_admin_passive_accept(struct selector_key *key) {
 	struct sockaddr_storage       admin_addr;
 	socklen_t                     admin_addr_len = sizeof(admin_addr);
 	struct pop3_admin          	  *state           = NULL;
-
 	const int admin = accept(key->fd, (struct sockaddr*) &admin_addr,
 														  &admin_addr_len);
 	if(admin == -1) {
@@ -206,17 +206,51 @@ static unsigned
 request_read(struct selector_key *key) {
 	unsigned  ret			= REQUEST_READ;
 	 uint8_t *buffer 		= ATTACHMENT(key)->buffer;
-	    bool  authenticated = ATTACHMENT(key)->authenticated;
-	  size_t  count;
+		bool  authenticated = ATTACHMENT(key)->authenticated;
+	  size_t  count 		= MAX_BUFFER;
 	 ssize_t  n;
-
+	 char **  parameters;
+	    char  response;
+	     int  pointer=2;
+    bzero(buffer, sizeof(buffer));
 	n = recv(key->fd, &ATTACHMENT(key)->buffer, count, 0);
 	if(n > 0) {
+		
 		if(authenticated){
 			// AUTHENTICATED
 		} else {
 			// NOT AUTHENTICATED
 		}
+		buffer[n] = 0;
+		//if (sndrcvinfo.sinfo_stream == LOCALTIME_STREAM) {
+		printf("El eByte es: ");
+		fflush(stdout);
+		show_byte(buffer[0]);
+		int size = buffer[1];
+		printf("La cantidad de parametros son: %d\n", size);
+		if((parameters=malloc(size*sizeof(char*)))==NULL){
+			printf("Error. No se pudo crear memoria para parameters[].\n");
+			return 1;
+		}
+		for (int i=0; i<size; i++){
+			parameters[i]=malloc(sizeof(buffer+pointer));
+			strcpy(parameters[i],buffer+pointer);
+			pointer+= sizeof(buffer+pointer);
+			//printf("%c\n", i+1);
+		}
+		/*for(int i=0; i < 10; i++){
+			putchar(buffer[i]);
+		}*/
+		printf("Los parametros son: ");
+		for(int i=0; i<size; i++){
+		  printf("%s ", parameters[i]);
+		}
+		printf("\n");
+		//printf("%s ", parameters[2]);
+		response=decode_request(buffer[0], parameters);
+		
+		fflush(stdout);
+		buffer[0]=response;
 		ret = response_write(key);
 	} else {
 		ret = ERROR;
@@ -230,7 +264,7 @@ response_write(struct selector_key *key) {
 	unsigned  ret     	= REQUEST_READ;
 	 uint8_t *buffer 	= ATTACHMENT(key)->buffer;
 	 // COUNT MUST BE SET TO THE LENGTH OF WHAT TO WRITE
-	  size_t  count;
+	  size_t  count 	= sizeof(char);
 	 ssize_t  n;
 
 	n = send(key->fd, buffer, count, MSG_NOSIGNAL);

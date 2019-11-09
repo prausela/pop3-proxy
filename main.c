@@ -79,7 +79,7 @@ init_socket(const unsigned port, const char **err_msg){
 
 	int ans;
 
-	const int server = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	const int server = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
 	if(server < 0) {
 		*err_msg = "unable to create socket";
 		return server;
