@@ -131,7 +131,6 @@ reset_parser_types_and_subtypes(struct ctx *ctx){
     //getchar();
     struct type_list *media_types = ctx->media_types;
     while(media_types!=NULL){
-        fprintf(stderr,"\nENTROOOOOOO\n");
         parser_reset(media_types->type_parser);
         media_subtypes   = media_types->subtypes;
         while(media_subtypes != NULL){
@@ -139,7 +138,6 @@ reset_parser_types_and_subtypes(struct ctx *ctx){
                 media_subtypes = NULL;
             }else{
                 parser_reset(media_subtypes->type_parser);
-                fprintf(stderr,"\nENTROOOOOOO\n");
                 media_subtypes = media_subtypes->next;
             }
             
@@ -254,26 +252,6 @@ rfc822_header(struct ctx *ctx, const uint8_t c)
 }
 
 static void
-content_type_value(struct ctx *ctx, const uint8_t c)
-{
-    const struct parser_event *e = parser_feed(ctx->ctype_value, c);
-    do
-    {
-        debug("3.typehr", parser_utils_strcmpi_event, e);
-        switch (e->type)
-        {
-        case STRING_CMP_EQ:
-            printf("Hola");
-            break;
-        case STRING_CMP_NEQ:
-            printf("Chau");
-            break;
-        }
-        e = e->next;
-    } while (e != NULL);
-}
-
-static void
 boundary_charset_match(struct ctx *ctx, const uint8_t c)
 {
     const struct parser_event *boundary_parser_evt = parser_feed(ctx->boundary_parser_detector, c);
@@ -281,13 +259,11 @@ boundary_charset_match(struct ctx *ctx, const uint8_t c)
     //Imprimir resultados
     if (boundary_parser_evt->type == STRING_CMP_EQ)
     {
-        fprintf(stderr, "LA CONCHA DE LA LORAAAA");
         ctx->multipart_section = &T;
         ctx->boundary_detected = &T;
     }
     else if (charset_parser_evt->type == STRING_CMP_EQ)
     {
-        fprintf(stderr, "LA CONCHA DE TU MADREEE");
         ctx->multipart_section = &F;
     }
     else
@@ -300,7 +276,6 @@ boundary_charset_match(struct ctx *ctx, const uint8_t c)
 static void
 replace_to_plain_text(struct ctx *ctx, const uint8_t c)
 {
-    fprintf(stderr, "before %c and %c", c, ctx->process_modification_mail[0]);
     while (ctx->process_modification_mail[0] != ' ' && ctx->process_modification_mail[0] != ':')
     {
         (ctx->process_modification_mail)--;
@@ -326,7 +301,6 @@ replace_to_plain_text(struct ctx *ctx, const uint8_t c)
     (ctx->process_modification_mail)++;
     ctx->process_modification_mail[0] = 'n';
     (ctx->process_modification_mail)++;
-    fprintf(stderr, "LALAAAA %c y %c\n", c, ctx->process_modification_mail[0]);
 }
 
 static void
@@ -361,14 +335,12 @@ content_subtype_match(struct ctx *ctx, const uint8_t c)
     {
         //Match found!
         ctx->media_filter_apply = &T;
-        fprintf(stderr, "Encontre un match!\n");
         ctx->replace_content_type = &T;
         //Go back and replace whatever to text/plain
         //                    replace_to_plain_text(ctx,c);
     }
     else if (current->type == STRING_CMP_NEQ)
     {
-        printf("NOT EQ\n");
         ctx->media_filter_apply = &F;
     }
     else
@@ -392,28 +364,20 @@ content_type_match(struct ctx *ctx, const uint8_t c)
     struct parser_event *current;
     while (type_list != NULL)
     {
-        fprintf(stderr, "SSSSSSSSSSSSEEEEEEEEEEEEEEEE%s\n", type_list->type);
-        fprintf(stderr,"%c\n",c);
-        fprintf(stderr,"%d\n",current->type);
 
         if(type_list->type_parser==NULL){
-            fprintf(stderr,"S NULL\n");
 
         }
         current = parser_feed(type_list->type_parser, c);
-                fprintf(stderr,"%d\n",current->type);
-        fprintf(stderr,"HOLAAAAA %c\n",current->data[0]);
+               
         if (current->type == STRING_CMP_EQ)
-        {        fprintf(stderr,"entro ETSAS\n");
-            
-            fprintf(stderr, "WUUUU");
+        {   
             ctx->media_type_filter_detected = &T;
             ctx->media_subtypes = type_list->subtypes;
             return;
         }else if (current->type == STRING_CMP_NEQ){
-            fprintf(stderr, "NEQ");
+           
         }
-        fprintf(stderr,"OLACOMO ETSAS\n");
         type_list = type_list->next;
     }
     ctx->media_type_filter_detected = &F;
@@ -435,7 +399,6 @@ content_type_msg(struct ctx *ctx, const uint8_t c)
 {
     const struct parser_event *e = parser_feed(ctx->content_type, c);
     debug("5.   ct_type", content_type_msg_event, e);
-    fprintf(stderr, "Current letter parser feed: %c\n", e->data[0]);
     do
     {
         switch (e->type)
@@ -478,7 +441,6 @@ content_type_msg(struct ctx *ctx, const uint8_t c)
             //Should i do smth here?
             if (*ctx->media_filter_apply)
             {
-                //fprintf(stderr,"char in buffer= %c",(ctx->process_modification_mail)[0]);
             }
             break;
         case MIME_PARAMETER:
@@ -518,12 +480,9 @@ content_type_msg(struct ctx *ctx, const uint8_t c)
             if (ctx->boundary_detected != 0 && ctx->boundary_detected == &T)
             {
 
-                printf("mime end:\n");
-                printf("list return string %s\n", list_return_string(ctx->boundary_name));
-                printf("list return string2 %s\n", list_return_string(ctx->boundary_name));
+               
 
                 stack_push(ctx->boundry_stack, list_return_string(ctx->boundary_name));
-                printf("STACK PEEK: %s\n", stack_peek(ctx->boundry_stack));
                 ctx->boundary_name = list_empty(ctx->boundary_name);
                 if (ctx->multipart_section != NULL && *ctx->media_filter_apply && !*ctx->multipart_section)
                 {
@@ -575,7 +534,7 @@ mime_msg(struct ctx *ctx, const uint8_t c)
     {
         debug("1.   msg", mime_msg_event, e);
         printf("Current letter parser feed: %c\n", e->data[0]);
-        printctx(ctx);
+        //printctx(ctx);
         switch (e->type)
         {
         case MIME_MSG_NAME:
@@ -641,7 +600,6 @@ mime_msg(struct ctx *ctx, const uint8_t c)
             ctx->msg_content_transfer_encoding_field_detected = 0;
             ctx->boundary_detected=&F;
             if(ctx->rfc822_detected!=0 && ctx->rfc822_detected==&T){
-                printf("ENTROOOOOOOOOOOOOOOOOOOOOOOOOOO\n\n");
                 parser_set_state(ctx->msg,MIME_MSG_NAME);
                 //ctx->rfc822_detected=&F;
             }
@@ -651,7 +609,6 @@ mime_msg(struct ctx *ctx, const uint8_t c)
             {
                 ctx->message_detected = &F;
                 ctx->rfc822_detected = &F;
-                fprintf(stderr,"MIME MSG BODY\n\n\n");
                 parser_reset(ctx->content_type);
             }else{
 
@@ -679,8 +636,7 @@ mime_msg(struct ctx *ctx, const uint8_t c)
 
                 if (e->data[0] == '-')
                 {
-                    printf("Possible boundary: %s\n", list_return_string(ctx->possible_boundary_string));
-                    printf("LEO GUION\n");
+                    
                     //tengo que setear el possible boundry cuando arranca la linea
 
                     ctx->possible_boundary = &T;
@@ -700,7 +656,6 @@ mime_msg(struct ctx *ctx, const uint8_t c)
                     //si encuentro un -- al final, prendo bool que encontre el boundary name end
                     if (e->data[0] == '-' && list_size(ctx->possible_boundary_string) != 0)
                     {
-                        printf("LIST PEEK: %c\n", list_peek(ctx->possible_boundary_string));
                         if (list_peek(ctx->possible_boundary_string) == '-')
                         {
                             //encontre dos -- al final
@@ -743,12 +698,9 @@ mime_msg(struct ctx *ctx, const uint8_t c)
 
             if (ctx->double_middle_dash != 0 && ctx->double_middle_dash == &T)
             {
-                printf("possible_boundary_string: %s lenght: %d\n", list_return_string(ctx->possible_boundary_string), list_size(ctx->possible_boundary_string));
-                printf("stack peek: %s lenght: %d\n", stack_peek(ctx->boundry_stack), strlen(stack_peek(ctx->boundry_stack)));
-
+               
                 if ((strcmp(list_return_string(ctx->possible_boundary_string), stack_peek(ctx->boundry_stack)) == 0) && ctx->boundary_end != &T)
                 {
-                    printf("ENTROOO \n");
                     //el possible boundry string coincidio con el del stack
                     //lo agrego al body
                     if (*ctx->media_filter_apply)
@@ -781,13 +733,9 @@ mime_msg(struct ctx *ctx, const uint8_t c)
             }
             if (ctx->boundary_end != 0 && ctx->boundary_end == &T)
             {
-                printf("entro a end!\n");
-                printf("possible_boundary_string: %s lenght: %d\n", list_ret_end_string(ctx->possible_boundary_string), list_size(ctx->possible_boundary_string));
-                printf("stack peek: %s lenght: %d\n", stack_peek(ctx->boundry_stack), strlen(stack_peek(ctx->boundry_stack)));
-
+               
                 if (strcmp(list_ret_end_string(ctx->possible_boundary_string), stack_peek(ctx->boundry_stack)) == 0)
                 {
-                    printf("encontro el fin del boundary\n");
                     //lo escribo en el body
                     if (*ctx->media_filter_apply)
                     {
@@ -862,7 +810,7 @@ pop3_multi(struct ctx *ctx, const uint8_t c)
             break;
         }
         e = e->next;
-        getchar();
+        //getchar();
     } while (e != NULL);
 }
 
@@ -972,7 +920,6 @@ add_media_type(const char * type, const char * subtype, struct type_list *media_
         media_types->event                  = malloc(sizeof(*media_types->event));
         media_types->type                   = malloc(sizeof(type) + 1);
         strcpy(media_types->type,type);
-        //fprintf(stderr,"\n%s\n",type);
         add_media_subtype(subtype, media_subtypes);
     }else{
         while(media_types->next != NULL){
@@ -1014,7 +961,6 @@ add_media_type(const char * type, const char * subtype, struct type_list *media_
             media_types_extra->subtypes         = media_subtypes;
             media_types_extra->type             = malloc(sizeof(type) + 1);
             strcpy(media_types_extra->type,type);
-            //fprintf(stderr,"\n%s\n",type);
             add_media_subtype(subtype,media_subtypes);
         }
     }
@@ -1072,7 +1018,6 @@ int main(const int argc, const char **argv)
 	/*tomar primer media*/
 	current = strtok_r(medias, comma, &context);
 	while (current != NULL) {
-        fprintf(stderr,"%s",current);
 		char * aux = malloc(strlen(current) + 1);
 		if (aux == NULL) {
 			free(aux);
@@ -1105,24 +1050,14 @@ int main(const int argc, const char **argv)
 		add_media_type(type, subtype, media_types);
         struct type_list *media_types_aux=media_types;
 
-        // while(media_types_aux->type!=NULL){
-        //     printf("TIPOOO %s\n",media_types_aux->type);
-        //     if(media_types_aux->next==NULL){
-        //         printf("ES NULL\n");
-        //     }
-        //     media_types_aux=media_types_aux->next;
-        // }
-        printf("SALE\n");
+       
 		free(aux);
 		current = strtok_r(NULL, comma, &context);
         
 	}
 
     free(medias);
-    // while(media_types_aux != NULL){
-    //     fprintf(stderr," dddd %s\n",media_types_aux->type);
-    //     media_types_aux=media_types_aux->next;
-    // }
+    
 
 
     struct parser_definition boundary_parser = parser_utils_strcmpi("boundary");
