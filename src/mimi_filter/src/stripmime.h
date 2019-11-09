@@ -36,7 +36,7 @@ struct type_list
 struct subtype_list
 {
     /** Media substype name */
-    char* type;
+    char* subtype;
 
     bool* is_wildcard;
     /** Status to check if the string matched the parser */

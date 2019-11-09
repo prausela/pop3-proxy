@@ -328,6 +328,7 @@ content_type_match(struct ctx *ctx, const uint8_t c)
 
     /* Leave in current*/
     struct parser_event *current;
+    fprintf(stderr,"MESSIIII\n");
     type_list->event = parser_feed(type_list->type_parser, c);
     current = type_list->event;
 
@@ -750,6 +751,7 @@ mime_msg(struct ctx *ctx, const uint8_t c)
         }
         e = e->next;
     } while (e != NULL);
+    getchar();
 }
 
 /* Delimita una respuesta multi-línea POP3. Se encarga del "byte-stuffing" */
@@ -854,7 +856,77 @@ void printctx(struct ctx *ctx)
     }
 }
 
+static void
+add_media_subtype(const char * subtype, struct subtype_list *media_subtypes){
+    if(strcmp(subtype,"*") != 0){
+        const unsigned int *no_class        = parser_no_classes();
+        struct parser_definition subtype1   = parser_utils_strcmpi(subtype);
+        media_subtypes->is_wildcard         = &F;
+        media_subtypes->type_parser         = parser_init(no_class, &subtype1);
+        media_subtypes->subtype             = malloc(sizeof(subtype) + 1);
+        strcpy(media_subtypes->subtype,subtype);
+    }else{
+        media_subtypes->is_wildcard         = &T;
+        media_subtypes->type_parser         = NULL;
+        media_subtypes->subtype             = NULL;
+    }
+}
 
+static void
+add_media_type(const char * type, const char * subtype, struct type_list *media_types){
+    if(media_types->type == NULL){    //Empty list
+        struct subtype_list *media_subtypes = malloc(sizeof(*media_subtypes));
+        const unsigned int *no_class        = parser_no_classes();
+        struct parser_definition type1      = parser_utils_strcmpi(type);
+        media_types->type_parser            = parser_init(no_class, &type1);
+        media_types->next                   = NULL;
+        media_subtypes->next                = NULL;
+        media_types->event                  = malloc(sizeof(*media_subtypes->event));
+        media_types->subtypes               = media_subtypes;
+        media_types->event                  = malloc(sizeof(*media_types->event));
+        media_types->type                   = malloc(sizeof(type) + 1);
+        strcpy(media_types->type,type);
+        add_media_subtype(subtype, media_subtypes);
+    }else{
+        while(media_types->next != NULL){
+            if(strcmp(media_types->type,type) == 0){
+                //Busco en subtipos
+                if(!*media_types->subtypes->is_wildcard){
+                    struct subtype_list *media_subtypes = malloc(sizeof(*media_subtypes));
+                    media_subtypes->next                = media_types->next;
+                    media_types->subtypes               = media_subtypes;
+                    strcpy(media_types->type,type);
+                    add_media_subtype(subtype,media_types->subtypes);
+                }
+                return;
+            }
+            media_types = media_types->next;
+        }
+        if(strcmp(media_types->type,type) == 0){
+            //Es el ultimo!
+            if(!*media_types->subtypes->is_wildcard){
+                struct subtype_list *media_subtypes = malloc(sizeof(*media_subtypes));
+                media_subtypes->next                = media_types->next;
+                media_types->subtypes               = media_subtypes;
+                strcpy(media_types->type,type);
+                add_media_subtype(subtype,media_types->subtypes);
+            }
+        }else{
+            //Agrego al final
+            struct subtype_list *media_subtypes = malloc(sizeof(*media_subtypes));
+            const unsigned int *no_class        = parser_no_classes();
+            struct parser_definition type1      = parser_utils_strcmpi(type);
+            media_types->type_parser            = parser_init(no_class, &type1);
+            media_types->next                   = NULL;
+            media_subtypes->next                = NULL;
+            media_types->event                  = malloc(sizeof(*media_types->event));
+            media_types->subtypes               = media_subtypes;
+            media_types->type                   = malloc(sizeof(type) + 1);
+            strcpy(media_types->type,type);
+            add_media_subtype(subtype,media_subtypes);
+        }
+    }
+}
 
 int main(const int argc, const char **argv)
 {
@@ -877,20 +949,71 @@ int main(const int argc, const char **argv)
     struct parser_definition media_value_def =
         parser_utils_strcmpi("text/plain");
 
-    struct type_list *media_types = malloc(sizeof(*media_types));
-    struct subtype_list *media_subtypes = malloc(sizeof(*media_subtypes));
+    
+	struct type_list *media_types = malloc(sizeof(*media_types));
 
-    struct parser_definition type1 = parser_utils_strcmpi("text");
-    struct parser_definition subtype1 = parser_utils_strcmpi("plain");
+    char * flm = getenv("FILTER_MEDIAS");
+    if (media_types == NULL) {
+        return -1;
+    }
+	if (flm == NULL) {
+		printf("No filter medias, please add one\n");
+		free(media_types);
+		return -1;
+	}
+	char * medias = malloc(strlen(flm) + 1);
+	if (medias == NULL) {
+		free(media_types);
+		return -1;
+	}
+	strcpy(medias, flm);
+	const char * comma   = ",";
+	const char * slash   = "/";
+	char * context       = "comma";
+	char * context_b     = "slash";
+	char * current;
+	char * mime;
+	/*tomar primer media*/
+	current = strtok_r(medias, comma, &context);
+	while (current != NULL) {
+        fprintf(stderr,"%s",current);
+		char * aux = malloc(strlen(current) + 1);
+		if (aux == NULL) {
+			free(aux);
+			return -1;
+		}
+		strcpy(aux, current);
+		/* getting type */
+		mime = strtok_r(aux, slash, &context_b);
+		if (mime == NULL) {
+            free(aux);
+			return -1;
+		}
+		char * type = malloc(strlen(mime) + 1);
+		if (type == NULL) {
+            free(type);
+			return -1;
+		}
+		strcpy(type, mime);
+		/*getting subtype*/
+		mime = strtok_r(NULL, slash, &context_b);
+		if (mime == NULL) {
+			return -1;
+		}
+		char * subtype = malloc(strlen(mime) + 1);
+		if (subtype == NULL) {
+            free(subtype);
+			return -1;
+		}
+		strcpy(subtype, mime);
+		add_media_type(type, subtype, media_types);
+		free(aux);
+		current = strtok_r(NULL, comma, &context);
+	}
+    free(medias);
+
     struct parser_definition boundary_parser = parser_utils_strcmpi("boundary");
     struct parser_definition charset_parser = parser_utils_strcmpi("charset");
-
-    media_types->next = NULL;
-    media_types->type_parser = parser_init(no_class, &type1);
-    media_types->subtypes = media_subtypes;
-    media_subtypes->next = NULL;
-    media_subtypes->is_wildcard = &F;
-    media_subtypes->type_parser = parser_init(no_class, &subtype1);
 
     struct ctx ctx = {
         .multi = parser_init(no_class, pop3_multi_parser()),
