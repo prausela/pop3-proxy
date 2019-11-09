@@ -23,7 +23,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
-#include "pop3_suscriptor.h"
+#include "services/pop3/include/pop3_suscriptor.h"
 
 static void
 sigterm_handler(const int signal) {
