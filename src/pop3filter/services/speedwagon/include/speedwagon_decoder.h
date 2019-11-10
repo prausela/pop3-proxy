@@ -3,6 +3,7 @@
 
 #define SUCCESS 	0
 #define MAX_BUFFER	1024
+#include <stdio.h>
 
 char decode_request(char ebyte, char** parameters);
 char sock_decoder(char ebyte, char ** parameters);
