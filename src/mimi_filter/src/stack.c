@@ -27,8 +27,6 @@ void stack_push(stack *stack, char *element)
 {
 
   stackNode *node = malloc(sizeof(stackNode));
-  printf("STACK PUSH\n");
-  printf("ELEM SIZE %ld\nString: %s\n", strlen(element), element);
   //node->data=element;
   node->data = malloc(strlen(element));
   //   printf("NODE DATA LENGHT1: %ld\n",strlen(node->data));
