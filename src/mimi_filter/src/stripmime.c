@@ -274,36 +274,6 @@ boundary_charset_match(struct ctx *ctx, const uint8_t c)
 }
 
 static void
-replace_to_plain_text(struct ctx *ctx, const uint8_t c)
-{
-    while (ctx->process_modification_mail[0] != ' ' && ctx->process_modification_mail[0] != ':')
-    {
-        (ctx->process_modification_mail)--;
-    }
-    (ctx->process_modification_mail)++;
-    ctx->process_modification_mail[0] = 't';
-    (ctx->process_modification_mail)++;
-    ctx->process_modification_mail[0] = 'e';
-    (ctx->process_modification_mail)++;
-    ctx->process_modification_mail[0] = 'x';
-    (ctx->process_modification_mail)++;
-    ctx->process_modification_mail[0] = 't';
-    (ctx->process_modification_mail)++;
-    ctx->process_modification_mail[0] = '/';
-    (ctx->process_modification_mail)++;
-    ctx->process_modification_mail[0] = 'p';
-    (ctx->process_modification_mail)++;
-    ctx->process_modification_mail[0] = 'l';
-    (ctx->process_modification_mail)++;
-    ctx->process_modification_mail[0] = 'a';
-    (ctx->process_modification_mail)++;
-    ctx->process_modification_mail[0] = 'i';
-    (ctx->process_modification_mail)++;
-    ctx->process_modification_mail[0] = 'n';
-    (ctx->process_modification_mail)++;
-}
-
-static void
 content_subtype_match(struct ctx *ctx, const uint8_t c)
 {
     struct subtype_list *subtype_list = ctx->media_subtypes;
@@ -1048,7 +1018,7 @@ int main(const int argc, const char **argv)
 		}
 		strcpy(subtype, mime);
 		add_media_type(type, subtype, media_types);
-        struct type_list *media_types_aux=media_types;
+        media_types_aux=media_types;
 
        
 		free(aux);
