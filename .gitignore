@@ -25,3 +25,7 @@ src/pop3_decrypt_parser
 src/pop3_encrypt_parser
 
 src/mime_filter
+
+pop3adminclient
+
+pop3filter
