@@ -15,9 +15,10 @@ debug(const char *p,
       const struct parser_event *e)
 {
     // DEBUG: imprime
+
     if (e->n == 0)
     {
-        fprintf(stderr, "%-8s: %-14s\n", p, namefnc(e->type));
+        fprintf(stderr, "%-14s\n", namefnc(e->type));
     }
     else
     {
@@ -27,11 +28,11 @@ debug(const char *p,
                                         : "";
             if (e->data[j] <= ' ')
             {
-                fprintf(stderr, "%-8s: %-14s 0x%02X\n", p, name, e->data[j]);
+                fprintf(stderr, "0x%02X", e->data[j]);
             }
             else
             {
-                fprintf(stderr, "%-8s: %-14s %c\n", p, name, e->data[j]);
+                fprintf(stderr, "%c",e->data[j]);
             }
         }
     }
@@ -171,7 +172,7 @@ content_transfer_encoding_header(struct ctx *ctx, const uint8_t c)
     const struct parser_event *e = parser_feed(ctx->ctransfer_encoding_header, c);
     do
     {
-        debug("6.typehr", parser_utils_strcmpi_event, e);
+        //debug("6.typehr", parser_utils_strcmpi_event, e);
         switch (e->type)
         {
         case STRING_CMP_EQ:
@@ -192,7 +193,7 @@ content_type_header(struct ctx *ctx, const uint8_t c)
     const struct parser_event *e = parser_feed(ctx->ctype_header, c);
     do
     {
-        debug("2.typehr", parser_utils_strcmpi_event, e);
+        //debug("2.typehr", parser_utils_strcmpi_event, e);
         switch (e->type)
         {
         case STRING_CMP_EQ:
@@ -213,8 +214,7 @@ message_header(struct ctx *ctx, const uint8_t c)
 {
     const struct parser_event *e = parser_feed(ctx->message_type, c);
     do
-    {
-        debug("7.typemessage", parser_utils_strcmpi_event, e);
+    {//debug("7.typemessage", parser_utils_strcmpi_event, e);
         switch (e->type)
         {
         case STRING_CMP_EQ:
@@ -236,7 +236,7 @@ rfc822_header(struct ctx *ctx, const uint8_t c)
     const struct parser_event *e = parser_feed(ctx->rfc822, c);
     do
     {
-        debug("8.type rfc822", parser_utils_strcmpi_event, e);
+        //debug("8.type rfc822", parser_utils_strcmpi_event, e);
         switch (e->type)
         {
         case STRING_CMP_EQ:
@@ -368,7 +368,7 @@ static void
 content_type_msg(struct ctx *ctx, const uint8_t c)
 {
     const struct parser_event *e = parser_feed(ctx->content_type, c);
-    debug("5.   ct_type", content_type_msg_event, e);
+    //debug("5.   ct_type", content_type_msg_event, e);
     do
     {
         switch (e->type)
@@ -502,8 +502,8 @@ mime_msg(struct ctx *ctx, const uint8_t c)
 
     do
     {
-        debug("1.   msg", mime_msg_event, e);
-        printf("Current letter parser feed: %c\n", e->data[0]);
+        //debug("1.   msg", mime_msg_event, e);
+        //printf("Current letter parser feed: %c\n", e->data[0]);
         //printctx(ctx);
         switch (e->type)
         {
@@ -754,7 +754,7 @@ pop3_multi(struct ctx *ctx, const uint8_t c)
     const struct parser_event *e = parser_feed(ctx->multi, c);
     do
     {
-        debug("0. multi", pop3_multi_event, e);
+        //debug("", pop3_multi_event, e);
         switch (e->type)
         {
         case POP3_MULTI_BYTE:
@@ -936,6 +936,32 @@ add_media_type(const char * type, const char * subtype, struct type_list *media_
     }
 }
 
+static void
+free_media_filter_list(struct type_list *media_types){
+    struct type_list    *media_types_aux    = media_types;
+    struct subtype_list *media_subtypes_aux;
+    while(media_types_aux != NULL){
+        free(media_types_aux->type);
+        free(media_types_aux->event);
+        parser_destroy(media_types_aux->type_parser);
+        media_subtypes_aux = media_types_aux->subtypes;
+        while (media_subtypes_aux != NULL) {
+            free(media_subtypes_aux->event);
+            free(media_subtypes_aux->is_wildcard);
+            if(media_subtypes_aux->type_parser != NULL)
+                parser_destroy(media_subtypes_aux->type_parser);
+            struct subtype_list *aux = media_subtypes_aux;
+            media_subtypes_aux = media_subtypes_aux->next;
+            free(aux);
+        }
+        free(media_subtypes_aux);
+        struct type_list *aux2 = media_types_aux;
+        media_types_aux = media_types_aux->next;
+        free(aux2);
+    }
+    free(media_types_aux);
+}
+
 int main(const int argc, const char **argv)
 {
     int fd = STDIN_FILENO;
@@ -1095,5 +1121,6 @@ int main(const int argc, const char **argv)
     //To be removed
     parser_destroy(ctx.charset_parser_detector);
     parser_utils_strcmpi_destroy(&charset_parser);
+    //free_media_filter_list(ctx.media_types);
     
 }
