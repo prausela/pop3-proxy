@@ -1094,15 +1094,13 @@ int main(const int argc, const char **argv)
     {
         n = read(fd, data, sizeof(data)); //Read from pipe instead of file!
         ctx.process_modification_mail = transformed;
-        for (ssize_t i = 0; i < n; i++)
+        ssize_t i;
+        for (i = 0; i < n; i++)
         {
             pop3_multi(&ctx, data[i]);
         }
-        int i = 0;
-        while (transformed[i] != 0)
-        {
-            printf("%c", transformed[i++]);
-        }
+        fflush(stdout); /* force it to go out */
+        write(1,transformed,i);
         memset(transformed, '\0', sizeof(transformed));
         //write to pipe!!
         //empty buffer
