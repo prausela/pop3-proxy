@@ -61,8 +61,7 @@ struct ctx
 
     /* delimitador para atributo boundary */
     struct parser *boundary_parser_detector;
-    //To be removed
-    struct parser *charset_parser_detector;
+  
 
     //lista que guarda una linea del body que puede ser bundary
     list *possible_boundary_string;
@@ -255,17 +254,13 @@ static void
 boundary_charset_match(struct ctx *ctx, const uint8_t c)
 {
     const struct parser_event *boundary_parser_evt = parser_feed(ctx->boundary_parser_detector, c);
-    const struct parser_event *charset_parser_evt = parser_feed(ctx->charset_parser_detector, c);
     //Imprimir resultados
     if (boundary_parser_evt->type == STRING_CMP_EQ)
     {
         ctx->multipart_section = &T;
         ctx->boundary_detected = &T;
     }
-    else if (charset_parser_evt->type == STRING_CMP_EQ)
-    {
-        ctx->multipart_section = &F;
-    }
+    
     else
     {
         //Todavia no se...
@@ -1079,7 +1074,6 @@ int main(const int argc, const char **argv)
         .possible_boundary_string = list_new(sizeof(uint8_t), NULL),
         .double_middle_dash = &F,
         .boundary_parser_detector = parser_init(no_class, &boundary_parser),
-        .charset_parser_detector = parser_init(no_class, &charset_parser),
         .msg_content_transfer_encoding_field_detected = NULL,
         .boundry_stack = stack_new(NULL),
         .boundary_name = list_new(sizeof(uint8_t), NULL),
@@ -1117,7 +1111,6 @@ int main(const int argc, const char **argv)
     parser_destroy(ctx.boundary_parser_detector);
     parser_utils_strcmpi_destroy(&boundary_parser);
     //To be removed
-    parser_destroy(ctx.charset_parser_detector);
     parser_utils_strcmpi_destroy(&charset_parser);
     //free_media_filter_list(ctx.media_types);
     
