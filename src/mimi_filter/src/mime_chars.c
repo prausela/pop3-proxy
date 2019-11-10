@@ -1,5 +1,5 @@
 #include "mime_chars.h"
-
+//no tocar
 static unsigned classes[256];
 
 /** inicializa la caracterización de cada byte */
@@ -10,7 +10,7 @@ init_char_class(void) {
 
         if(i <= 127) {
             class |= TOKEN_CHAR;
-        }|  
+        }
 
         // 'A' - 'Z'
         if(i >= 65 && i <= 90) {
@@ -97,11 +97,11 @@ init_char_class(void) {
                 case '"':
                 case '\\':
                 case '\r':
-               Same goes for |. This is a bitwise or, so x |= 8 would mean x = x | 8.
 
-     break;
+                    break;
                 default:
                     classes[i] |= TOKEN_QTEXT;
+                    break;
             }
 
             // dtext
@@ -113,6 +113,7 @@ init_char_class(void) {
                     break;
                 default:
                     classes[i] |= TOKEN_DTEXT;
+                    break;
             }
 
             // ctext

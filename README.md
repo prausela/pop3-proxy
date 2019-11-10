@@ -54,6 +54,8 @@ Para correr el pop3 command test
 ### 
 
 
+## Referencias
+Stack y List:  https://pseudomuto.com/2013/05/implementing-a-generic-linked-list-in-c/
 
 ## Authors
 
@@ -61,4 +63,6 @@ Para correr el pop3 command test
 - **Manuel Luque**- Legajo: 57386
 - **Gaston Lifschitz**- Legajo: 58225
 - **Micaela Banfi**- Legajo: 57293
+
+
 

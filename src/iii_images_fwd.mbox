@@ -1,0 +1,41 @@
+Date: Sun, 5 Nov 2017 18:59:53 -0300
+To: juan
+Content-Type: multipart/mixed; boundary="MP_/n0TMIrGQob2KkHXMh5Jho3A"
+
+--MP_/n0TMIrGQob2KkHXMh5Jho3A
+Content-Type: text/plain; charset=US-ASCII
+
+Adjunto un correo.
+--MP_/n0TMIrGQob2KkHXMh5Jho3A
+Content-Type: message/rfc822
+
+From: juan <juan@juan-virtual-machine>
+To: juan
+Subject: ii
+Content-Type: multipart/mixed; boundary="MP_/XAkM/CBycDJWEUGbQ_LLaw3"
+
+--MP_/XAkM/CBycDJWEUGbQ_LLaw3
+Content-Type: text/plain; charset=US-ASCII
+
+Un png, un jpgeg
+--MP_/XAkM/CBycDJWEUGbQ_LLaw3
+Content-Type: image/png
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=favicon.png
+
+iV==
+
+--MP_/XAkM/CBycDJWEUGbQ_LLaw3
+Content-Type: image/jpeg
+
+/9
+
+--MP_/XAkM/CBycDJWEUGbQ_LLaw3
+Content-Type: text/plain
+
+hola mundo!
+
+--MP_/XAkM/CBycDJWEUGbQ_LLaw3--
+
+--MP_/n0TMIrGQob2KkHXMh5Jho3A--
+

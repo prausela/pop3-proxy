@@ -234,11 +234,11 @@ Donec eleifend, mi sed vulputate aliquam, nisi dui pharetra neque, non commodo a
   while(1){
     sleep(2);
     printf("Writing to pipe:\n");
-    write(sender_pipe[1],message1,68000);
+    //write(sender_pipe[1],message1,68000);
     sleep(2);
     int size = 16;
     char message[size];
-    read(receiver_pipe[0],message,68000);
+    //read(receiver_pipe[0],message,68000);
     printf("Lei: %s\n", message);
   }
 */
