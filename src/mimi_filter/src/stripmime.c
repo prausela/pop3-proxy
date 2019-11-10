@@ -158,6 +158,10 @@ void print_filter_msg(struct ctx*ctx){
         ctx->process_modification_mail[0]=filter[i++];
         (ctx->process_modification_mail)++;
     }
+    ctx->process_modification_mail[0]='\r';
+    (ctx->process_modification_mail)++;
+    ctx->process_modification_mail[0]='\n';
+    (ctx->process_modification_mail)++;
 }
 /* Detecta si un header-field-name equivale a Content-Type.
  * Deja el valor en `ctx->msg_content_type_field_detected'. Tres valores
@@ -209,8 +213,7 @@ content_type_header(struct ctx *ctx, const uint8_t c)
 
 //detecta message en el header
 static void
-message_header(struct ctx *ctx, const uint8_t c)
-{
+message_header(struct ctx *ctx, const uint8_t c) {
     const struct parser_event *e = parser_feed(ctx->message_type, c);
     do
     {//debug("7.typemessage", parser_utils_strcmpi_event, e);
