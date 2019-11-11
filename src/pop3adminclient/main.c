@@ -19,6 +19,7 @@
 #define STATUS "status"
 #define MOD "mod"
 #define BYTES "bytes"
+#define ACCESS "access"
 
 #define ORIGIN "origin"
 #define LOCAL "local"

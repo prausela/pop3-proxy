@@ -26,7 +26,7 @@ char decode_request(char ebyte, char ** parameters, int size){
     }
     else if((unsigned char)byte==(unsigned char)0x80){
       printf("Metrics/");
-      metrics_decoder(ebyte, parameters);
+      response=metrics_decoder(ebyte, parameters);
     }
     else {
       printf("Configuration/");
@@ -41,7 +41,7 @@ char sock_decoder(char ebyte, char ** parameters){    // Devuelve byte a respond
     if( (byte=ebyte&(0x30))==0x00){ // 00.00.xx.xx = STATUS
       printf("Status\n");
 
-
+      response=0x80;
       if((byte=ebyte&0x0C)==0x00){  // 00.00.00.xx = ORIGIN
         printf("Origin\n");
         // Function();
@@ -183,6 +183,7 @@ char trans_decoder(char ebyte, char ** parameters, int size){
           char * aux = getenv("FILTER_MEDIAS");
           printf("Los tipos de mensajes a banear son: %s\n",aux );
 
+          response=0x80;
         }
         else{
           printf("Not implemented. \n");
