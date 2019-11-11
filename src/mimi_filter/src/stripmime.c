@@ -1084,7 +1084,7 @@ int main(const int argc, const char **argv)
         .message_detected=&F,
         .rfc822_detected=&F,
     };
-    uint8_t data[4096], transformed[4096];
+    uint8_t data[9999], transformed[9999];
     memset(transformed, '\0', sizeof(transformed));
     int n;
     do
@@ -1096,8 +1096,8 @@ int main(const int argc, const char **argv)
         {
             pop3_multi(&ctx, data[i]);
         }
-        fflush(stdout); /* force it to go out */
-        write(1,transformed,i);
+        printf("%s",transformed);
+        
         memset(transformed, '\0', sizeof(transformed));
         //write to pipe!!
         //empty buffer

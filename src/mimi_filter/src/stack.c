@@ -27,13 +27,9 @@ void stack_push(stack *stack, char *element)
 {
 
   stackNode *node = malloc(sizeof(stackNode));
-  //node->data=element;
   node->data = malloc(strlen(element));
-  //   printf("NODE DATA LENGHT1: %ld\n",strlen(node->data));
   memcpy(node->data, element, strlen(element)); //+1 del \0?
   node->data[strlen(element)] = 0;
-  //   printf("NODE DATA LENGHT: %ld\n",strlen(node->data));
-  //   printf("NODE DATA %s\n",node->data);
   node->next = NULL;
   node->prev = NULL;
 
@@ -43,13 +39,11 @@ void stack_push(stack *stack, char *element)
   }
   else
   {
-    printf("Entro else\n");
     node->prev = stack->tail;
     stack->tail->next = node;
     stack->tail = node;
   }
   stack->logicalLength++;
-  printf("Logical stack lenght: %d\n", stack->logicalLength);
 }
 
 char *stack_pop(stack *stack)
