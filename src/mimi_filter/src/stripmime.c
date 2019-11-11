@@ -1090,7 +1090,7 @@ int main(const int argc, const char **argv)
         .message_detected=&F,
         .rfc822_detected=&F,
     };
-    uint8_t data[9999], transformed[9999];
+    uint8_t data[9999], transformed[11000];
     memset(transformed, '\0', sizeof(transformed));
     int n;
     do
