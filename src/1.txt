@@ -1,6 +1,0 @@
-MIME-VERSION: 1.0
-Content-Type: text/plain; boundary="hola"
-
-A VER LO DEL PU.NTO
-
-.
