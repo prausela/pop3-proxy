@@ -163,8 +163,13 @@ int main()
                         (struct sockaddr *)NULL, 0, &sndrcvinfo, &flags );
     if (in > 0) {
       buffer[in] = 0;
+      if(buffer[0]==0x00){
+        printf("Bad request response\n");
+      }
+      else{
+        printf("Proxy says: all OK\n");
+      }
       //if (sndrcvinfo.sinfo_stream == LOCALTIME_STREAM) {
-        printf("Lo recibi todo OK\n");
       //} else if (sndrcvinfo.sinfo_stream == GMT_STREAM) {
         //printf("TODO MAL\n", buffer);
       //}

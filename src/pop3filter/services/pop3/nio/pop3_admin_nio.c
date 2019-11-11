@@ -257,6 +257,7 @@ request_read(struct selector_key *key) {
 		//printf("%s ", parameters[2]);
 		response=decode_request(buffer[0], parameters, size);
 
+
 		fflush(stdout);
 		buffer[0]=response;
 		ret = response_write(key);

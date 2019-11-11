@@ -41,6 +41,7 @@ char sock_decoder(char ebyte, char ** parameters){    // Devuelve byte a respond
     if( (byte=ebyte&(0x30))==0x00){ // 00.00.xx.xx = STATUS
       printf("Status\n");
 
+
       if((byte=ebyte&0x0C)==0x00){  // 00.00.00.xx = ORIGIN
         printf("Origin\n");
         // Function();
@@ -65,9 +66,19 @@ char sock_decoder(char ebyte, char ** parameters){    // Devuelve byte a respond
 
         if((byte=ebyte&0x01)==0x00){   // 00.00.00.00 = PORT
           printf("Port\n");
+          if((parameters[0][0]>'9')||(parameters[0][0]<'0')){
+            response=0x00;
+          }
+          else{
+            response=0x80;
+            // Modifico puerto
+            printf("Connecting proxy to new origin server port %s", parameters[0]);
+          }
+
         }
         else if(byte==0x01){  // 00.00.00.01 = ADDRESS
           printf("Address\n");
+          printf("Connecting proxy to new origin server address \n");
         }
         else{
           printf("Not implemented. \n");
@@ -114,6 +125,11 @@ char trans_decoder(char ebyte, char ** parameters, int size){
   char response=0x00;
     if(ebyte==0x40){ // 01.00.xx.xx = STATUS
       printf("Status\n");
+      printf("Currently filtering the following media types: ");
+      char * aux = getenv("FILTER_MEDIAS");
+      if(aux!=NULL){
+        printf("%s\n",aux );
+      }
     }
 
     else if((byte&0x50)==0x50){ // 01.01.xx.xx = MOD
@@ -199,6 +215,7 @@ char metrics_decoder(char ebyte, char ** parameters){
   //if( byte==0x80){
     printf("Total bytes\n");
     printf("%d total of bytes transfered\n", total_bytes_transfered);
+    response=0x80;
   //}
 
   return response;
