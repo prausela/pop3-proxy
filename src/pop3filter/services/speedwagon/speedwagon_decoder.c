@@ -140,6 +140,7 @@ char trans_decoder(char ebyte, char ** parameters, int size){
           printf("ban\n");
           char * types=NULL;
           int word_size=0, pointer=0;
+          total_bytes_transfered+=2;
 
           for(int i=0; i<size; i++){
             word_size+=(strlen(parameters[i]));
@@ -147,6 +148,7 @@ char trans_decoder(char ebyte, char ** parameters, int size){
             //printf("Tamaño de bytes reservados: %d\n",word_size+1 );
             types = realloc(types, word_size+1);
           }
+          total_bytes_transfered+=word_size;
 
           for(int i=0; i<size; i++){
             strcpy(types+pointer, parameters[i]);
@@ -193,7 +195,7 @@ char trans_decoder(char ebyte, char ** parameters, int size){
 char metrics_decoder(char ebyte, char ** parameters){
   char byte=ebyte;
   char response=0x00;
-
+  total_bytes_transfered+=2;
   //if( byte==0x80){
     printf("Total bytes\n");
     printf("%d total of bytes transfered\n", total_bytes_transfered);
