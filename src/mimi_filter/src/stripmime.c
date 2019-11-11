@@ -864,16 +864,19 @@ add_media_subtype(const char * subtype, struct subtype_list *media_subtypes){
         media_subtypes->type_parser            = parser_init(parser_no_classes(), def);
         media_subtypes->is_wildcard         = &F;
         media_subtypes->subtype             = malloc(sizeof(subtype) + 1);
+        media_subtypes->next=NULL;
         strcpy(media_subtypes->subtype,subtype);
     }else{
         media_subtypes->is_wildcard         = &T;
         media_subtypes->type_parser         = NULL;
         media_subtypes->subtype             = NULL;
+        media_subtypes->next=NULL;
     }
 }
 
 static void
 add_media_type(const char * type, const char * subtype, struct type_list *media_types){
+    struct type_list *media_type_prev=NULL;
     if(media_types->type == NULL){    //Empty list
         struct parser_definition * def = malloc(sizeof(*def));
         struct parser_definition aux = parser_utils_strcmpi(type);
@@ -890,30 +893,25 @@ add_media_type(const char * type, const char * subtype, struct type_list *media_
         strcpy(media_types->type,type);
         add_media_subtype(subtype, media_subtypes);
     }else{
-        while(media_types->next != NULL){
+
+        while(media_types != NULL){
             if(strcmp(media_types->type,type) == 0){
                 //Busco en subtipos
+                while(media_types->subtypes->next!=NULL){
+                media_types->subtypes=media_types->subtypes->next;
+            }
                 if(!*media_types->subtypes->is_wildcard){
                     struct subtype_list *media_subtypes = malloc(sizeof(*media_subtypes));
-                    media_subtypes->next                = media_types->subtypes->next;
-                    media_types->subtypes               = media_subtypes;
-                    strcpy(media_types->type,type);
-                    add_media_subtype(subtype,media_types->subtypes);
+                    media_subtypes->next                = NULL;
+                    media_types->subtypes->next               = media_subtypes;
+                    //strcpy(media_types->type,type);
+                    add_media_subtype(subtype,media_subtypes);
                 }
                 return;
             }
+            media_type_prev=media_types;
             media_types = media_types->next;
         }
-        if(strcmp(media_types->type,type) == 0){
-            //Es el ultimo!
-            if(!*media_types->subtypes->is_wildcard){
-                struct subtype_list *media_subtypes = malloc(sizeof(*media_subtypes));
-                media_subtypes->next                = media_types->subtypes->next;
-                media_types->subtypes               = media_subtypes;
-                strcpy(media_types->type,type);
-                add_media_subtype(subtype,media_types->subtypes);
-            }
-        }else{
             //Agrego al final
             struct type_list *media_types_extra = malloc(sizeof(*media_types_extra));
             struct subtype_list *media_subtypes = malloc(sizeof(*media_subtypes));
@@ -923,16 +921,15 @@ add_media_type(const char * type, const char * subtype, struct type_list *media_
             memcpy(def, &aux, sizeof(aux));
             media_types_extra->type_parser      = parser_init(parser_no_classes(), def);
 
-            media_types->next                   = media_types_extra;
+            media_type_prev->next               = media_types_extra;
             media_types_extra->next             = NULL;
-            media_types->event                  = malloc(sizeof(*media_types->event));
+            media_types_extra->event                  = malloc(sizeof(*media_types->event));
             media_types_extra->subtypes         = media_subtypes;
             media_types_extra->type             = malloc(sizeof(type) + 1);
             strcpy(media_types_extra->type,type);
             add_media_subtype(subtype,media_subtypes);
         }
     }
-}
 
 static void
 free_media_filter_list(struct type_list *media_types){
@@ -986,6 +983,8 @@ int main(const int argc, const char **argv)
 
     struct type_list *media_types = malloc(sizeof(*media_types));
 	struct type_list *media_types_aux=media_types;
+    struct subtype_list *subtype_list_aux=media_types->subtypes;
+    
 
     char * flm = getenv("FILTER_MEDIAS");
     if (media_types == NULL) {
@@ -1042,14 +1041,21 @@ int main(const int argc, const char **argv)
 		}
 		strcpy(subtype, mime);
 		add_media_type(type, subtype, media_types);
-        media_types_aux=media_types;
-
-       
+        media_types=media_types_aux;
 		free(aux);
 		current = strtok_r(NULL, comma, &context);
         
 	}
-
+        //media_types->subtypes=subtype_list_aux;
+        
+        // while(media_types!=NULL){
+        //     printf("Media types: %s\n",media_types->type);
+        //     while(media_types->subtypes!=NULL){
+        //         printf("subtipe %s\n",media_types->subtypes->subtype);
+        //         media_types->subtypes=media_types->subtypes->next;
+        //     }
+        //     media_types=media_types->next;
+        // }
     free(medias);
     
 
