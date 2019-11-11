@@ -19,7 +19,8 @@
 #define STATUS "status"
 #define MOD "mod"
 #define BYTES "bytes"
-#define ACCESS "access"
+#define ACCESS "access\n"
+#define CONECTIONS "conections\n"
 
 #define ORIGIN "origin"
 #define LOCAL "local"
@@ -342,8 +343,17 @@ char trans_encoder(char** argv, int argc, char byte, char* parameters[], int* si
 }
 
 char metrics_encoder(char** argv, int argc, char byte, char* parameters[], int* size){
-  if(strcmp(argv[1],BYTES)){
+  if(strcmp(argv[1],BYTES)==0){
     // Dejo el byte como esta --> 10.00.00.00
+  }
+  else if(strcmp(argv[1], ACCESS)==0){
+      byte=byte|0x90;
+  }
+  else if(strcmp(argv[1], CONECTIONS)==0){
+      byte=byte|0xA0;
+  }
+  else{
+      printf("Comando no valido para metricas.\n");
   }
   return byte;
 }
