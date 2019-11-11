@@ -18,6 +18,7 @@
 
 #define STATUS "status"
 #define MOD "mod"
+#define BYTES "bytes"
 
 #define ORIGIN "origin"
 #define LOCAL "local"
@@ -119,7 +120,7 @@ int main()
       printf("%s ",input_buffer[i]);
     }
     printf("\n");
-    printf("The quantity of parameters is: %d\n",pointer);
+    printf("The quantity of words in the input are: %d\n",pointer);
 
     ebyte=encode_request(input_buffer, pointer, parameters, &size);
     printf("PROTOCOL RESPONSE: THE eBYTE IS ");
@@ -129,13 +130,17 @@ int main()
     buffer[0]=ebyte;
     buffer[1]=size;
 
+    printf("The quantity of parameters are: %d\n",size );
+
     printf("Los parametros ingresados son: ");
     for(i=0; i<size; i++){
         printf(" %s ", parameters[i]);
     }
+    pointer=2;
     for (i=0; i<size; i++){
         strcpy(buffer+pointer, parameters[i]);
-        pointer+=sizeof(parameters[i]);
+        pointer+=strlen(parameters[i])+1;
+        printf("El tamaño de el parametro %s es %d\n",parameters[i], strlen(parameters[i]));
     }
 
     printf("\n");
@@ -146,13 +151,13 @@ int main()
     for(i=0; i<size; i++){
         printf("%d ) ",i+1);
         printf("%s\n",buffer+pointer);
-        pointer+=sizeof(parameters[i]);
+        pointer+=strlen(parameters[i])+1;
     }
 
-    ret = sctp_sendmsg( connSock, (void *)buffer, (size_t)strlen(buffer),
+    ret = sctp_sendmsg( connSock, (void *)buffer, (size_t)MAX_BUFFER,
                          NULL, 0, 0, 0, LOCALTIME_STREAM, 0, 0 );
 
-  
+
 
     in = sctp_recvmsg( connSock, (void *)buffer, sizeof(buffer),
                         (struct sockaddr *)NULL, 0, &sndrcvinfo, &flags );
@@ -309,8 +314,11 @@ char trans_encoder(char** argv, int argc, char byte, char* parameters[], int* si
               byte=byte|0x04;
               if (strcmp(argv[3],BAN)==0){  //  01.01.01.00 = MOD MIME BAN
                   // Dejo el byte como esta
-                  parameters[*size]=argv[4];
-                  (*size)++;
+                  argc=argc-4;
+                  for(int j=0; j<argc; j++){
+                    parameters[*size]=argv[j+4];
+                    (*size)++;
+                  }
               }
               else{
                 printf("Error. Comando no valido para transformaciones MIME.\n");
@@ -328,6 +336,9 @@ char trans_encoder(char** argv, int argc, char byte, char* parameters[], int* si
 }
 
 char metrics_encoder(char** argv, int argc, char byte, char* parameters[], int* size){
+  if(strcmp(argv[1],BYTES)){
+    // Dejo el byte como esta --> 10.00.00.00
+  }
   return byte;
 }
 

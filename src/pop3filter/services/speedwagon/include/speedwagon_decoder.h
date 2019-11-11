@@ -4,10 +4,12 @@
 #define SUCCESS 	0
 #define MAX_BUFFER	1024
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-char decode_request(char ebyte, char** parameters);
+char decode_request(char ebyte, char** parameters, int size);
 char sock_decoder(char ebyte, char ** parameters);
-char trans_decoder(char ebyte, char ** parameters);
+char trans_decoder(char ebyte, char ** parameters, int size);
 char metrics_decoder(char ebyte, char ** parameters);
 char config_decoder(char ebyte, char ** parameters);
 int show_byte(char to_decode);
