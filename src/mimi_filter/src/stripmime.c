@@ -969,6 +969,7 @@ int main(const int argc, const char **argv)
             return 1;
         }
     }
+    uint8_t data[9999], transformed[11000];
 
     const unsigned int *no_class = parser_no_classes();
     struct parser_definition media_header_def =
@@ -994,6 +995,21 @@ int main(const int argc, const char **argv)
 		printf("No filter medias, please add one\n");
         flm = "";
         //TODO write in pipe the same message!!
+        int j;
+        do
+        {
+            j = read(fd, data, sizeof(data)); //Read from pipe instead of file!
+            ssize_t i;
+            for (i = 0; i < j; i++)
+            {
+                transformed[i] = data[i];
+            }
+            printf("%s",transformed);
+            
+            memset(transformed, '\0', sizeof(transformed));
+            //write to pipe!!
+            //empty buffer
+        } while (j > 0);
         return 1;
 	}
 	char * medias = malloc(strlen(flm) + 1);
@@ -1090,7 +1106,7 @@ int main(const int argc, const char **argv)
         .message_detected=&F,
         .rfc822_detected=&F,
     };
-    uint8_t data[9999], transformed[11000];
+    
     memset(transformed, '\0', sizeof(transformed));
     int n;
     do
