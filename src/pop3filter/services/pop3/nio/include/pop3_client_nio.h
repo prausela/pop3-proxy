@@ -3,7 +3,7 @@
 
 #include <netdb.h>
 #include "../../../include/selector.h"
-#include "../../../utils/include/structure_builder.h"
+#include "../../../../../nio-proxy/services/utils/include/structure_builder.h"
 
 /** handler del socket pasivo que atiende conexiones socksv5 */
 void

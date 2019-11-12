@@ -20,7 +20,7 @@
 #define NOT_REQUIRED 2
 
 
-int command_line_parser(int argc,char **argv,char * proxy_port,char * port);
+int command_line_parser(int argc,char **argv,char * proxy_port,char * port, char* proxy_address);
 int checkArg(char *argument, int *expecting_data);
 
 #endif

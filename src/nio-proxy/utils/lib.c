@@ -77,7 +77,7 @@ int checkArg(char *argument, int *expecting_data)
 
 
 /* This functions parses the input from the command line           */
-int command_line_parser(int argc,char **argv,char * proxy_port,char * port)
+int command_line_parser(int argc,char **argv,char * proxy_port,char * port, char* proxy_address)
 {
 
   //Definition of variables
@@ -135,6 +135,8 @@ int command_line_parser(int argc,char **argv,char * proxy_port,char * port)
       }
       case 'l':
       {
+        strcpy(proxy_address, data[i]);
+        printf("We are about to connect to address: %s\n", proxy_address);
         break;
       }
       case 'L':
@@ -149,7 +151,7 @@ int command_line_parser(int argc,char **argv,char * proxy_port,char * port)
       }
       case 'M':
       {
-        printf("This function is being developed.\n");
+        printf("Administrator address.\n");
         break;
       }
       case 'o':

@@ -48,8 +48,8 @@ init_suscription_service(const int server, const char **err_msg);
 
 static
 int
-param_validation(const int argc, const char **argv, char *proxy_port, char *origin_port){
-	command_line_parser(argc, argv, proxy_port, origin_port);
+param_validation(const int argc, const char **argv, char *proxy_port, char *origin_port, char* proxy_address){
+	command_line_parser(argc, argv, proxy_port, origin_port, proxy_address);
 	/*if(argc == 1) {
 		// utilizamos el default
 	} else if(argc == 2) {
@@ -72,11 +72,11 @@ param_validation(const int argc, const char **argv, char *proxy_port, char *orig
 
 static 
 int 
-init_socket(const char *proxy_port, const char **err_msg){
+init_socket(const char *proxy_port, const char * proxy_address, const char **err_msg){
 	struct sockaddr_in addr;
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family      = AF_INET;
-	addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	addr.sin_addr.s_addr = inet_addr(proxy_address);
 	addr.sin_port        = htons(atoi(proxy_port));
 
 	int ans;
@@ -91,7 +91,6 @@ init_socket(const char *proxy_port, const char **err_msg){
 
 	// man 7 ip. no importa reportar nada si falla.
 	setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
-
 	if((ans = bind(server, (struct sockaddr*) &addr, sizeof(addr))) < 0) {
 		*err_msg = "unable to bind socket";
 		return ans;
@@ -126,10 +125,11 @@ main(const int argc, const char **argv) {
 	//unsigned 	port 	 = 1080;
 	char 		proxy_port[100];
 	char 		origin_port[100];
+	char 		proxy_address[100];
 	strcpy(proxy_port, "1100");
 	strcpy(origin_port, "110");
-
-	if((ret = param_validation(argc, argv, proxy_port, origin_port)) != 0){	
+	strcpy(proxy_address, "0.0.0.0");
+	if((ret = param_validation(argc, argv, proxy_port, origin_port, proxy_address)) != 0){	
 		return ret;
 	}
 
@@ -138,7 +138,7 @@ main(const int argc, const char **argv) {
 
 	// Variable for error messages
 	const char	*err_msg = NULL;
-	const int 	server 	 = init_socket(proxy_port, &err_msg);
+	const int 	server 	 = init_socket(proxy_port,proxy_address, &err_msg);
 
 	if(server < 0){
 		goto finally;
