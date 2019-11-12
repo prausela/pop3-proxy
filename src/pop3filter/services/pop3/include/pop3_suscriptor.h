@@ -8,6 +8,6 @@
 extern bool done;
 
 selector_status 
-init_suscription_service(const int server, const char **err_msg);
+init_suscription_service(const int server, const int admin, const char **err_msg);
 
 #endif

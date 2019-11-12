@@ -3,12 +3,13 @@
 #include <signal.h>
 
 #include "nio/include/pop3_client_nio.h"
+#include "nio/include/pop3_admin_nio.h"
 #include "include/pop3_suscriptor.h"
 
 bool done = false;
  
 selector_status 
-init_suscription_service(const int server, const char **err_msg){
+init_suscription_service(const int server, const int admin, const char **err_msg){
 	selector_status   ss      = SELECTOR_SUCCESS;
 	fd_selector selector      = NULL;
 
@@ -37,14 +38,16 @@ init_suscription_service(const int server, const char **err_msg){
 		.handle_write      = NULL,
 		.handle_close      = NULL, // nada que liberar
 	};
-	/*
+	
 	const struct fd_handler pop3_admin = {
 		.handle_read       = pop3_admin_passive_accept,
 		.handle_write      = NULL,
 		.handle_close      = NULL, // nada que liberar
-	};*/
+	};
 
 	ss = selector_register(selector, server, &pop3,
+											  OP_READ, NULL);
+	ss = selector_register(selector, admin, &pop3_admin,
 											  OP_READ, NULL);
 	if(ss != SELECTOR_SUCCESS) {
 		*err_msg = "registering fd";
@@ -69,5 +72,6 @@ term_suscription_service:
 	}
 	selector_close();
 	destroy_suscription_pool();
+	pop3_admin_destroy_suscription_pool();
 	return ss;
 }

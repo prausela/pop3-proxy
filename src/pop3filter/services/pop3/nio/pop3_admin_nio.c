@@ -1,3 +1,6 @@
+/**
+ * socks5nio.c  - controla el flujo de un proxy SOCKSv5 (sockets no bloqueantes)
+ */
 #include <stdio.h>
 #include <stdlib.h>  // malloc
 #include <string.h>  // memset
@@ -18,9 +21,6 @@
 #include "../../speedwagon/include/speedwagon_decoder.h"
 
 #define N(x) (sizeof(x)/sizeof((x)[0]))
-
-static const struct state_definition *
-describe_states(void);
 
 static unsigned
 request_read(struct selector_key *key);
@@ -55,7 +55,7 @@ struct pop3_admin {
 };
 
 /** Handler definition for each state */
-static const struct state_definition admin_statbl[] = {
+static const struct state_definition client_statbl[] = {
 	{
 		.state 					= 	REQUEST_READ,
 		.on_read_ready 			= 	request_read,
@@ -66,11 +66,141 @@ static const struct state_definition admin_statbl[] = {
 
 static const struct state_definition *
 describe_states(void) {
-	return admin_statbl;
+	return client_statbl;
+}
+
+
+/**
+ * Pool de `struct socks5', para ser reusados.
+ *
+ * Como tenemos un unico hilo que emite eventos no necesitamos barreras de
+ * contención.
+ */
+
+static const unsigned		max_pool  = 50; // tamaño máximo
+static unsigned				pool_size = 0;  // tamaño actual
+static struct pop3_admin*	pool      = 0;  // pool propiamente dicho
+
+static const struct state_definition *
+describe_states(void);
+
+/** crea un nuevo `struct socks5' */
+static struct pop3_admin *
+pop3_admin_new(int admin_fd) {
+	struct pop3_admin *ret;
+
+	if(pool == NULL) {
+		ret = malloc(sizeof(*ret));
+	} else {
+		ret       = pool;
+		pool      = pool->next;
+		ret->next = 0;
+	}
+	if(ret == NULL) {
+		goto finally;
+	}
+	memset(ret, 0x00, sizeof(*ret));
+
+	ret->admin_fd       = admin_fd;
+	ret->admin_addr_len = sizeof(ret->admin_addr);
+
+	ret->authenticated 	= false;
+
+	ret->stm    .initial   = REQUEST_READ;
+	ret->stm    .max_state = ERROR;
+	ret->stm    .states    = describe_states();
+	stm_init(&ret->stm);
+
+	ret->references = 1;
+finally:
+	return ret;
+}
+
+
+
+/**
+ * destruye un  `struct socks5', tiene en cuenta las referencias
+ * y el pool de objetos.
+ */
+static void
+destroy_suscription(struct pop3_admin *s) {
+	if(s == NULL) {
+		// nada para hacer
+	} else if(s->references == 1) {
+		if(s != NULL) {
+			if(pool_size < max_pool) {
+				s->next = pool;
+				pool    = s;
+				pool_size++;
+			}
+		}
+	} else {
+		s->references -= 1;
+	}
+}
+
+void
+pop3_admin_destroy_suscription_pool(void) {
+	struct pop3_admin *next, *s;
+	for(s = pool; s != NULL ; s = next) {
+		next = s->next;
+		free(s);
+	}
 }
 
 /** obtiene el struct (socks5 *) desde la llave de selección  */
 #define ATTACHMENT(key) ( (struct pop3_admin *)(key)->data)
+
+/* declaración forward de los handlers de selección de una conexión
+ * establecida entre un cliente y el proxy.
+ */
+static void read_suscription   (struct selector_key *key);
+static void write_suscription  (struct selector_key *key);
+static void block_suscription  (struct selector_key *key);
+static void close_suscription  (struct selector_key *key);
+static const struct fd_handler suscriptions_handler = {
+	.handle_read   = read_suscription,
+	.handle_write  = write_suscription,
+	.handle_close  = close_suscription,
+	.handle_block  = block_suscription,
+};
+
+/** Attemps to accept an incomming connection */
+void
+pop3_admin_passive_accept(struct selector_key *key) {
+	struct sockaddr_storage       admin_addr;
+	socklen_t                     admin_addr_len = sizeof(admin_addr);
+	struct pop3_admin          	  *state           = NULL;
+	const int admin = accept(key->fd, (struct sockaddr*) &admin_addr,
+														  &admin_addr_len);
+	if(admin == -1) {
+		goto fail;
+	}
+	if(selector_fd_set_nio(admin) == -1) {
+		goto fail;
+	}
+
+	state = pop3_admin_new(admin);
+	if(state == NULL) {
+		// sin un estado, nos es imposible manejaro.
+		// tal vez deberiamos apagar accept() hasta que detectemos
+		// que se liberó alguna conexión.
+		goto fail;
+	}
+	memcpy(&state->admin_addr, &admin_addr, admin_addr_len);
+	state->admin_addr_len = admin_addr_len;
+
+	if(SELECTOR_SUCCESS != selector_register(key->s, admin, &suscriptions_handler,
+											  OP_READ, state)) {
+		goto fail;
+	}
+	return ;
+fail:
+	if(admin != -1) {
+		close(admin);
+	}
+	destroy_suscription(state);
+}
 
 static unsigned
 request_read(struct selector_key *key) {
@@ -143,4 +273,60 @@ response_write(struct selector_key *key) {
 	}
 
 	return ret;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Handlers top level de la conexión pasiva.
+// son los que emiten los eventos a la maquina de estados.
+static void
+finished_suscription(struct selector_key* key);
+
+static void
+read_suscription(struct selector_key *key) {
+	struct state_machine *stm   = &ATTACHMENT(key)->stm;
+	const enum pop3_admin_states st = stm_handler_read(stm, key);
+
+	if(ERROR == st) {
+		finished_suscription(key);
+	}
+}
+
+static void
+write_suscription(struct selector_key *key) {
+	struct state_machine *stm   = &ATTACHMENT(key)->stm;
+	const enum pop3_admin_states st = stm_handler_write(stm, key);
+
+	if(ERROR == st) {
+		finished_suscription(key);
+	}
+}
+
+static void
+block_suscription(struct selector_key *key) {
+	struct state_machine *stm   = &ATTACHMENT(key)->stm;
+	const enum pop3_admin_states st = stm_handler_block(stm, key);
+
+	if(ERROR == st) {
+		finished_suscription(key);
+	}
+}
+
+static void
+close_suscription(struct selector_key *key) {
+	destroy_suscription(ATTACHMENT(key));
+}
+
+static void
+finished_suscription(struct selector_key* key) {
+	const int fds[] = {
+		ATTACHMENT(key)->admin_fd,
+	};
+	for(unsigned i = 0; i < N(fds); i++) {
+		if(fds[i] != -1) {
+			if(SELECTOR_SUCCESS != selector_unregister_fd(key->s, fds[i])) {
+				abort();
+			}
+			close(fds[i]);
+		}
+	}
 }

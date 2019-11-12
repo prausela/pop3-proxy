@@ -70,7 +70,7 @@ param_validation(const int argc, const char **argv, unsigned *port){
 
 static 
 int 
-init_socket(const unsigned port, const char **err_msg){
+init_socket(const unsigned port, const int protocol, const char **err_msg){
 	struct sockaddr_in addr;
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family      = AF_INET;
@@ -79,7 +79,7 @@ init_socket(const unsigned port, const char **err_msg){
 
 	int ans;
 
-	const int server = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	const int server = socket(AF_INET, SOCK_STREAM, protocol);
 	if(server < 0) {
 		*err_msg = "unable to create socket";
 		return server;
@@ -132,11 +132,18 @@ main(const int argc, const char **argv) {
 
 	// Variable for error messages
 	const char	*err_msg = NULL;
-	const int 	server 	 = init_socket(port, &err_msg);
+	const int 	server 	 = init_socket(port, IPPROTO_TCP, &err_msg);
 
 	if(server < 0){
 		goto finally;
 	}
+
+	const int 	admin 	 = init_socket(9090, IPPROTO_SCTP, &err_msg);
+
+	if(admin < 0){
+		goto finally;
+	}
+
 
 	// registrar sigterm es útil para terminar el programa normalmente.
 	// esto ayuda mucho en herramientas como valgrind.
@@ -148,7 +155,7 @@ main(const int argc, const char **argv) {
 		goto finally;
 	}
 	
-	selector_status ss = init_suscription_service(server, &err_msg);
+	selector_status ss = init_suscription_service(server, admin, &err_msg);
 
 finally:
 

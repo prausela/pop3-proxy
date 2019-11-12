@@ -11,7 +11,7 @@ pop3_admin_passive_accept(struct selector_key *key);
 
 /** libera pools internos */
 void
-destroy_suscription_pool(void);
+pop3_admin_destroy_suscription_pool(void);
 
 /*enum addr_type {
     req_addrtype_ipv4   = 0x01,
@@ -26,10 +26,10 @@ union addr {
 };
 
 struct server_credentials {
-    enum  addr_type 		dest_addr_type;
-    union addr				dest_addr;*/
+    enum  addr_type         dest_addr_type;
+    union addr              dest_addr;*/
     /** port in network byte order */
-   /* in_port_t 				dest_port;
+   /* in_port_t                 dest_port;
 };
 
 struct server_credentials curr_origin_server;
