@@ -130,6 +130,10 @@ char trans_decoder(char ebyte, char ** parameters, int size){
       if(aux!=NULL){
         printf("%s\n",aux );
       }
+      else{
+        printf("%s\n");
+      }
+      response=0x80;
     }
 
     else if((byte&0x50)==0x50){ // 01.01.xx.xx = MOD
@@ -181,7 +185,7 @@ char trans_decoder(char ebyte, char ** parameters, int size){
           setenv("FILTER_MSG", " !____MENSAJE DE REEMPLAZO_____! ", 1);
           setenv("FILTER_MEDIAS",types, 1);
           char * aux = getenv("FILTER_MEDIAS");
-          printf("Los tipos de mensajes a banear son: %s\n",aux );
+          printf("Current filtered MIME types are: %s\n",aux );
 
           response=0x80;
         }
@@ -229,7 +233,7 @@ char metrics_decoder(char ebyte, char ** parameters){
     response=0x80;
   }
   else{
-    
+
   }
 
   return response;
