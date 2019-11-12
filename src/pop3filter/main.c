@@ -22,7 +22,7 @@
 #include <sys/socket.h>  // socket
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#include "../include/lib.h"
+
 #include "services/pop3/include/pop3_suscriptor.h"
 
 static void
@@ -36,12 +36,12 @@ static
 int
 param_validation(const int argc, const char **argv);
 
-static
-int
+static 
+int 
 init_socket(const unsigned port, const char **err_msg);
 
-static
-selector_status
+static 
+selector_status 
 init_suscription_service(const int server, const char **err_msg);
 */
 
@@ -49,13 +49,12 @@ static
 int
 param_validation(const int argc, const char **argv, unsigned *port){
 	if(argc == 1) {
-		return 0;
 		// utilizamos el default
 	} else if(argc == 2) {
 		char *end     = 0;
 		const long sl = strtol(argv[1], &end, 10);
 
-		if (end == argv[1]|| '\0' != *end
+		if (end == argv[1]|| '\0' != *end 
 		   || ((LONG_MIN == sl || LONG_MAX == sl) && ERANGE == errno)
 		   || sl < 0 || sl > USHRT_MAX) {
 			fprintf(stderr, "port should be an integer: %s\n", argv[1]);
@@ -66,11 +65,11 @@ param_validation(const int argc, const char **argv, unsigned *port){
 		fprintf(stderr, "Usage: %s <port>\n", argv[0]);
 		return 1;
 	}
-	return command_line_parser(argc,argv,10,port);
+	return 0;
 }
 
-static
-int
+static 
+int 
 init_socket(const unsigned port, const char **err_msg){
 	struct sockaddr_in addr;
 	memset(&addr, 0, sizeof(addr));
@@ -80,13 +79,13 @@ init_socket(const unsigned port, const char **err_msg){
 
 	int ans;
 
-	const int server = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
+	const int server = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if(server < 0) {
 		*err_msg = "unable to create socket";
 		return server;
 	}
 
-	fprintf(stdout, "Listening on SCTP port %d\n", port);
+	fprintf(stdout, "Listening on TCP port %d\n", port);
 
 	// man 7 ip. no importa reportar nada si falla.
 	setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
@@ -124,8 +123,7 @@ main(const int argc, const char **argv) {
 	int 		ret  	 = 0;
 	unsigned 	port 	 = 1080;
 
-	if((ret = param_validation(argc, argv, &port)) != 0){
-		printf("%d",ret);
+	if((ret = param_validation(argc, argv, &port)) != 0){	
 		return ret;
 	}
 
@@ -149,7 +147,7 @@ main(const int argc, const char **argv) {
 		err_msg = "getting server socket flags";
 		goto finally;
 	}
-
+	
 	selector_status ss = init_suscription_service(server, &err_msg);
 
 finally:

@@ -1,4 +1,4 @@
-#include "../include/pop3_multiline_response_parser.h"
+#include "include/pop3_multiline_response_parser.h"
 
 /** ~~POP3 MULTILINE PARSER~~
  *
@@ -22,14 +22,15 @@
  */
 
 enum pop3_multiline_response_states {
-				DOT_DATA = 0,
-				CR,
-				CRLF,
-				CRLFDOT,
+				CRLFDOT = 0,
 				CRLFDOTCR,
 				CRLFDOTCRLF,
+				DOT_DATA,
+				CR,
+				CRLF,		
 	};
 
+#define N(x) (sizeof(x) / sizeof((x)[0]))
 
 static void
 dat_stuffed_end(struct parser_event *ret, const uint8_t c){
@@ -46,6 +47,12 @@ dat_stuffed(struct parser_event *ret, const uint8_t c){
 	ret->data[0] 	= c;
 	 // ret->next       = dat_stuffed_end;
 
+}
+
+static void
+ignore(struct parser_event *ret, const uint8_t c){
+	ret->type 		= DAT_STUFFED;
+	ret->n 			  = 0;
 }
 
 /** ~~DOT_DATA TRANSITIONS~~
@@ -306,27 +313,31 @@ static const struct parser_state_transition ST_CRLFDOTCRLF [] =  {
 
 
 static const size_t pop3_multiline_response_states_n [] = {
-	N(ST_DOT_DATA),
-	N(ST_CR),
-	N(ST_CRLF),
+	//N(ST_TRAP),
 	N(ST_CRLFDOT),
 	N(ST_CRLFDOTCR),
 	N(ST_CRLFDOTCRLF),
+	N(ST_DOT_DATA),
+	N(ST_CR),
+	N(ST_CRLF),
+	
 
 };
 
 static const struct parser_state_transition *pop3_multiline_response_states [] = {
-		ST_DOT_DATA,
-		ST_CR,
-		ST_CRLF,
+		//ST_TRAP,
 		ST_CRLFDOT,
 		ST_CRLFDOTCR,
 		ST_CRLFDOTCRLF,
+		ST_DOT_DATA,
+		ST_CR,
+		ST_CRLF,
+		
 };
 
 static struct parser_definition pop3_multiline_response_definition = {
 	.states_count	= N(pop3_multiline_response_states),
-	.states 		  = pop3_multiline_response_states,
+	.states 		= pop3_multiline_response_states,
 	.states_n 		= pop3_multiline_response_states_n,
 	.start_state 	= CRLFDOT,
 };
@@ -334,4 +345,30 @@ static struct parser_definition pop3_multiline_response_definition = {
 struct parser *
 pop3_multiline_response_parser_init(void){
 	return parser_init(parser_no_classes(), &pop3_multiline_response_definition);
+}
+
+
+enum consumer_state
+pop3_multiline_response_checker(buffer *b, struct parser *p, bool *error){
+	uint8_t c;
+    struct parser_event *e;
+    size_t  count;
+    //printf("Giorno\n");
+    uint8_t *ptr = buffer_read_ptr(b, &count);
+    while(count > 0){
+        c = *ptr;
+        printf("Buccelatti\n");
+        printf("%c %d\n", c, c);
+        e = parser_feed(p, c);
+        printf("%c %d\n", c, c);
+        printf("Im Mario\n");
+        fflush(stdout);
+        if(e->next != NULL && e->next->type == DAT_STUFFED_END){
+        	return FINISHED_CONSUMING;
+        }
+        ptr++;
+        count--;
+    }
+
+    return CONSUMING;
 }

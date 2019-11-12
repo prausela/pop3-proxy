@@ -2,7 +2,8 @@
 #define POP3_CLIENT_NIO_H_whVj9DjZzFKtzEUtC0Ma2Ae45Hm
 
 #include <netdb.h>
-#include "selector.h"
+#include "../../../include/selector.h"
+#include "../../../utils/include/structure_builder.h"
 
 /** handler del socket pasivo que atiende conexiones socksv5 */
 void

@@ -1,3 +1,8 @@
+#include "include/pop3.h"
+
+#include <stdbool.h>
+#include <stddef.h>
+
 #define MAX_KEYWORD_COMMAND_LENGTH 4
 
 /** ~~OVERLOADED COMMANDS~~
@@ -72,3 +77,33 @@ const char *multiline_commands[] =
 		"CAPA",
 		NULL,
 };
+
+
+bool is_in_string_array(char *what, const char **string_array)
+{
+	while (*string_array != NULL)
+	{
+		if (strcmp(what, *string_array) == 0)
+		{
+			return true;
+		}
+		string_array++;
+	}
+	return false;
+}
+
+
+int get_command_type(char *cmd)
+{
+	if (is_in_string_array(cmd, multiline_commands))
+	{
+		return MULTILINE;
+	}
+
+	if (is_in_string_array(cmd, overloaded_commands))
+	{
+		return OVERLOADED;
+	}
+	
+	return SINGLELINE;
+}

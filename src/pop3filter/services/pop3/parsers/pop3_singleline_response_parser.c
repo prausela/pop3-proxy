@@ -1,4 +1,4 @@
-#include "../include/pop3_singleline_response_parser.h"
+#include "include/pop3_singleline_response_parser.h"
 
 /** ~~POP3 SINGLELINE RESPONSE PARSER~~
  *
@@ -389,11 +389,50 @@ static const struct parser_state_transition *pop3_singleline_response_states [] 
 
 static struct parser_definition pop3_singleline_response_definition = {
 	.states_count	= N(pop3_singleline_response_states),
-	.states 			= pop3_singleline_response_states,
+	.states 		= pop3_singleline_response_states,
 	.states_n 		= pop3_singleline_response_states_n,
 	.start_state 	= STAT,
 };
 
+enum structure_builder_states
+pop3_singleline_response_builder(buffer *b, struct parser *p, struct pop3_singleline_response_builder *resp, bool *error){
+	uint8_t c;
+	struct parser_event *e;
+	size_t  count;
+	uint8_t *ptr = buffer_read_ptr(b, &count);
+	printf("MIIIII %d\n", count);
+	while(count > 0){
+		printf("Oh no\n");
+		c = *ptr;
+		printf("Oh duhh\n");
+		e = parser_feed(p, c);
+		printf("char : %d\n", c);
+		switch(e->type){
+			case OK_RESP:
+				printf("OK_RESP\n");
+				resp->status = STATUS_OK;
+				break;
+			case ERR_RESP:
+				printf("ERR_RESP\n");
+				resp->status = STATUS_ERR;
+				break;
+			case END_SINGLELINE:
+				printf("END_SINGLELINE\n");
+				return BUILD_FINISHED;
+			case TRAPPED:
+				printf("TRAPPED\n");
+				*error = 1; 
+				return BUILD_FAILED;
+			default:
+				break;
+		}
+		ptr++;
+		count--;
+	}
+	
+	return BUILDING;
+}
+/*
 bool 
 pop3_singleline_parser_is_done(const struct parser_event *event, bool *errored) {
     bool ret;
@@ -415,7 +454,7 @@ pop3_singleline_parser_is_done(const struct parser_event *event, bool *errored) 
 struct parser_event *
 pop3_singleline_parser_consume(buffer *b, struct parser *p, bool *errored) {
 	return parser_consume(b, p, errored, pop3_singleline_parser_is_done);
-}
+}*/
 
 struct parser *
 pop3_singleline_response_parser_init(void){

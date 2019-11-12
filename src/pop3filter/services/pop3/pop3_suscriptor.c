@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <signal.h>
 
-#include "nio/include/pop3_admin_nio.h"
+#include "nio/include/pop3_client_nio.h"
 #include "include/pop3_suscriptor.h"
 
 bool done = false;
@@ -32,19 +32,19 @@ init_suscription_service(const int server, const char **err_msg){
 	}
 
 	//Suscription for accepts
-	/*const struct fd_handler pop3 = {
+	const struct fd_handler pop3 = {
 		.handle_read       = pop3_passive_accept,
 		.handle_write      = NULL,
 		.handle_close      = NULL, // nada que liberar
-	};*/
-
+	};
+	/*
 	const struct fd_handler pop3_admin = {
 		.handle_read       = pop3_admin_passive_accept,
 		.handle_write      = NULL,
 		.handle_close      = NULL, // nada que liberar
-	};
+	};*/
 
-	ss = selector_register(selector, server, &pop3_admin,
+	ss = selector_register(selector, server, &pop3,
 											  OP_READ, NULL);
 	if(ss != SELECTOR_SUCCESS) {
 		*err_msg = "registering fd";

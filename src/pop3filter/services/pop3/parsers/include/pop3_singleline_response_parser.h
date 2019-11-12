@@ -2,20 +2,28 @@
 #define POP3_SINGLELINE_RESPONSE_PARSER_H_ACK0Q8X1WrbMI9ZFlPxsr98iOM
 
 #include <stdbool.h>
-#include "../utils/include/parser_utils.h"
+#include "../../../utils/include/parser_utils.h"
+#include "../../../utils/include/structure_builder.h"
+
+
+enum pop3_singleline_response_status {
+	STATUS_OK,
+	STATUS_ERR,
+};
+
+struct pop3_singleline_response_builder {
+	enum pop3_singleline_response_status status; 
+};
+
+enum structure_builder_states
+pop3_singleline_response_builder(buffer *b, struct parser *p, struct pop3_singleline_response_builder *resp, bool *error);
+
 
 /**	~~INIT PARSER 
  *		(Create a new parser intended for pop3 singleline response interpretation)~~
  */
 struct parser *
 pop3_singleline_response_parser_init(void);
-
-/** ~~FEED BUFFER TO PARSER
- *		(returns the event sent by the last state)~~
- */
-
-struct parser_event *
-pop3_singleline_parser_consume(buffer *b, struct parser *p, bool *errored);
 
 /** 
  * PLEASE USE THE FOLLOWING PARSER_FACTORY METHODS FOR MORE OPERATIONS:

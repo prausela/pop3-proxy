@@ -16,6 +16,12 @@
 #include <stdbool.h>
 #include "buffer.h"
 
+enum consumer_state {
+    FINISHED_CONSUMING,
+    CONSUMING,
+    ERROR_CONSUMING,
+};
+
 /**
  * Evento que retorna el parser.
  * Cada tipo de evento tendrá sus reglas en relación a data.

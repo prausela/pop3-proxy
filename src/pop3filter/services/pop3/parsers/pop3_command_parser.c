@@ -1,4 +1,6 @@
-#include "../include/pop3_command_parser.h"
+#include "include/pop3_command_parser.h"
+
+struct pop3_command_builder pop3_command_builder_default = { {0}, 0, false };
 
 /** ~~POP3 COMMAND PARSER~~
  *
@@ -297,7 +299,56 @@ static struct parser_definition pop3_command_definition = {
 	.start_state 	= KWRD,
 };
 
-bool 
+static inline bool 
+set_pop3_command_builder_next(struct pop3_command_builder *cmd, uint8_t value){
+    if(cmd->kwrd_ptr >= MAX_KEYWORD_LENGTH){
+        printf("Oh no\n");
+        return false;
+    }
+    cmd->kwrd[cmd->kwrd_ptr] = value;
+    cmd->kwrd_ptr++;
+    return true;
+}
+
+enum structure_builder_states
+command_builder(buffer *b, struct parser *p, struct pop3_command_builder *cmd, bool *error){
+    uint8_t c;
+    struct parser_event *e;
+    size_t  count;
+
+    uint8_t *ptr = buffer_read_ptr(b, &count);
+    while(count > 0){
+        c = *ptr;
+        e = parser_feed(p, c);
+        printf("%c %d\n", c, c);
+        switch(e->type){
+            case BUFFER_CMD:
+                printf("BUFFER_CMD\n");
+                if(set_pop3_command_builder_next(cmd, c)){
+                    break;
+                }
+            case BAD_CMD:
+                printf("BAD_CMD\n");
+                *error = 1; 
+                return BUILD_FAILED;
+            case SET_CMD:
+                printf("SET_CMD\n");
+                return BUILD_FINISHED;
+            case HAS_ARGS:
+                cmd->has_args = true;
+                break;
+            default:
+                printf("%d\n", e->type);
+                break;
+        }
+        ptr++;
+        count--;
+    }
+
+    return BUILDING;
+}
+
+/*bool 
 pop3_command_parser_is_done(const struct parser_event *event, bool *errored) {
     bool ret;
     switch (event->type) {
@@ -313,7 +364,7 @@ pop3_command_parser_is_done(const struct parser_event *event, bool *errored) {
             break;
     }
    return ret;
-}
+}*/
 
 /*struct parser_event *
 pop3_commmand_parser_consume(buffer *b, struct parser *p, bool *errored) {

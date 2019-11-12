@@ -66,10 +66,16 @@ parser_consume(buffer *b, struct parser *p, bool *errored, bool (*parser_is_done
     return event;
 }
 
+
+
 struct parser_event *
 parser_feed(struct parser *p, const uint8_t c)
 {
+    printf("Dark, very dark\n");
+    fflush(stdout);
     const unsigned type                         = p->classes[c];
+    printf("Bright and shiny\n");
+    fflush(stdout);
     p->e1.next = p->e2.next                     = 0;
     const struct parser_state_transition *state = p->def->states[p->state];
     const size_t n                              = p->def->states_n[p->state];

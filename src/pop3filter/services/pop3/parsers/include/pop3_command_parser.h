@@ -3,12 +3,17 @@
 
 #include "../utils/include/pop3_parser_utils.h"
 #include <stdbool.h>
+#include "../../../utils/include/structure_builder.h"
 
-static void
-set_cmd(struct parser_event *ret, const uint8_t c);
+#define MAX_KEYWORD_LENGTH 4
 
-static void
-bad_cmd(struct parser_event *ret, const uint8_t c);
+struct pop3_command_builder {
+	char	kwrd[MAX_KEYWORD_LENGTH+1];
+	size_t	kwrd_ptr;
+	bool	has_args;
+};
+
+extern struct pop3_command_builder pop3_command_builder_default;
 
 /**	~~INIT PARSER 
  *		(Create a new parser intended for pop3 command interpretation)~~
@@ -16,11 +21,8 @@ bad_cmd(struct parser_event *ret, const uint8_t c);
 struct parser *
 pop3_command_parser_init(void);
 
-struct parser_event *
-pop3_commmand_parser_consume(buffer *b, struct parser *p, bool *errored);
-
-bool 
-pop3_singleline_parser_is_done(const struct parser_event *event, bool *errored);
+enum structure_builder_states
+command_builder(buffer *b, struct parser *p, struct pop3_command_builder *cmd, bool *error);
 
 /** 
  * PLEASE USE THE FOLLOWING PARSER_FACTORY METHODS FOR MORE OPERATIONS:
