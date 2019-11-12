@@ -56,7 +56,7 @@ char *stack_pop(stack *stack)
 
   stackNode *node = stack->tail;
   stack->tail = stack->tail->prev;
-  free(node);
+  
   stack->logicalLength--;
   return elem;
 }

@@ -18,7 +18,7 @@
 
 #define STATUS "status"
 #define MOD "mod"
-#define BYTES "bytes"
+#define BYTES "bytes\n"
 #define ACCESS "access\n"
 #define CONECTIONS "conections\n"
 
@@ -117,64 +117,73 @@ int main()
        }
     }
 
-    printf("The input words are: ");
-    for(i=0; i<pointer; i++){
-      printf("%s ",input_buffer[i]);
-    }
-    printf("\n");
-    printf("The quantity of words in the input are: %d\n",pointer);
+    //printf("The input words are: ");
+    //for(i=0; i<pointer; i++){
+    //  printf("%s ",input_buffer[i]);
+    //}
+    //printf("\n");
+    //printf("The quantity of words in the input are: %d\n",pointer);
 
     ebyte=encode_request(input_buffer, pointer, parameters, &size);
-    printf("PROTOCOL RESPONSE: THE eBYTE IS ");
-    show_byte(ebyte);
+    
 
-    pointer=2;
-    buffer[0]=ebyte;
-    buffer[1]=size;
-
-    printf("The quantity of parameters are: %d\n",size );
-
-    printf("Los parametros ingresados son: ");
-    for(i=0; i<size; i++){
-        printf(" %s ", parameters[i]);
+    if(ebyte==-1){
+        printf("Invalid command\n");
     }
-    pointer=2;
-    for (i=0; i<size; i++){
-        strcpy(buffer+pointer, parameters[i]);
-        pointer+=strlen(parameters[i])+1;
-        printf("El tamaño de el parametro %s es %d\n",parameters[i], strlen(parameters[i]));
-    }
+    else{
+        printf("PROTOCOL RESPONSE: THE eBYTE IS ");
+        show_byte(ebyte);
 
-    printf("\n");
-    printf("Los parametros copiados son: \n");
-    pointer=2;
+        pointer=2;
+        buffer[0]=ebyte;
+        buffer[1]=size;
+        if (size>0){
+            printf("The quantity of parameters are: %d\n",size );
+            printf("The parameters are: ");
+            for(i=0; i<size; i++){
+                printf(" %s ", parameters[i]);
+            }
+            pointer=2;
+            for (i=0; i<size; i++){
+                strcpy(buffer+pointer, parameters[i]);
+                pointer+=strlen(parameters[i])+1;
+                //printf("El tamaño de el parametro %s es %d\n",parameters[i], strlen(parameters[i]));
+            }
 
-    pointer=2;
-    for(i=0; i<size; i++){
-        printf("%d ) ",i+1);
-        printf("%s\n",buffer+pointer);
-        pointer+=strlen(parameters[i])+1;
-    }
+            printf("\n");
+            printf("The parameters copied to buffer are: \n");
+            pointer=2;
 
-    ret = sctp_sendmsg( connSock, (void *)buffer, (size_t)MAX_BUFFER,
-                         NULL, 0, 0, 0, LOCALTIME_STREAM, 0, 0 );
+            pointer=2;
+            for(i=0; i<size; i++){
+                printf("%d ) ",i+1);
+                printf("%s\n",buffer+pointer);
+                pointer+=strlen(parameters[i])+1;
+            }
+
+        }
+
+        
+        ret = sctp_sendmsg( connSock, (void *)buffer, (size_t)MAX_BUFFER,
+                            NULL, 0, 0, 0, LOCALTIME_STREAM, 0, 0 );
 
 
 
-    in = sctp_recvmsg( connSock, (void *)buffer, sizeof(buffer),
-                        (struct sockaddr *)NULL, 0, &sndrcvinfo, &flags );
-    if (in > 0) {
-      buffer[in] = 0;
-      if(buffer[0]==0x00){
-        printf("Bad request response\n");
-      }
-      else{
-        printf("Proxy says: all OK\n");
-      }
-      //if (sndrcvinfo.sinfo_stream == LOCALTIME_STREAM) {
-      //} else if (sndrcvinfo.sinfo_stream == GMT_STREAM) {
-        //printf("TODO MAL\n", buffer);
-      //}
+        in = sctp_recvmsg( connSock, (void *)buffer, sizeof(buffer),
+                            (struct sockaddr *)NULL, 0, &sndrcvinfo, &flags );
+        if (in > 0) {
+        buffer[in] = 0;
+        if(buffer[0]==0x00){
+            printf("Bad request response\n");
+        }
+        else{
+            printf("Proxy says: all OK\n");
+        }
+        //if (sndrcvinfo.sinfo_stream == LOCALTIME_STREAM) {
+        //} else if (sndrcvinfo.sinfo_stream == GMT_STREAM) {
+            //printf("TODO MAL\n", buffer);
+        //}
+        }   
     }
     bzero((char *)&buffer, sizeof(buffer));
     size=0;
@@ -209,7 +218,6 @@ char encode_request(char** argv, int argc, char** parameters, int* size){
         byte=config_encoder(argv, argc, byte, parameters, size);
     }
     else{
-        printf("Error: no such an option. No match for %s\n", argv[3]);
         return -1;
     }
     return byte;
@@ -231,7 +239,7 @@ char sock_encoder(char** argv, int argc, char byte, char* parameters[], int* siz
         // Dejo esos 2 bits en 0, no requiere cambio
         // Chequeo proximo parametro
         if(argc<6){
-            printf("Error. Sintaxis: <sock> <status> <origin/local>\n");
+            printf("Error. Syntax: <sock> <status> <origin/local>\n");
         }
         else{
             if (strcmp(argv[2],ORIGIN)==0){
@@ -241,7 +249,7 @@ char sock_encoder(char** argv, int argc, char byte, char* parameters[], int* siz
                 byte=byte|0x04;
             }
             else{
-                printf("Error. Comando no valido para status.\n");
+                printf("Error. Not a valid command for status.\n");
                 return -1;
             }
         }
@@ -260,7 +268,7 @@ char sock_encoder(char** argv, int argc, char byte, char* parameters[], int* siz
                 // No cambio bits
             }
             else{
-                printf("Error. Comando no valido para mod.\n");
+                printf("Error. Not a valid command for mod.\n");
                 return -1;  // OJO CON EL VALOR DE ERROR
             }
 
@@ -273,7 +281,7 @@ char sock_encoder(char** argv, int argc, char byte, char* parameters[], int* siz
                 // No cambio bits
             }
             else{
-                printf("Error. Comando no valido para mod.\n");
+                printf("Error. Not a valid command for mod.\n");
                 return -1;  // OJO CON EL VALOR DE ERROR
             }
 
@@ -290,7 +298,8 @@ char sock_encoder(char** argv, int argc, char byte, char* parameters[], int* siz
 char trans_encoder(char** argv, int argc, char byte, char* parameters[], int* size){
   if (strcmp(argv[1],STATUS)==0){   // 01.00.xx.xx = STATUS
       if(argc>2){
-          printf("Error. Sintaxis: <trans> <status>\n");
+          printf("Error. Syntax: <trans> <status>\n");
+          return -1;
       }
       else{
         // Dejo el byte como está
@@ -299,7 +308,7 @@ char trans_encoder(char** argv, int argc, char byte, char* parameters[], int* si
 
   else if(strcmp(argv[1],MOD)==0){  //  01.01.xx.xx = MOD
       if(argc<5){ //Arreglar por si pasan mas parametros de los que se debe
-          printf("Error. Sintaxis: <trans> <mod> <general/mime> <operation> <parameter>\n" );
+          printf("Error. Syntax: <trans> <mod> <general/mime> <operation> <parameter>\n" );
       }
       else{
           byte=byte|0x10;
@@ -313,7 +322,7 @@ char trans_encoder(char** argv, int argc, char byte, char* parameters[], int* si
                   (*size)++;
               }
               else{
-                printf("Error. Comando no valido para transformaciones GENERAL.\n");
+                printf("Error. Not a valid command for general transformations.\n");
                 return -1;
               }
           }
@@ -328,12 +337,12 @@ char trans_encoder(char** argv, int argc, char byte, char* parameters[], int* si
                   }
               }
               else{
-                printf("Error. Comando no valido para transformaciones MIME.\n");
+                printf("Error. Not a valid command for MIME transformations.\n");
                 return -1;
               }
           }
           else{
-              printf("Error. Comando no valido para mod.\n");
+              printf("Error. Not a valid command for mod.\n");
               return -1;  // OJO CON EL VALOR DE ERROR
           }
       }
@@ -353,7 +362,8 @@ char metrics_encoder(char** argv, int argc, char byte, char* parameters[], int* 
       byte=byte|0xA0;
   }
   else{
-      printf("Comando no valido para metricas.\n");
+      printf("Error. Not a valid command for metrics.\n");
+      return -1;
   }
   return byte;
 }

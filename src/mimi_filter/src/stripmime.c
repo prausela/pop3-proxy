@@ -1135,8 +1135,11 @@ int main(const int argc, const char **argv)
     parser_utils_strcmpi_destroy(&content_transfer_encoding_header_def);
     parser_destroy(ctx.boundary_parser_detector);
     parser_utils_strcmpi_destroy(&boundary_parser);
-    //To be removed
     parser_utils_strcmpi_destroy(&charset_parser);
+    list_destroy(ctx.possible_boundary_string);
+    list_destroy(ctx.boundary_name);
+    stack_destroy(ctx.boundry_stack);
+
     //free_media_filter_list(ctx.media_types);
     
 }

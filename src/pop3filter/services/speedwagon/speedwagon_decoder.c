@@ -212,10 +212,10 @@ char trans_decoder(char ebyte, char ** parameters, int size){
 char metrics_decoder(char ebyte, char ** parameters){
   char byte=ebyte;
   char response=0x00;
-  printf("EL byte ingresado es: ");
-  show_byte(byte);
+  //printf("EL byte ingresado es: ");
+  //show_byte(byte);
   total_bytes_transfered+=2;
-  if( byte==0x80){
+  if( ebyte==(char)0x80){
     printf("Total bytes\n");
     printf("%d total of bytes transfered\n", total_bytes_transfered);
     response=0x80;
