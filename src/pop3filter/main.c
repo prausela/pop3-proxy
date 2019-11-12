@@ -106,7 +106,7 @@ print_err_msg(selector_status ss, const char **err_msg){
 int
 main(const int argc, const char **argv) {
 	int 		ret  	 = 0;
-	unsigned 	port 	 = 1080;
+	unsigned 	port 	 = 1100;
 	char 		proxy_port[100];
 	char 		origin_port[100];
 	char 		proxy_address[100];
