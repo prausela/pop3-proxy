@@ -22,7 +22,7 @@
 #include <sys/socket.h>  // socket
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-
+#include "../include/lib.h"
 #include "services/pop3/include/pop3_suscriptor.h"
 
 static void
@@ -49,6 +49,7 @@ static
 int
 param_validation(const int argc, const char **argv, unsigned *port){
 	if(argc == 1) {
+		return 0;
 		// utilizamos el default
 	} else if(argc == 2) {
 		char *end     = 0;
@@ -65,7 +66,7 @@ param_validation(const int argc, const char **argv, unsigned *port){
 		fprintf(stderr, "Usage: %s <port>\n", argv[0]);
 		return 1;
 	}
-	return 0;
+	return command_line_parser(argc,argv,10,port);
 }
 
 static
@@ -124,6 +125,7 @@ main(const int argc, const char **argv) {
 	unsigned 	port 	 = 1080;
 
 	if((ret = param_validation(argc, argv, &port)) != 0){
+		printf("%d",ret);
 		return ret;
 	}
 
