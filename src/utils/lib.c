@@ -1,4 +1,4 @@
-#include "../include/lib.h"
+#include "lib.h"
 
 /* Check if an argument is correc and if it's required for pop3          */
 int checkArg(char *argument, int *expecting_data)
@@ -77,8 +77,9 @@ int checkArg(char *argument, int *expecting_data)
 
 
 /* This functions parses the input from the command line           */
-int command_line_parser(int argc,char **argv,char * proxy_port,char * port)
+int command_line_parser(int argc,char **argv,char * proxy_port,char * port, char* proxy_address)
 {
+
   //Definition of variables
   int expecting_data,i,j,is_valid;
   char *options[10]; // Array for inserted options (by client)
@@ -119,6 +120,7 @@ int command_line_parser(int argc,char **argv,char * proxy_port,char * port)
   {
     if (options[i] != NULL)
     {
+      printf("Not null\n");
       switch (options[i][1])
       {
       case 'e':
@@ -133,6 +135,8 @@ int command_line_parser(int argc,char **argv,char * proxy_port,char * port)
       }
       case 'l':
       {
+        strcpy(proxy_address, data[i]);
+        printf("We are about to connect to address: %s\n", proxy_address);
         break;
       }
       case 'L':
@@ -147,7 +151,7 @@ int command_line_parser(int argc,char **argv,char * proxy_port,char * port)
       }
       case 'M':
       {
-        printf("This function is being developed.\n");
+        printf("Administrator address.\n");
         break;
       }
       case 'o':

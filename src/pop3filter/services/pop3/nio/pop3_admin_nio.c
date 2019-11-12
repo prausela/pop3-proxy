@@ -46,7 +46,7 @@ struct pop3_admin {
 
 	/** State Machines*/
 	struct state_machine			stm;
-	
+
 	/** Amount of reference to this object, if one it should be destroyed */
 	unsigned references;
 
@@ -212,10 +212,11 @@ request_read(struct selector_key *key) {
 	 char **  parameters;
 	    char  response;
 	     int  pointer=2;
+			 int  bytes_transfered=0;
     bzero(buffer, sizeof(buffer));
 	n = recv(key->fd, &ATTACHMENT(key)->buffer, count, 0);
 	if(n > 0) {
-		
+
 		if(authenticated){
 			// AUTHENTICATED
 		} else {
@@ -223,32 +224,42 @@ request_read(struct selector_key *key) {
 		}
 		buffer[n] = 0;
 		//if (sndrcvinfo.sinfo_stream == LOCALTIME_STREAM) {
-		printf("El eByte es: ");
+		printf("PROTOCOL RESPONSE: THE eBYTE is ");
 		fflush(stdout);
 		show_byte(buffer[0]);
 		int size = buffer[1];
-		printf("La cantidad de parametros son: %d\n", size);
-		if((parameters=malloc(size*sizeof(char*)))==NULL){
-			printf("Error. No se pudo crear memoria para parameters[].\n");
-			return 1;
+		if(size>0){
+			printf("Quantity of parameters are: %d\n", size);
+			if((parameters=malloc(size*sizeof(char*)))==NULL){
+				printf("Error. Cannot allocate memory for parameters[].\n");
+				return 1;
+			}
+			for (int i=0; i<size; i++){
+				parameters[i]=malloc(strlen(buffer+pointer)+1);
+				//printf("Reservando memoria para el parametro %d.....\n", i+1);
+				//printf("La cantidad de memoria reservada es: %d\n", strlen(buffer+pointer)+1);
+				strcpy(parameters[i],buffer+pointer);
+				//printf("Se acaba de copiar la palabra: %s\n",buffer+pointer );
+				pointer+= strlen(buffer+pointer)+1;
+				//printf("El nuevo valor del puntero es: %d\n",pointer );
+				//printf("%c\n", i+1);
+				bytes_transfered+=strlen(buffer+pointer)+1;
+			}
+			printf("Parameters are: ");
+			for(int i=0; i<size; i++){
+				printf("%s ", parameters[i]);
+			}
+			printf("\n");
 		}
-		for (int i=0; i<size; i++){
-			parameters[i]=malloc(sizeof(buffer+pointer));
-			strcpy(parameters[i],buffer+pointer);
-			pointer+= sizeof(buffer+pointer);
-			//printf("%c\n", i+1);
-		}
+		bytes_transfered=2;
+		pointer=2;
 		/*for(int i=0; i < 10; i++){
 			putchar(buffer[i]);
 		}*/
-		printf("Los parametros son: ");
-		for(int i=0; i<size; i++){
-		  printf("%s ", parameters[i]);
-		}
-		printf("\n");
 		//printf("%s ", parameters[2]);
-		response=decode_request(buffer[0], parameters);
-		
+		response=decode_request(buffer[0], parameters, size);
+
+
 		fflush(stdout);
 		buffer[0]=response;
 		ret = response_write(key);

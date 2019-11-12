@@ -16,6 +16,7 @@
 
 #include "../../include/stm.h"
 #include "include/pop3_client_nio.h"
+#include "include/pop3_admin_nio.h"
 #include "../../../utils/include/netutils.h"
 #include "../parsers/include/pop3_command_parser.h"
 #include "../parsers/include/pop3_singleline_response_parser.h"
