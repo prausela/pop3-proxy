@@ -32,7 +32,7 @@ int create_transformation(int * sender_pipe, int * receiver_pipe)
     dup2(receiver_pipe[1],STDOUT_FILENO);
     close(receiver_pipe[1]);
 
-    char *argv[] = {CAT, 0};
+    char *argv[] = {MEDIA_FILTER, 0};
     execvp(argv[0],argv);
     return 1;
   }

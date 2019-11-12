@@ -400,7 +400,6 @@ pop3_singleline_response_builder(buffer *b, struct parser *p, struct pop3_single
 	struct parser_event *e;
 	size_t  count;
 	uint8_t *ptr = buffer_read_ptr(b, &count);
-	printf("MIIIII %d\n", count);
 	while(count > 0){
 		printf("Oh no\n");
 		c = *ptr;

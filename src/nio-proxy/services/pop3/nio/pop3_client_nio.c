@@ -687,7 +687,7 @@ greeting_init(const unsigned state, struct selector_key *key) {
 	 *
 	 */
 
-	buffer_init(d->write_buffer, sizeof(GREETING_OK)-1, GREETING_OK);
+	buffer_init(d->write_buffer, sizeof(GREETING_OK)-1, &GREETING_OK);
 
 	/**
 	 * Now we shall advance the write_ptr to match the limit, so the string can be read.
@@ -792,7 +792,6 @@ greeting_cwrite(struct selector_key *key) {
 			}
 		}
 	}
-	printf("Yeah\n");
 
 	return ret;
 }
@@ -813,7 +812,6 @@ command_init(const unsigned state, struct selector_key *key) {
 
 static unsigned
 command_cread(struct selector_key *key) {
-	printf("Hola\n");
 	struct command_st *d = &ATTACHMENT(key)->client.command;
 	unsigned  ret      = COMMAND_CREAD;
 		bool  error    = false;
@@ -823,23 +821,15 @@ command_cread(struct selector_key *key) {
 	 enum structure_builder_states 	 			state;
 
 	ptr = buffer_write_ptr(d->read_buffer, &count);
-	printf("%Hakuna %d\n", count);
 	n = recv(key->fd, ptr, count, 0);
-	printf("BYe %d\n", n);
 	if(n > 0) {
-		printf("Thats my secret hulk, %s\n", ptr);
-		buffer_write_adv(d->read_buffer, n);
-		printf("%BRUJERIAS %d\n", d->read_buffer->write);
-		printf("Heyo\n");
 		state = command_builder(d->read_buffer, d->command_parser, d->current_command, &error);
-		printf("Wiiiii %d\n", d->read_buffer->write);
 		fflush(stdout);
 		
 		if(state == BUILD_FINISHED ){
 			d->read_buffer->read = d->read_buffer->data;
 			selector_set_interest    (key->s, ATTACHMENT(key)->client_fd, OP_NOOP);
 			if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->origin_fd, OP_WRITE)){
-				printf("Thats my secret cap, %s %s\n", d->current_command->kwrd, ptr);
 				ret = COMMAND_SWRITE;
 			} else {
 				ret = ERROR;
@@ -847,10 +837,8 @@ command_cread(struct selector_key *key) {
 			
 		} else if(state == BUILDING){
 			//selector_set_interest_key(key, OP_WRITE);
-			printf("Ship\n");
 			ret = COMMAND_CREAD;
 		} else {
-			printf("Why???\n");
 			ret = ERROR;
 		}
 		/*const struct parser_event* event = pop3_singleline_parser_consume(d->read_buffer, &d->singleline_parser, &error);
@@ -864,13 +852,11 @@ command_cread(struct selector_key *key) {
 	} else {
 		ret = ERROR;
 	}
-	printf("ksmdklsmcdks\n");
 	return error ? ERROR : ret;
 }
 
 static unsigned
 command_swrite(struct selector_key *key) {
-	printf("Mehhh\n");
 	struct command_st *d = &ATTACHMENT(key)->client.command;
 	
 	unsigned  ret     = COMMAND_SWRITE;
@@ -879,26 +865,20 @@ command_swrite(struct selector_key *key) {
 	 ssize_t  n;
 
 	ptr = buffer_read_ptr(d->read_buffer, &count);
-	printf("aksnkas %s %d %d\n", ptr, count, d->read_buffer->write);
 	n = send(key->fd, ptr, count, MSG_NOSIGNAL);
-	printf("Alaska %s %d\n", ptr, n);
 	if(n == -1) {
 		ret = ERROR;
 	} else {
 		buffer_read_adv(d->read_buffer, n);
 		if(!buffer_can_read(d->read_buffer)) {
-			printf("Mimuuu %d\n", ATTACHMENT(key)->origin_fd);
 			//key->fd = ATTACHMENT(key)->origin_fd;
 			if(SELECTOR_SUCCESS == selector_set_interest_key(key, OP_READ)) {
-				printf("Manu Luque\n");
 				ret = RESPONSE_SREAD;
 			} else {
-				printf("Im fucked\n");
 				ret = ERROR;
 			}
 		}
 	}
-	printf("My my\n");
 
 	return ret;
 }
@@ -906,12 +886,10 @@ command_swrite(struct selector_key *key) {
 /** inicializa las variables de los estados HELLO_… */
 static void
 response_init(const unsigned state, struct selector_key *key) {
-	printf("Sadness\n");
 	struct response_st *d 		= &ATTACHMENT(key)->origin.response;
 	d->current_command 			= &(ATTACHMENT(key)->current_command);
 	d->singleline_parser 		= pop3_singleline_response_parser_init();
 	d->multiline_parser 		= pop3_multiline_response_parser_init();
-	printf("Puntero %p\n", d->multiline_parser);
 	d->is_singleline 			= &ATTACHMENT(key)->is_singleline;
 	buffer_reset(d->read_buffer);
 	buffer_reset(d->write_buffer);
@@ -919,7 +897,6 @@ response_init(const unsigned state, struct selector_key *key) {
 
 static unsigned
 response_sread(struct selector_key *key) {
-	printf("Im still here\n");
 	fflush(stdout);
 	struct response_st *d 	= &ATTACHMENT(key)->origin.response;
 	unsigned  ret      		= RESPONSE_SREAD;
@@ -929,17 +906,12 @@ response_sread(struct selector_key *key) {
 	 ssize_t  n;
 	  enum structure_builder_states 	 			state;
 	 struct pop3_singleline_response_builder 		builder;
-	 printf("Siiiiii\n");
 	fflush(stdout);
 	ptr = buffer_write_ptr(d->write_buffer, &count);
-	printf("Okkay\n");
 	n = recv(key->fd, ptr, count, 0);
-	printf("%d\n", n);
 	fflush(stdout);
 	if(n > 0) {
-		printf("JJJJJ\n");
 		buffer_write_adv(d->write_buffer, n);
-		printf("Tu vieja %s\n", ptr);
 		if(*(d->is_singleline)){
 			state = pop3_singleline_response_builder(d->write_buffer, d->singleline_parser, &builder, &error);
 			//buffer_read_adv(d->write_buffer, n);
@@ -954,6 +926,13 @@ response_sread(struct selector_key *key) {
 						if(!d->current_command->has_args){
 							break;
 						}
+					//todo
+					case SINGLELINE:
+					printf("SingleLIne\n");
+						break;
+					case NOT_CMD:
+					printf("NOT CMD\n");
+						break;
 					case MULTILINE:
 						*(d->is_singleline) = false;
 						printf("MULTILINE\n");

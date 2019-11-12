@@ -1,6 +1,13 @@
 #include "stripmime.h"
 #include <string.h>
 
+static void
+write_log(const char* msg){
+    FILE * fPtr;
+    fPtr = fopen("../../logs.txt", "a");
+    fputs(msg, fPtr);
+    fclose(fPtr);
+}
 
 /*
  * imprime información de debuging sobre un evento.
@@ -959,6 +966,7 @@ free_media_filter_list(struct type_list *media_types){
 
 int main(const int argc, const char **argv)
 {
+    write_log("ENTRO MAIN STRIP\n");
     int fd = STDIN_FILENO;
     if (argc > 1)
     {

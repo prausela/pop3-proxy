@@ -688,7 +688,7 @@ greeting_init(const unsigned state, struct selector_key *key) {
 	 *
 	 */
 
-	buffer_init(d->write_buffer, sizeof(GREETING_OK)-1, GREETING_OK);
+	buffer_init(d->write_buffer, sizeof(GREETING_OK)-1, &GREETING_OK);
 
 	/**
 	 * Now we shall advance the write_ptr to match the limit, so the string can be read.
@@ -932,21 +932,15 @@ response_sread(struct selector_key *key) {
 	 ssize_t  n;
 	  enum structure_builder_states 	 			state;
 	 struct pop3_singleline_response_builder 		builder;
-	 printf("Siiiiii\n");
 	fflush(stdout);
 	ptr = buffer_write_ptr(d->write_buffer, &count);
-	printf("Okkay\n");
 	n = recv(key->fd, ptr, count, 0);
-	printf("%d\n", n);
 	fflush(stdout);
 	if(n > 0) {
-		printf("JJJJJ\n");
 		buffer_write_adv(d->write_buffer, n);
-		printf("Tu vieja %s\n", ptr);
 		if(*(d->is_singleline)){
 			state = pop3_singleline_response_builder(d->write_buffer, d->singleline_parser, &builder, &error);
 			//buffer_read_adv(d->write_buffer, n);
-			printf("Haremos lo necesitamos para salvar esta compania\n");
 			//struct parser_event* event = pop3_singleline_parser_consume(d->read_buffer, d->singleline_parser, &error);
 			
 			if(state == BUILD_FINISHED){
@@ -968,10 +962,8 @@ response_sread(struct selector_key *key) {
 							write(ATTACHMENT(key)->sender_pipe[0], ptr, bytes_to_read);
 							uint8_t *read_ptr = buffer_write_ptr(d->read_buffer, &bytes_to_read);
 							read(ATTACHMENT(key)->receiver_pipe[1], read_ptr, bytes_to_read);
-							printf("DATA TRANS\n");
 							return RESPONSE_SREAD;
 						} else {
-							printf("DATA NO TRANS\n");
 
 						}
 						if(c_state == FINISHED_CONSUMING ){
@@ -984,9 +976,7 @@ response_sread(struct selector_key *key) {
 							}
 							return ret;
 						} else {
-							printf("WHATTTT\n");
 							selector_set_interest    (key->s, ATTACHMENT(key)->origin_fd, OP_NOOP);
-							printf("Miedulis\n");
 							if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->client_fd, OP_WRITE)){
 								ret = PARTIAL_RESPONSE_CWRITE;
 							} else {
@@ -997,7 +987,6 @@ response_sread(struct selector_key *key) {
 
 				}
 				selector_set_interest    (key->s, ATTACHMENT(key)->origin_fd, OP_NOOP);
-				printf("Hashtag\n");
 				if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->client_fd, OP_WRITE)){
 					ret = RESPONSE_CWRITE;
 				} else {
@@ -1010,16 +999,13 @@ response_sread(struct selector_key *key) {
 		} else {
 			enum consumer_state c_state = pop3_multiline_response_checker(d->write_buffer, d->multiline_parser, &error);
 			if(strcmp(d->current_command->kwrd, "RETR") == 0 || strcmp(d->current_command->kwrd, "TOP") == 0){
-				printf("DATA TRANS\n");
 				int bytes_to_read;
 				uint8_t *ptr=buffer_read_ptr(d->write_buffer,&bytes_to_read);
 				write(ATTACHMENT(key)->sender_pipe[0],ptr,bytes_to_read);
 			} else {
-				printf("DATA NO TRANS\n");
 			}
 			if(c_state == FINISHED_CONSUMING ){
 				selector_set_interest    (key->s, ATTACHMENT(key)->origin_fd, OP_NOOP);
-				printf("Hashtag\n");
 				if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->client_fd, OP_WRITE)){
 					ret = RESPONSE_CWRITE;
 				} else {
@@ -1027,9 +1013,7 @@ response_sread(struct selector_key *key) {
 				}
 				return ret;
 			} else {
-				printf("WHATTTT\n");
 				selector_set_interest    (key->s, ATTACHMENT(key)->origin_fd, OP_NOOP);
-				printf("Miedulis\n");
 				if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->client_fd, OP_WRITE)){
 					ret = PARTIAL_RESPONSE_CWRITE;
 				} else {
@@ -1054,7 +1038,6 @@ response_sread(struct selector_key *key) {
 
 static unsigned
 partial_response_cwrite(struct selector_key *key) {
-	printf("JAHSNJKAS\n");
 	struct response_st *d = &ATTACHMENT(key)->origin.response;
 
 	unsigned  ret     = PARTIAL_RESPONSE_CWRITE;
@@ -1083,7 +1066,6 @@ partial_response_cwrite(struct selector_key *key) {
 
 static unsigned
 response_cwrite(struct selector_key *key) {
-	printf("JAHSNJKAS\n");
 	struct response_st *d = &ATTACHMENT(key)->origin.response;
 
 	unsigned  ret     = RESPONSE_CWRITE;
