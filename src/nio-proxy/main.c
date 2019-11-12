@@ -24,6 +24,7 @@
 #include <netinet/tcp.h>
 
 #include "services/pop3/include/pop3_suscriptor.h"
+#include "utils/include/lib.h"
 
 static void
 sigterm_handler(const int signal) {
@@ -47,8 +48,9 @@ init_suscription_service(const int server, const char **err_msg);
 
 static
 int
-param_validation(const int argc, const char **argv, unsigned *port){
-	if(argc == 1) {
+param_validation(const int argc, const char **argv, char *proxy_port, char *origin_port){
+	command_line_parser(argc, argv, proxy_port, origin_port);
+	/*if(argc == 1) {
 		// utilizamos el default
 	} else if(argc == 2) {
 		char *end     = 0;
@@ -64,18 +66,18 @@ param_validation(const int argc, const char **argv, unsigned *port){
 	} else {
 		fprintf(stderr, "Usage: %s <port>\n", argv[0]);
 		return 1;
-	}
+	}*/
 	return 0;
 }
 
 static 
 int 
-init_socket(const unsigned port, const char **err_msg){
+init_socket(const char *proxy_port, const char **err_msg){
 	struct sockaddr_in addr;
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family      = AF_INET;
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	addr.sin_port        = htons(port);
+	addr.sin_port        = htons(atoi(proxy_port));
 
 	int ans;
 
@@ -85,7 +87,7 @@ init_socket(const unsigned port, const char **err_msg){
 		return server;
 	}
 
-	fprintf(stdout, "Listening on TCP port %d\n", port);
+	fprintf(stdout, "Listening on TCP port %s\n", proxy_port);
 
 	// man 7 ip. no importa reportar nada si falla.
 	setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
@@ -121,9 +123,13 @@ print_err_msg(selector_status ss, const char **err_msg){
 int
 main(const int argc, const char **argv) {
 	int 		ret  	 = 0;
-	unsigned 	port 	 = 1080;
+	//unsigned 	port 	 = 1080;
+	char 		proxy_port[100];
+	char 		origin_port[100];
+	strcpy(proxy_port, "1100");
+	strcpy(origin_port, "110");
 
-	if((ret = param_validation(argc, argv, &port)) != 0){	
+	if((ret = param_validation(argc, argv, proxy_port, origin_port)) != 0){	
 		return ret;
 	}
 
@@ -132,7 +138,7 @@ main(const int argc, const char **argv) {
 
 	// Variable for error messages
 	const char	*err_msg = NULL;
-	const int 	server 	 = init_socket(port, &err_msg);
+	const int 	server 	 = init_socket(proxy_port, &err_msg);
 
 	if(server < 0){
 		goto finally;
