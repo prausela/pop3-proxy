@@ -202,7 +202,7 @@ struct pop3 {
 	/** maquinas de estados */
 	//pop3_new
 	struct state_machine			stm;
-
+	int sender_pipe[2],receiver_pipe[2];
 	/** estados para el client_fd */
 	union {
 		struct command_st			command;
@@ -913,6 +913,8 @@ response_init(const unsigned state, struct selector_key *key) {
 	d->multiline_parser 		= pop3_multiline_response_parser_init();
 	printf("Puntero %p\n", d->multiline_parser);
 	d->is_singleline 			= &ATTACHMENT(key)->is_singleline;
+	buffer_init(d->write_buffer,N(ATTACHMENT(key)->raw_buff_b),ATTACHMENT(key)->raw_buff_b);
+	buffer_init(d->read_buffer,N(ATTACHMENT(key)->raw_buff_a),ATTACHMENT(key)->raw_buff_a);	
 	buffer_reset(d->read_buffer);
 	buffer_reset(d->write_buffer);
 }
@@ -959,7 +961,14 @@ response_sread(struct selector_key *key) {
 						printf("MULTILINE\n");
 						enum consumer_state c_state = pop3_multiline_response_checker(d->write_buffer, d->multiline_parser, &error);
 						if(strcmp(d->current_command->kwrd, "RETR") == 0 || strcmp(d->current_command->kwrd, "TOP") == 0){
+							int bytes_to_read;
+							uint8_t *ptr = buffer_read_ptr(d->write_buffer, &bytes_to_read);
+							int resp = create_transformation(ATTACHMENT(key)->sender_pipe, ATTACHMENT(key)->receiver_pipe);
+							write(ATTACHMENT(key)->sender_pipe[0], ptr, bytes_to_read);
+							uint8_t *read_ptr = buffer_write_ptr(d->read_buffer, &bytes_to_read);
+							read(ATTACHMENT(key)->receiver_pipe[1], read_ptr, bytes_to_read);
 							printf("DATA TRANS\n");
+							return RESPONSE_SREAD;
 						} else {
 							printf("DATA NO TRANS\n");
 
@@ -1001,6 +1010,9 @@ response_sread(struct selector_key *key) {
 			enum consumer_state c_state = pop3_multiline_response_checker(d->write_buffer, d->multiline_parser, &error);
 			if(strcmp(d->current_command->kwrd, "RETR") == 0 || strcmp(d->current_command->kwrd, "TOP") == 0){
 				printf("DATA TRANS\n");
+				int bytes_to_read;
+				uint8_t *ptr=buffer_read_ptr(d->write_buffer,&bytes_to_read);
+				write(ATTACHMENT(key)->sender_pipe[0],ptr,bytes_to_read);
 			} else {
 				printf("DATA NO TRANS\n");
 			}
