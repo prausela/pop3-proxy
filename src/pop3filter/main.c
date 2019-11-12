@@ -24,6 +24,7 @@
 #include <netinet/tcp.h>
 
 #include "services/pop3/include/pop3_suscriptor.h"
+#include "../utils/lib.h"
 
 static void
 sigterm_handler(const int signal) {
@@ -47,35 +48,19 @@ init_suscription_service(const int server, const char **err_msg);
 
 static
 int
-param_validation(const int argc, const char **argv, unsigned *port){
-	if(argc == 1) {
-		// utilizamos el default
-	} else if(argc == 2) {
-		char *end     = 0;
-		const long sl = strtol(argv[1], &end, 10);
-
-		if (end == argv[1]|| '\0' != *end 
-		   || ((LONG_MIN == sl || LONG_MAX == sl) && ERANGE == errno)
-		   || sl < 0 || sl > USHRT_MAX) {
-			fprintf(stderr, "port should be an integer: %s\n", argv[1]);
-			return 1;
-		}
-		*port = sl;
-	} else {
-		fprintf(stderr, "Usage: %s <port>\n", argv[0]);
-		return 1;
-	}
+param_validation(const int argc, const char **argv, char* proxy_port, char *origin_port, char* proxy_address){
+	command_line_parser(argc, argv, proxy_port, origin_port, proxy_address);
 	return 0;
 }
 
 static 
 int 
-init_socket(const unsigned port, const int protocol, const char **err_msg){
+init_socket(const char * proxy_port, const char * proxy_address, const char **err_msg, int protocol){
 	struct sockaddr_in addr;
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family      = AF_INET;
-	addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	addr.sin_port        = htons(port);
+	addr.sin_addr.s_addr = inet_addr(proxy_address);
+	addr.sin_port        = htons(atoi(proxy_port));
 
 	int ans;
 
@@ -85,7 +70,7 @@ init_socket(const unsigned port, const int protocol, const char **err_msg){
 		return server;
 	}
 
-	fprintf(stdout, "Listening on TCP port %d\n", port);
+	fprintf(stdout, "Listening on TCP port %s\n", proxy_port);
 
 	// man 7 ip. no importa reportar nada si falla.
 	setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
@@ -122,23 +107,34 @@ int
 main(const int argc, const char **argv) {
 	int 		ret  	 = 0;
 	unsigned 	port 	 = 1080;
+	char 		proxy_port[100];
+	char 		origin_port[100];
+	char 		proxy_address[100];
 
-	if((ret = param_validation(argc, argv, &port)) != 0){	
+	strcpy(proxy_port, "1100");
+	strcpy(origin_port, "110");
+	strcpy(proxy_address, "0.0.0.0");
+
+	if((ret = param_validation(argc, argv, proxy_port, origin_port, proxy_address)) != 0){	
 		return ret;
 	}
+
 
 	// No input from user is needed
 	close(STDIN_FILENO);
 
 	// Variable for error messages
 	const char	*err_msg = NULL;
-	const int 	server 	 = init_socket(port, IPPROTO_TCP, &err_msg);
+	const int 	server 	 = init_socket(proxy_port, proxy_address, &err_msg, IPPROTO_TCP);
 
 	if(server < 0){
 		goto finally;
 	}
 
-	const int 	admin 	 = init_socket(9090, IPPROTO_SCTP, &err_msg);
+	char 		admin_address[100];
+	strcpy(admin_address, "0.0.0.0");
+
+	const int 	admin 	 = init_socket("9090", admin_address, &err_msg, IPPROTO_SCTP);
 
 	if(admin < 0){
 		goto finally;
