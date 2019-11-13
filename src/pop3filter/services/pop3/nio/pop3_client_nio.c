@@ -1013,7 +1013,7 @@ response_sread(struct selector_key *key) {
 			if(strcmp(d->current_command->kwrd, "RETR") == 0 || strcmp(d->current_command->kwrd, "TOP") == 0){
 				int bytes_to_read;
 				uint8_t *ptr=buffer_read_ptr(d->write_buffer,&bytes_to_read);
-				write(ATTACHMENT(key)->sender_pipe[0],ptr,bytes_to_read);
+				write(ATTACHMENT(key)->sender_pipe[1],ptr,bytes_to_read);
 			} else {
 			}
 			if(c_state == FINISHED_CONSUMING ){
