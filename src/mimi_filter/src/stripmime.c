@@ -31,8 +31,7 @@ debug(const char *p,
     {
         for (int j = 0; j < e->n; j++)
         {
-            const char *name = (j == 0) ? namefnc(e->type)
-                                        : "";
+                                   
             if (e->data[j] <= ' ')
             {
                 fprintf(stderr, "0x%02X", e->data[j]);

@@ -301,7 +301,6 @@ static struct parser_definition pop3_command_definition = {
 
 static inline bool 
 set_pop3_command_builder_next(struct pop3_command_builder *cmd, uint8_t value){
-    printf("Este es el keyword ptr %d\n",cmd->kwrd_ptr);
     if(cmd->kwrd_ptr >= MAX_KEYWORD_LENGTH){
         return false;
     }
@@ -317,7 +316,6 @@ command_builder(uint8_t *ptr, size_t count, struct parser *p, struct pop3_comman
     while(count > 0){
         c = *ptr;
         e = parser_feed(p, c);
-        printf("%c %d\n", c, c);
         switch(e->type){
             case BUFFER_CMD:
                 printf("BUFFER_CMD\n");
