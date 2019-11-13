@@ -9,7 +9,9 @@
 #include <time.h>
 #include <unistd.h>  // close
 #include <pthread.h>
-
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 #include <arpa/inet.h>
 
 #include "../../include/buffer.h"
@@ -755,7 +757,6 @@ greeting_sread(struct selector_key *key) {
 			ret = GREETING_CWRITE;
 		}
 	}
-	printf("Stressed out: %s\n", ret == ERROR ? "error" : (ret == GREETING_CWRITE ? "estamos bien" : "no estamos bien"));
 
 	return error ? ERROR : ret;
 }
@@ -790,6 +791,7 @@ greeting_cwrite(struct selector_key *key) {
 
 static void
 command_init(const unsigned state, struct selector_key *key) {
+	printf("Estoy en CMD_INIT");
 	struct command_st * d = &ATTACHMENT(key)->client.command;
 
 	d->read_buffer              = &(ATTACHMENT(key)->read_buffer);
@@ -797,7 +799,9 @@ command_init(const unsigned state, struct selector_key *key) {
 	buffer_init(d->write_buffer, N(ATTACHMENT(key)->raw_buff_b), ATTACHMENT(key)->raw_buff_b);
 	d->command_parser 			= pop3_command_parser_init();
 	d->current_command 			= &(ATTACHMENT(key)->current_command);
-	*(d->current_command) 		= pop3_command_builder_default;
+	d->current_command->has_args = false;
+	d->current_command->kwrd_ptr = 0;
+	memset(d->current_command->kwrd, '\0', MAX_KEYWORD_LENGTH);
 	buffer_reset(d->read_buffer);
 	buffer_reset(d->write_buffer);
 }
@@ -813,15 +817,15 @@ command_cread(struct selector_key *key) {
 	 enum structure_builder_states 	 			state;
 
 	ptr = buffer_write_ptr(d->read_buffer, &count);
-n = recv(key->fd, ptr, count, 0);
+	n = recv(key->fd, ptr, count, 0);
 	if(n > 0) {
 		buffer_write_adv(d->read_buffer, n);
-		state = command_builder(d->read_buffer, d->command_parser, d->current_command, &error);
-		fflush(stdout);
+		state = command_builder(ptr, n, d->command_parser, d->current_command, &error);
+		//fflush(stdout);
 		
 		if(state == BUILD_FINISHED ){
-			d->read_buffer->read = d->read_buffer->data;
-			selector_set_interest    (key->s, ATTACHMENT(key)->client_fd, OP_NOOP);
+			printf("%s", d->current_command->kwrd);
+			selector_set_interest(key->s, ATTACHMENT(key)->client_fd, OP_NOOP);
 			if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->origin_fd, OP_WRITE)){
 				ret = COMMAND_SWRITE;
 			} else {
@@ -831,7 +835,11 @@ n = recv(key->fd, ptr, count, 0);
 		} else if(state == BUILDING){
 			//selector_set_interest_key(key, OP_WRITE);
 			printf("State building\n");
-			ret = COMMAND_CREAD;
+			if(SELECTOR_SUCCESS == selector_set_interest_key(key, OP_READ)) {
+				ret = COMMAND_CREAD;
+			} else {
+				ret = ERROR;
+			}
 		} else {
 			printf("state else building\n");
 			ret = ERROR;

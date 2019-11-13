@@ -22,8 +22,7 @@ struct parser *
 pop3_command_parser_init(void);
 
 enum structure_builder_states
-command_builder(buffer *b, struct parser *p, struct pop3_command_builder *cmd, bool *error);
-
+command_builder(uint8_t *ptr, size_t count, struct parser *p, struct pop3_command_builder *cmd, bool *error);
 /** 
  * PLEASE USE THE FOLLOWING PARSER_FACTORY METHODS FOR MORE OPERATIONS:
  *

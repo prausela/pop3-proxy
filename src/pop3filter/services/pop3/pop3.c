@@ -39,7 +39,6 @@ const char *singleline_commands[] =
 	{
 		"QUIT",
 		"STAT",
-		"LIST",
 		"DELE",
 		"NOOP",
 		"RSET",

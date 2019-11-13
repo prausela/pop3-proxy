@@ -301,6 +301,7 @@ static struct parser_definition pop3_command_definition = {
 
 static inline bool 
 set_pop3_command_builder_next(struct pop3_command_builder *cmd, uint8_t value){
+    printf("Este es el keyword ptr %d\n",cmd->kwrd_ptr);
     if(cmd->kwrd_ptr >= MAX_KEYWORD_LENGTH){
         return false;
     }
@@ -310,12 +311,9 @@ set_pop3_command_builder_next(struct pop3_command_builder *cmd, uint8_t value){
 }
 
 enum structure_builder_states
-command_builder(buffer *b, struct parser *p, struct pop3_command_builder *cmd, bool *error){
+command_builder(uint8_t *ptr, size_t count, struct parser *p, struct pop3_command_builder *cmd, bool *error){
     uint8_t c;
     struct parser_event *e;
-    size_t  count;
-
-    uint8_t *ptr = buffer_read_ptr(b, &count);
     while(count > 0){
         c = *ptr;
         e = parser_feed(p, c);
