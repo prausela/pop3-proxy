@@ -356,7 +356,7 @@ pop3_multiline_response_checker(uint8_t *ptr, size_t count,struct parser *p, boo
 	
     while(count > 0){
         c = *ptr;
-        //printf("Buccelatti %d\n", count);
+        printf("Buccelatti %d\n", count);
         //printf("%c %d\n", c, c);
         e = parser_feed(p, c);
         //printf("%c %d\n", c, c);

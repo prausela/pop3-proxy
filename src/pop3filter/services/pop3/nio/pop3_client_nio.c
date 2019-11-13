@@ -708,10 +708,6 @@ greeting_init(const unsigned state, struct selector_key *key) {
 	d->singleline_parser = pop3_singleline_response_parser_init();
 }
 
-void breakpoint(void){
-
-}
-
 static unsigned
 greeting_sread(struct selector_key *key) {
 	//exit(0);
@@ -907,6 +903,10 @@ response_init(const unsigned state, struct selector_key *key) {
 	buffer_reset(d->write_buffer);
 }
 
+void breakpoint(){
+
+}
+
 static unsigned
 response_sread(struct selector_key *key) {
 	struct response_st *d 	= &ATTACHMENT(key)->origin.response;
@@ -927,12 +927,12 @@ response_sread(struct selector_key *key) {
 			switch(type){
 				case OVERLOADED:
 					printf("OVERLOADED\n");
-					if(!d->current_command->has_args){
+					if(d->current_command->has_args){
 						break;
 					}
 				case MULTILINE:
 					printf("MULTILINE\n");
-					enum consumer_state c_state = pop3_multiline_response_checker(ptr,n, d->multiline_parser, &error);
+					enum consumer_state c_state = pop3_multiline_response_checker(ptr, n, d->multiline_parser, &error);
 					printf("En mlt\n");
 					fflush(stdout);
 					if(0/*strcmp(d->current_command->kwrd, "RETR") == 0 || strcmp(d->current_command->kwrd, "TOP") == 0*/){
@@ -987,6 +987,7 @@ response_sread(struct selector_key *key) {
 							printf("I'm about to be killed\n");
 							printf("%s\n", ptr);
 							fflush(stdout);
+							breakpoint();
 							ret = DOT_DATA_CWRITE;
 						} else {
 							ret = ERROR;
@@ -1020,8 +1021,16 @@ response_sread(struct selector_key *key) {
 	return error ? ERROR : ret;
 }
 
+static void
+dot_data_init(const unsigned state, struct selector_key *key) {
+	struct response_st *d 		= &ATTACHMENT(key)->origin.response;
+	d->transform 			= &ATTACHMENT(key)->transform;
+	buffer_reset(d->write_buffer);
+}
+
 static unsigned
 dot_data_sread(struct selector_key *key){
+	printf("READY TO READ\n");
 	struct response_st *d 	= &ATTACHMENT(key)->origin.response;
 	unsigned  ret      		= DOT_DATA_SREAD;
 		bool  error    		= false;
@@ -1031,9 +1040,11 @@ dot_data_sread(struct selector_key *key){
 	  enum consumer_state 	 consumer_state;
 	ptr = buffer_write_ptr(d->write_buffer, &count);
 	n = recv(key->fd, ptr, count, 0);
+	printf("IMMMM HERE %d %s\n", n, ptr);
 	if(n > 0) {
 		consumer_state = pop3_multiline_response_checker(ptr, n, d->multiline_parser, &error);
-		if(*d->transform){
+		printf("SHAzAM\n %d", (d->transform));
+		if(*(d->transform)){
 			int bytes_to_read;
 			uint8_t *ptr = buffer_read_ptr(d->write_buffer, &bytes_to_read);
 			int resp = create_transformation(ATTACHMENT(key)->sender_pipe, ATTACHMENT(key)->receiver_pipe);
@@ -1042,8 +1053,16 @@ dot_data_sread(struct selector_key *key){
 			read(ATTACHMENT(key)->receiver_pipe[0], read_ptr, bytes_to_read);
 		}
 		if(consumer_state != FINISHED_CONSUMING ){
-			ret = DOT_DATA_CWRITE;
+			printf("NOT FINISHED_CONSUMING\n");
+			selector_set_interest    (key->s, ATTACHMENT(key)->origin_fd, OP_NOOP);
+			if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->client_fd, OP_WRITE)){
+				ret = DOT_DATA_CWRITE;
+			} else {
+				ret = ERROR;
+			}
 		} else {
+			printf("FINISHED_CONSUMING\n");
+			selector_set_interest    (key->s, ATTACHMENT(key)->origin_fd, OP_NOOP);
 			if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->client_fd, OP_WRITE)){
 				ret = RESPONSE_CWRITE;
 			} else {
@@ -1076,7 +1095,8 @@ dot_data_cwrite(struct selector_key *key) {
 	} else {
 		buffer_read_adv(d->write_buffer, n);
 		if(!buffer_can_read(d->write_buffer)) {
-			if(SELECTOR_SUCCESS == selector_set_interest_key(key, OP_READ)) {
+			selector_set_interest    (key->s, ATTACHMENT(key)->client_fd, OP_NOOP);
+			if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->origin_fd, OP_READ)){
 				ret = DOT_DATA_SREAD;
 			} else {
 				ret = ERROR;
@@ -1147,10 +1167,11 @@ static const struct state_definition client_statbl[] = {
 		.on_read_ready		= response_sread,
 	},{
 		.state 				= DOT_DATA_SREAD,
+		.on_arrival 		= dot_data_init,
 		.on_read_ready 		= dot_data_sread,
 	},{
 		.state 				= DOT_DATA_CWRITE,
-		.on_read_ready 		= dot_data_cwrite,
+		.on_write_ready		= dot_data_cwrite,
 	},{
 		.state				= RESPONSE_CWRITE,
 		.on_write_ready		= response_cwrite,
