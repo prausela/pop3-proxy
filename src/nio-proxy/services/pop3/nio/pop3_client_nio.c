@@ -758,7 +758,6 @@ greeting_sread(struct selector_key *key) {
 			ret = GREETING_CWRITE;
 		}
 	}
-	printf("Stressed out: %s\n", ret == ERROR ? "error" : (ret == GREETING_CWRITE ? "estamos bien" : "no estamos bien"));
 
 	return error ? ERROR : ret;
 }

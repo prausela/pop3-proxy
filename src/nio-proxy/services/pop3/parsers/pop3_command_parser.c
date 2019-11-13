@@ -303,6 +303,7 @@ static inline bool
 set_pop3_command_builder_next(struct pop3_command_builder *cmd, uint8_t value){
     if(cmd->kwrd_ptr >= MAX_KEYWORD_LENGTH){
         printf("Oh no\n");
+        printf("CAGAMOSSSS");
         return false;
     }
     cmd->kwrd[cmd->kwrd_ptr] = value;

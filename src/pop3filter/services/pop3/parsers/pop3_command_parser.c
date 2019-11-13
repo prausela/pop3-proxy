@@ -302,7 +302,6 @@ static struct parser_definition pop3_command_definition = {
 static inline bool 
 set_pop3_command_builder_next(struct pop3_command_builder *cmd, uint8_t value){
     if(cmd->kwrd_ptr >= MAX_KEYWORD_LENGTH){
-        printf("Oh no\n");
         return false;
     }
     cmd->kwrd[cmd->kwrd_ptr] = value;
