@@ -1,34 +1,8 @@
 /**
  * socks5nio.c  - controla el flujo de un proxy SOCKSv5 (sockets no bloqueantes)
  */
-#include <stdio.h>
-#include <stdlib.h>  // malloc
-#include <string.h>  // memset
-#include <assert.h>  // assert
-#include <errno.h>
-#include <time.h>
-#include <unistd.h>  // close
-#include <pthread.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <arpa/inet.h>
 
-#include "../../include/buffer.h"
-
-#include "../../include/stm.h"
 #include "include/pop3_client_nio.h"
-#include "include/pop3_admin_nio.h"
-#include "../../../utils/include/netutils.h"
-#include "../parsers/include/pop3_command_parser.h"
-#include "../parsers/include/pop3_singleline_response_parser.h"
-#include "../parsers/include/pop3_multiline_response_parser.h"
-#include "../include/pop3.h"
-#include "../../../../services/services.h"
-
-#define N(x) (sizeof(x)/sizeof((x)[0]))
-
-#define GREETING_OK "+OK Welcome to pop3filter!\r\n"
 
 extern struct server_credentials curr_origin_server = {
 	.dest_addr_type = req_addrtype_domain, 
@@ -37,15 +11,6 @@ extern struct server_credentials curr_origin_server = {
 	},
 	.dest_port = 28160,
 };
-/*
-.ipv4 = {
-			.sin_port = 28160,
-			.sin_family = AF_INET, 
-			.sin_addr = {
-	    		s_addr = 1611125961
-	  		},
-	  		sin_zero = "\200PUUUU\000"
-	  	}},*/
 
 enum states {
 
@@ -787,7 +752,6 @@ greeting_cwrite(struct selector_key *key) {
 
 static void
 command_init(const unsigned state, struct selector_key *key) {
-	printf("Estoy en CMD_INIT");
 	struct command_st * d = &ATTACHMENT(key)->client.command;
 
 	d->read_buffer              = &(ATTACHMENT(key)->read_buffer);
@@ -884,7 +848,6 @@ command_swrite(struct selector_key *key) {
 			}
 		}
 	}
-	printf("My my\n");
 
 	return ret;
 }
