@@ -961,10 +961,10 @@ response_sread(struct selector_key *key) {
 							uint8_t *ptr = buffer_read_ptr(d->write_buffer, &bytes_to_read);
 							int resp = create_transformation(ATTACHMENT(key)->sender_pipe, ATTACHMENT(key)->receiver_pipe);
 							printf("My little bunny %d\n", resp);
-							write(ATTACHMENT(key)->sender_pipe[0], ptr, bytes_to_read);
+							write(ATTACHMENT(key)->sender_pipe[1], ptr, bytes_to_read);
 							printf("Chiguagua\n");
 							uint8_t *read_ptr = buffer_write_ptr(d->read_buffer, &bytes_to_read);
-							read(ATTACHMENT(key)->receiver_pipe[1], read_ptr, bytes_to_read);
+							read(ATTACHMENT(key)->receiver_pipe[0], read_ptr, bytes_to_read);
 							if(c_state != FINISHED_CONSUMING ){
 								return RESPONSE_SREAD;
 							} else {
