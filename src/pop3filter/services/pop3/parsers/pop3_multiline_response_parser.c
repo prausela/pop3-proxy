@@ -357,12 +357,12 @@ pop3_multiline_response_checker(buffer *b, struct parser *p, bool *error){
     uint8_t *ptr = buffer_read_ptr(b, &count);
     while(count > 0){
         c = *ptr;
-        printf("Buccelatti\n");
-        printf("%c %d\n", c, c);
+        //printf("Buccelatti\n");
+        //printf("%c %d\n", c, c);
         e = parser_feed(p, c);
-        printf("%c %d\n", c, c);
-        printf("Im Mario\n");
-        fflush(stdout);
+        //printf("%c %d\n", c, c);
+        //printf("Im Mario\n");
+        //fflush(stdout);
         if(e->next != NULL && e->next->type == DAT_STUFFED_END){
         	return FINISHED_CONSUMING;
         }

@@ -21,16 +21,17 @@ int create_transformation(int * sender_pipe, int * receiver_pipe)
 
   if (pipe(sender_pipe) < 0 ||pipe(receiver_pipe) < 0)
   {
+    printf("JOSEEEEEEEE\n");
     return 1;
   }
   pid = fork();
   if(pid == 0) //Child process
   {
-    dup2(sender_pipe[0],STDIN_FILENO);
-    close(sender_pipe[0]);
+    dup2(sender_pipe[1],STDIN_FILENO);
+    close(sender_pipe[1]);
 
-    dup2(receiver_pipe[1],STDOUT_FILENO);
-    close(receiver_pipe[1]);
+    dup2(receiver_pipe[0],STDOUT_FILENO);
+    close(receiver_pipe[0]);
 
     char *argv[] = {MEDIA_FILTER, 0};
     execvp(argv[0],argv);

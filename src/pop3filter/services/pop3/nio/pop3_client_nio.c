@@ -22,6 +22,7 @@
 #include "../parsers/include/pop3_singleline_response_parser.h"
 #include "../parsers/include/pop3_multiline_response_parser.h"
 #include "../include/pop3.h"
+#include "../../../../services/services.h"
 
 #define N(x) (sizeof(x)/sizeof((x)[0]))
 
@@ -959,10 +960,21 @@ response_sread(struct selector_key *key) {
 							int bytes_to_read;
 							uint8_t *ptr = buffer_read_ptr(d->write_buffer, &bytes_to_read);
 							int resp = create_transformation(ATTACHMENT(key)->sender_pipe, ATTACHMENT(key)->receiver_pipe);
+							printf("My little bunny %d\n", resp);
 							write(ATTACHMENT(key)->sender_pipe[0], ptr, bytes_to_read);
+							printf("Chiguagua\n");
 							uint8_t *read_ptr = buffer_write_ptr(d->read_buffer, &bytes_to_read);
 							read(ATTACHMENT(key)->receiver_pipe[1], read_ptr, bytes_to_read);
-							return RESPONSE_SREAD;
+							if(c_state != FINISHED_CONSUMING ){
+								return RESPONSE_SREAD;
+							} else {
+								if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->client_fd, OP_WRITE)){
+									ret = RESPONSE_CWRITE;
+								} else {
+									ret = ERROR;
+								}
+								return ret;
+							}
 						} else {
 
 						}
@@ -1045,13 +1057,13 @@ partial_response_cwrite(struct selector_key *key) {
 	  size_t  count;
 	 ssize_t  n;
 
-	ptr = buffer_read_ptr(d->write_buffer, &count);
+	ptr = buffer_read_ptr(d->read_buffer, &count);
 	n = send(key->fd, ptr, count, MSG_NOSIGNAL);
 	if(n == -1) {
 		ret = ERROR;
 	} else {
-		buffer_read_adv(d->write_buffer, n);
-		if(!buffer_can_read(d->write_buffer)) {
+		buffer_read_adv(d->read_buffer, n);
+		if(!buffer_can_read(d->read_buffer)) {
 			selector_set_interest    (key->s, ATTACHMENT(key)->client_fd, OP_NOOP);
 			if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->origin_fd, OP_READ)){
 				ret = RESPONSE_SREAD;
