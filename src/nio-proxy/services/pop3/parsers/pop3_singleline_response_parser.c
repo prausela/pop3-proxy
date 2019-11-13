@@ -401,11 +401,10 @@ pop3_singleline_response_builder(buffer *b, struct parser *p, struct pop3_single
 	size_t  count;
 	uint8_t *ptr = buffer_read_ptr(b, &count);
 	while(count > 0){
-		printf("Oh no\n");
+	
 		c = *ptr;
-		printf("Oh duhh\n");
 		e = parser_feed(p, c);
-		printf("char : %d\n", c);
+	
 		switch(e->type){
 			case OK_RESP:
 				printf("OK_RESP\n");
