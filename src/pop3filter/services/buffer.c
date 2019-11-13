@@ -41,7 +41,6 @@ buffer_can_read(buffer *b) {
 inline uint8_t *
 buffer_read_ptr(buffer *b, size_t *nbyte) {
     assert(b->read <= b->write);
-    printf("%d %d\n", b->write, b->read);
     *nbyte = b->write - b->read;
     return b->read;
 }
@@ -51,7 +50,6 @@ buffer_write_adv(buffer *b, const ssize_t bytes) {
     if(bytes > -1) {
         b->write += (size_t) bytes;
         assert(b->write <= b->limit);
-        printf("ADV %d %d \n", b->write, b->read);
     }
 }
 

@@ -54,7 +54,6 @@ char *stack_pop(stack *stack)
   }
   char *elem = stack->tail->data;
 
-  stackNode *node = stack->tail;
   stack->tail = stack->tail->prev;
   
   stack->logicalLength--;

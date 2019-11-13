@@ -992,7 +992,6 @@ int main(const int argc, const char **argv)
 
     struct type_list *media_types = malloc(sizeof(*media_types));
 	struct type_list *media_types_aux=media_types;
-    struct subtype_list *subtype_list_aux=media_types->subtypes;
     
 
     char * flm = getenv("FILTER_MEDIAS");
