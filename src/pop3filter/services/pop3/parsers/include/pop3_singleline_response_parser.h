@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 #include "../../../utils/include/parser_utils.h"
-#include "../../../../../nio-proxy/services/utils/include/structure_builder.h"
+#include "../../../../utils/include/structure_builder.h"
 
 
 enum pop3_singleline_response_status {

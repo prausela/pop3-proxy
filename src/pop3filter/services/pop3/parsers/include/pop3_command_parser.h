@@ -3,7 +3,7 @@
 
 #include "../utils/include/pop3_parser_utils.h"
 #include <stdbool.h>
-#include "../../../../../nio-proxy/services/utils/include/structure_builder.h"
+#include "../../../../utils/include/structure_builder.h"
 
 #define MAX_KEYWORD_LENGTH 4
 
