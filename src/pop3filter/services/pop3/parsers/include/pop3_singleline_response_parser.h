@@ -16,8 +16,7 @@ struct pop3_singleline_response_builder {
 };
 
 enum structure_builder_states
-pop3_singleline_response_builder(buffer *b, struct parser *p, struct pop3_singleline_response_builder *resp, bool *error);
-
+pop3_singleline_response_builder(uint8_t *ptr, size_t count, struct parser *p, struct pop3_singleline_response_builder *resp, bool *error);
 
 /**	~~INIT PARSER 
  *		(Create a new parser intended for pop3 singleline response interpretation)~~

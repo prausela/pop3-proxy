@@ -395,11 +395,9 @@ static struct parser_definition pop3_singleline_response_definition = {
 };
 
 enum structure_builder_states
-pop3_singleline_response_builder(buffer *b, struct parser *p, struct pop3_singleline_response_builder *resp, bool *error){
+pop3_singleline_response_builder(uint8_t *ptr, size_t count, struct parser *p, struct pop3_singleline_response_builder *resp, bool *error){
 	uint8_t c;
 	struct parser_event *e;
-	size_t  count;
-	uint8_t *ptr = buffer_read_ptr(b, &count);
 	while(count > 0){
 		c = *ptr;
 		e = parser_feed(p, c);

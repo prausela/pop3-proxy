@@ -15,6 +15,6 @@ enum pop3_multiline_response_event_type
 };
 
 enum consumer_state
-pop3_multiline_response_checker(buffer *b, struct parser *p, bool *error);
+pop3_multiline_response_checker(uint8_t *ptr, size_t count,struct parser *p, bool *error);
 
 #endif
