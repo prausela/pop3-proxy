@@ -1023,9 +1023,10 @@ response_sread(struct selector_key *key) {
 
 static void
 dot_data_init(const unsigned state, struct selector_key *key) {
-	struct response_st *d 		= &ATTACHMENT(key)->origin.response;
-	d->transform 			= &ATTACHMENT(key)->transform;
-	buffer_reset(d->write_buffer);
+	printf("WE init\n");
+	//struct response_st *d 		= &ATTACHMENT(key)->origin.response;
+	//d->transform 				= &ATTACHMENT(key)->transform;
+	//buffer_reset(d->write_buffer);
 }
 
 static unsigned
@@ -1042,16 +1043,17 @@ dot_data_sread(struct selector_key *key){
 	n = recv(key->fd, ptr, count, 0);
 	printf("IMMMM HERE %d %s\n", n, ptr);
 	if(n > 0) {
+		buffer_write_adv(d->write_buffer, n);
 		consumer_state = pop3_multiline_response_checker(ptr, n, d->multiline_parser, &error);
-		printf("SHAzAM\n %d", (d->transform));
-		if(*(d->transform)){
+		printf("SHAzAM\n %d\n", *(d->transform));
+		/*if(*(d->transform)){
 			int bytes_to_read;
 			uint8_t *ptr = buffer_read_ptr(d->write_buffer, &bytes_to_read);
 			int resp = create_transformation(ATTACHMENT(key)->sender_pipe, ATTACHMENT(key)->receiver_pipe);
 			write(ATTACHMENT(key)->sender_pipe[1], ptr, bytes_to_read);
 			uint8_t *read_ptr = buffer_write_ptr(d->read_buffer, &bytes_to_read);
 			read(ATTACHMENT(key)->receiver_pipe[0], read_ptr, bytes_to_read);
-		}
+		}*/
 		if(consumer_state != FINISHED_CONSUMING ){
 			printf("NOT FINISHED_CONSUMING\n");
 			selector_set_interest    (key->s, ATTACHMENT(key)->origin_fd, OP_NOOP);
@@ -1109,6 +1111,7 @@ dot_data_cwrite(struct selector_key *key) {
 
 static unsigned
 response_cwrite(struct selector_key *key) {
+	printf("response_cwrite\n");
 	struct response_st *d = &ATTACHMENT(key)->origin.response;
 
 	unsigned  ret     = RESPONSE_CWRITE;
@@ -1117,6 +1120,7 @@ response_cwrite(struct selector_key *key) {
 	 ssize_t  n;
 
 	ptr = buffer_read_ptr(d->write_buffer, &count);
+	printf("PTR %s %d %p %p\n", ptr, count, d->write_buffer->read, d->write_buffer->write);
 	n = send(key->fd, ptr, count, MSG_NOSIGNAL);
 	if(n == -1) {
 		ret = ERROR;
