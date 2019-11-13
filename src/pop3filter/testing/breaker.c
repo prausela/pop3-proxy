@@ -30,6 +30,5 @@ struct server_credentials origin_server = {
 int main(void){
 	for(int i = 0; i < 1025; i++){
 		system("nc -C localhost 1080 &");
-		printf("Wuahahaha\n");
 	}
 }

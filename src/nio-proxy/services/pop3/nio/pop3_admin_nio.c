@@ -93,11 +93,8 @@ request_read(struct selector_key *key) {
 		}
 		buffer[n] = 0;
 		//if (sndrcvinfo.sinfo_stream == LOCALTIME_STREAM) {
-		printf("El eByte es: ");
-		fflush(stdout);
 		show_byte(buffer[0]);
 		int size = buffer[1];
-		printf("La cantidad de parametros son: %d\n", size);
 		if((parameters=malloc(size*sizeof(char*)))==NULL){
 			printf("Error. No se pudo crear memoria para parameters[].\n");
 			return 1;

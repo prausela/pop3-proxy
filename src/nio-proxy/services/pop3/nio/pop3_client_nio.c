@@ -414,14 +414,11 @@ process_connection_init(const unsigned state, struct selector_key *key) {
 	struct connecting_st * d = &ATTACHMENT(key)->origin.connecting;
 	//d->status          = status_general_SOCKS_server_failure;
 	//request_parser_init(&d->parser);
-	printf("? %d\n", &ATTACHMENT(key)->client_fd);
 	d->client_fd       = &ATTACHMENT(key)->client_fd;
 	d->origin_fd       = &ATTACHMENT(key)->origin_fd;
-	printf("!\n");
 	d->origin_server.dest_addr_type 	= curr_origin_server.dest_addr_type;
 	d->origin_server.dest_addr 		= curr_origin_server.dest_addr;
 	d->origin_server.dest_port 		= curr_origin_server.dest_port;
-	printf(":P\n");
 	d->origin_addr     = &ATTACHMENT(key)->origin_addr;
 	d->origin_addr_len = &ATTACHMENT(key)->origin_addr_len;
 	d->origin_domain   = &ATTACHMENT(key)->origin_domain;
