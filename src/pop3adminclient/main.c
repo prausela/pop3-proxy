@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,7 +38,7 @@ char trans_encoder(char** argv, int argc, char byte, char* parameters[], int* si
 char metrics_encoder(char** argv, int argc, char byte, char* parameters[], int* size);
 char config_encoder(char** argv, int argc, char byte, char* parameters[], int* size);
 
-int main()
+int main(int argc, char ** argv)
 {
   int connSock, in, i, ret, flags;
   struct sockaddr_in servaddr;
@@ -48,6 +47,7 @@ int main()
   struct sctp_event_subscribe events;
   struct sctp_initmsg initmsg;
   char buffer[MAX_BUFFER+1];
+  int port=9090;
   time_t currentTime;
 
   /* Create an SCTP TCP-Style Socket */
@@ -61,15 +61,27 @@ int main()
   ret = setsockopt( connSock, IPPROTO_SCTP, SCTP_INITMSG,
                      &initmsg, sizeof(initmsg) );
 
+  if(argc>1){
+    port=atoi(argv[1]);
+    if(port==0){
+      printf("Ingrese un numero de puerto valido\n");
+      return 1;
+    }
+  }
+
   /* Specify the peer endpoint to which we'll connect */
   bzero( (void *)&servaddr, sizeof(servaddr) );
   servaddr.sin_family = AF_INET;
-  servaddr.sin_port = htons(MY_PORT_NUM);
+  servaddr.sin_port = htons(port);
   servaddr.sin_addr.s_addr = inet_addr( "127.0.0.1" );
+
+  printf("Connecting to port %d\n",port );
 
   /* Connect to the server */
   ret = connect( connSock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
-
+  if(ret==-1){
+    printf("Error al conectarse\n");
+  }
   /* Enable receipt of SCTP Snd/Rcv Data via sctp_recvmsg */
   memset( (void *)&events, 0, sizeof(events) );
   events.sctp_data_io_event = 1;
@@ -125,7 +137,7 @@ int main()
     //printf("The quantity of words in the input are: %d\n",pointer);
 
     ebyte=encode_request(input_buffer, pointer, parameters, &size);
-    
+
 
     if(ebyte==-1){
         printf("Invalid command\n");
@@ -163,7 +175,7 @@ int main()
 
         }
 
-        
+
         ret = sctp_sendmsg( connSock, (void *)buffer, (size_t)MAX_BUFFER,
                             NULL, 0, 0, 0, LOCALTIME_STREAM, 0, 0 );
 
@@ -183,7 +195,7 @@ int main()
         //} else if (sndrcvinfo.sinfo_stream == GMT_STREAM) {
             //printf("TODO MAL\n", buffer);
         //}
-        }   
+        }
     }
     bzero((char *)&buffer, sizeof(buffer));
     size=0;
