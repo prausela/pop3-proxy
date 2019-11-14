@@ -42,9 +42,6 @@ int create_transformation(int * sender_pipe, int * receiver_pipe)
     //int x=execve("/bin/bash", argv, NULL);
 
    int x=execl("/bin/mime_filter","mime_filter",(char*)NULL);
-    
-    fprintf(stderr,"ACA ES EXECV %d\n",x);
-
    return 1;
   }
   else if(pid < 0)

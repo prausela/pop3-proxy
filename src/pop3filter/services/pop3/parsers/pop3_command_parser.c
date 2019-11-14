@@ -317,26 +317,21 @@ command_builder(uint8_t *ptr, size_t count, size_t *read, struct parser *p, stru
     while(count > 0){
         c = *ptr;
         e = parser_feed(p, c);
-        printf("%c\n", c);
         (*read)++;
         switch(e->type){
             case BUFFER_CMD:
-                printf("BUFFER_CMD\n");
                 if(set_pop3_command_builder_next(cmd, c)){
                     break;
                 }
             case BAD_CMD:
-                printf("BAD_CMD\n");
                 *error = 1; 
                 return BUILD_FAILED;
             case SET_CMD:
-                printf("SET_CMD\n");
                 return BUILD_FINISHED;
             case HAS_ARGS:
                 cmd->has_args = true;
                 break;
             default:
-                printf("%d\n", e->type);
                 break;
         }
         ptr++;

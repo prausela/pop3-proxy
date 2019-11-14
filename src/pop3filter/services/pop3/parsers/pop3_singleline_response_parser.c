@@ -403,18 +403,14 @@ pop3_singleline_response_builder(uint8_t *ptr, size_t count, struct parser *p, s
 		e = parser_feed(p, c);
 		switch(e->type){
 			case OK_RESP:
-				printf("OK_RESP\n");
 				resp->status = STATUS_OK;
 				break;
 			case ERR_RESP:
-				printf("ERR_RESP\n");
 				resp->status = STATUS_ERR;
 				break;
 			case END_SINGLELINE:
-				printf("END_SINGLELINE\n");
 				return BUILD_FINISHED;
 			case TRAPPED:
-				printf("TRAPPED\n");
 				*error = 1; 
 				return BUILD_FAILED;
 			default:
