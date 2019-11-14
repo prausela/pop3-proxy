@@ -99,6 +99,7 @@ init_socket(const char * proxy_port, const char * proxy_address, const char **er
 			init_curr_origin_server(req_addrtype_ipv6,NULL,addr_ipv6.sin6_port,addr,addr_ipv6);
 	}else{
 		//Resolucion del nombre
+		
 		fprintf(stderr,"HOLAAA3\n");
 		addr.sin_family      = AF_UNSPEC;
 		addr.sin_addr.s_addr = inet_addr(proxy_address);

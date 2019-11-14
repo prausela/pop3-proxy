@@ -352,11 +352,9 @@ enum consumer_state
 pop3_multiline_response_checker(uint8_t *ptr, size_t count,struct parser *p, bool *error){
 	uint8_t c;
     struct parser_event *e;
-    printf("Giorno\n");
 	
     while(count > 0){
         c = *ptr;
-        printf("Buccelatti %d\n", count);
         //printf("%c %d\n", c, c);
         e = parser_feed(p, c);
         //printf("%c %d\n", c, c);
@@ -368,6 +366,5 @@ pop3_multiline_response_checker(uint8_t *ptr, size_t count,struct parser *p, boo
         ptr++;
         count--;
     }
-	printf("Mimu");
     return CONSUMING;
 }

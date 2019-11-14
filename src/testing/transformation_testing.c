@@ -21,11 +21,11 @@ int main(){
   while(1){
     sleep(2);
     printf("Writing to pipe:\n");
-    write(sender_pipe[1],"hola",sizeof("hola"));
+    write(sender_pipe[1],"hola como estas todo ben",sizeof("hola como estas todo ben"));
     sleep(2);
     int size = 16;
-    char message[size];
-    read(receiver_pipe[0],message,68000);
+    char message[sizeof("hola como estas todo ben")];
+    read(receiver_pipe[0],message,sizeof("hola como estas todo ben"));
     printf("Lei: %s\n", message);
   }
 

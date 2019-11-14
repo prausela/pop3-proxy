@@ -1056,15 +1056,18 @@ response_sread(struct selector_key *key) {
 					if(*(d->transform)){
 >>>>>>> f3ea92324a8c0525aae6b4b00923f7c79a90cecf
 						int bytes_to_read;
-						uint8_t *ptr = buffer_read_ptr(d->write_buffer, &bytes_to_read);
+						uint8_t *ptr = buffer_read_ptr((d->write_buffer), (&bytes_to_read));
 						int resp = create_transformation(ATTACHMENT(key)->sender_pipe, ATTACHMENT(key)->receiver_pipe);
 						write(ATTACHMENT(key)->sender_pipe[1], ptr, bytes_to_read);
 						uint8_t *read_ptr = buffer_write_ptr(d->read_buffer, &bytes_to_read);
-						printf("Antes de leer");
+						printf("Antes de leer\n");
 						read(ATTACHMENT(key)->receiver_pipe[0], read_ptr, bytes_to_read);
+						printf("DESPues de leer\n");
+
 						if(c_state != FINISHED_CONSUMING ){
 							selector_set_interest(key->s, ATTACHMENT(key)->origin_fd, OP_NOOP);
 							if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->client_fd, OP_WRITE)){
+								printf("SE VA A CWRITE\n");
 							return DOT_DATA_CWRITE;
 							}
 						} else {
@@ -1157,6 +1160,13 @@ dot_data_sread(struct selector_key *key){
 		buffer_write_adv(d->write_buffer, n);
 		consumer_state = pop3_multiline_response_checker(ptr, n, d->multiline_parser, &error);
 		printf("SHAzAM\n %d\n", *(d->transform));
+		// int bytes_to_read;
+
+		// uint8_t *ptr = buffer_read_ptr(d->write_buffer, &bytes_to_read);
+
+		// write(ATTACHMENT(key)->sender_pipe[1], ptr, bytes_to_read);
+		// uint8_t *read_ptr = buffer_write_ptr(d->read_buffer, &bytes_to_read);
+		// read(ATTACHMENT(key)->receiver_pipe[0], read_ptr, bytes_to_read);
 		/*if(*(d->transform)){
 			int bytes_to_read;
 			uint8_t *ptr = buffer_read_ptr(d->write_buffer, &bytes_to_read);

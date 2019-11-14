@@ -965,7 +965,16 @@ free_media_filter_list(struct type_list *media_types){
 
 int main(const int argc, const char **argv)
 {
-    write_log("ENTRO MAIN STRIP\n");
+    //write_log("ENTRO MAIN STRIP\n");
+    //fprintf(stderr,"entro mime_filter\n");
+
+    //  FILE * fPtr;
+    //  fPtr = fopen("../../logs.txt", "a");
+    // fputs("A VER SI ESCRIBE", fPtr);
+    // fclose(fPtr);
+    fprintf(stderr, "entro mime_filter22\n");
+    fflush(stderr);
+
     int fd = STDIN_FILENO;
     if (argc > 1)
     {
@@ -991,13 +1000,16 @@ int main(const int argc, const char **argv)
 
     struct type_list *media_types = malloc(sizeof(*media_types));
 	struct type_list *media_types_aux=media_types;
-    
+        fprintf(stderr, "entro mime_filter23\n");
+
 
     char * flm = getenv("FILTER_MEDIAS");
     if (media_types == NULL) {
+        
         return -1;
     }
 	if (flm == NULL) {
+        
 		printf("No filter medias, please add one\n");
         flm = "";
         //TODO write in pipe the same message!!
@@ -1010,7 +1022,7 @@ int main(const int argc, const char **argv)
             {
                 transformed[i] = data[i];
             }
-            printf("%s",transformed);
+            fprintf(stderr,"%s",transformed);
             
             memset(transformed, '\0', sizeof(transformed));
             //write to pipe!!
@@ -1023,6 +1035,8 @@ int main(const int argc, const char **argv)
 		free(media_types);
 		return -1;
 	}
+    fprintf(stderr, "entro mime_filtermimimimimi\n");
+
 	strcpy(medias, flm);
 	const char * comma   = ",";
 	const char * slash   = "/";
@@ -1068,6 +1082,8 @@ int main(const int argc, const char **argv)
 		current = strtok_r(NULL, comma, &context);
         
 	}
+        fprintf(stderr, "entro mime_filter26\n");
+
         //media_types->subtypes=subtype_list_aux;
         
         // while(media_types!=NULL){
@@ -1124,7 +1140,8 @@ int main(const int argc, const char **argv)
         {
             pop3_multi(&ctx, data[i]);
         }
-        printf("%s",transformed);
+        fprintf(stderr,"ACA VA EL MAILLLL\n\n%s",transformed);
+        write_log(transformed);
         
         memset(transformed, '\0', sizeof(transformed));
         //write to pipe!!
