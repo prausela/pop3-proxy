@@ -77,7 +77,7 @@ int checkArg(char *argument, int *expecting_data)
 
 
 /* This functions parses the input from the command line           */
-int command_line_parser(int argc,char **argv,char * client_port,char * admin_port, char* proxy_address, char* origin_port, char* origin_address)
+int command_line_parser(int argc,char **argv,char* proxy_address, char* proxy_address_ipv6, char* client_port, char* admin_address, char* admin_address_ipv6, char* admin_port, char* origin_address, char* origin_port)
 {
 
   //Definition of variables
@@ -140,14 +140,36 @@ int command_line_parser(int argc,char **argv,char * client_port,char * admin_por
       }
       case 'l':
       {
-        strcpy(proxy_address, data[i]);
-        printf("We are about to connect to address: %s\n", proxy_address);
+        char aux[100];
+        strcpy(aux, data[i]);
+        if(inet_pton(AF_INET, aux, proxy_address)){
+          printf("Cambiando direccion cliente del proxy. IPV4\n");
+          strcpy(proxy_address, data[i]);
+        }
+        else if(inet_pton(AF_INET6, aux, proxy_address_ipv6)){
+          printf("Cambiando direccion cliente del proxy. IPV6\n");
+          strcpy(proxy_address_ipv6, data[i]);
+        }
+        else{
+          printf("No pude cambiar la direccion del proxy pq no entiendo nada\n");
+        }
         break;
       }
       case 'L':
       {
-        printf("This function is being developed.\n");
-        break;
+        char aux2[100];
+        strcpy(aux2, data[i]);
+        if(inet_pton(AF_INET, aux2, admin_address)){
+          printf("Cambiando direccion admin del proxy. IPV4\n");
+          strcpy(admin_address, data[i]);
+        }
+        else if(inet_pton(AF_INET6, aux2, admin_address_ipv6)){
+          printf("Cambiando direccion admin del proxy. IPV6\n");
+          strcpy(admin_address_ipv6, data[i]);
+        }
+        else{
+          printf("No pude cambiar la direccion del proxy pq no entiendo nada. Admin\n");
+        }
       }
       case 'm':
       {
