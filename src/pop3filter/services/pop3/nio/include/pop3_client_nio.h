@@ -36,6 +36,8 @@
 
 /** handler del socket pasivo que atiende conexiones socksv5 */
 void
+init_curr_origin_server(int address_type,char addr[0xff], in_port_t dest_port,struct sockaddr_in ipv4,struct sockaddr_in6 ipv6 );
+void
 pop3_passive_accept(struct selector_key *key);
 
 
@@ -71,7 +73,7 @@ struct server_credentials {
     /** port in network byte order */
     in_port_t 				dest_port;
 };
+struct server_credentials * curr_origin_server;
 
-struct server_credentials curr_origin_server;
 
 #endif

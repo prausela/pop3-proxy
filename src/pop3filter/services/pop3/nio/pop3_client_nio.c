@@ -4,14 +4,6 @@
 
 #include "include/pop3_client_nio.h"
 
-extern struct server_credentials curr_origin_server = {
-	.dest_addr_type = req_addrtype_domain, 
-	.dest_addr = {
-		.fqdn = "pop.fibertel.com.ar"
-	},
-	.dest_port = 28160,
-};
-
 enum states {
 
 	PROCESS_CONNECTION,
@@ -211,10 +203,41 @@ struct pop3 {
 
 static const unsigned  max_pool  = 50; // tamaño máximo
 static unsigned        pool_size = 0;  // tamaño actual
-static struct pop3 * pool      = 0;  // pool propiamente dicho
+static struct pop3 * pool      	 = 0;  // pool propiamente dicho
+
+// curr_origin_server = {
+// 	.dest_addr_type = req_addrtype_domain, 
+// 	.dest_addr = {
+// 		.fqdn = "pop.fibertel.com.ar"
+// 	},
+// 	.dest_port = 28160,
+// };
 
 static const struct state_definition *
 describe_states(void);
+
+void
+init_curr_origin_server(int address_type,char addr[0xff], in_port_t dest_port,struct sockaddr_in ipv4,struct sockaddr_in6 ipv6 ){
+	curr_origin_server = malloc(sizeof(*curr_origin_server));
+	if(address_type == req_addrtype_domain){
+		//Resolver nombre
+		//curr_origin_server->dest_addr.fqdn = addr;
+		strncpy(curr_origin_server->dest_addr.fqdn, addr, sizeof(addr));
+		curr_origin_server->dest_addr_type = req_addrtype_domain;
+		curr_origin_server->dest_port 		= dest_port;
+	}
+	else if(address_type == req_addrtype_ipv4)
+	{
+		curr_origin_server->dest_addr.ipv4 = ipv4;
+		curr_origin_server->dest_addr_type = req_addrtype_ipv4;
+		curr_origin_server->dest_port = dest_port;
+	}
+	else{
+		curr_origin_server->dest_addr.ipv6 = ipv6;
+		curr_origin_server->dest_addr_type = req_addrtype_ipv6;
+		curr_origin_server->dest_port = dest_port;
+	}
+}
 
 /** crea un nuevo `struct socks5' */
 static struct pop3 *
@@ -232,13 +255,12 @@ pop3_new(int client_fd) {
 		goto finally;
 	}
 	memset(ret, 0x00, sizeof(*ret));
-
 	ret->origin_fd       = -1;
 	ret->client_fd       = client_fd;
 	ret->client_addr_len = sizeof(ret->client_addr);
-	ret->origin_server.dest_addr_type 	= curr_origin_server.dest_addr_type;
-	ret->origin_server.dest_addr 		= curr_origin_server.dest_addr;
-	ret->origin_server.dest_port 		= curr_origin_server.dest_port;
+	ret->origin_server.dest_addr_type 	= curr_origin_server->dest_addr_type;
+	ret->origin_server.dest_addr 		= curr_origin_server->dest_addr;
+	ret->origin_server.dest_port 		= curr_origin_server->dest_port;
 
 	ret->stm    .initial   = PROCESS_CONNECTION;
 	ret->stm    .max_state = ERROR;
@@ -249,6 +271,7 @@ pop3_new(int client_fd) {
 	buffer_init(&ret->write_buffer, N(ret->raw_buff_b), ret->raw_buff_b);
 
 	ret->references = 1;
+	fprintf(stderr,"ETREEEE\n");
 finally:
 	return ret;
 }
@@ -321,6 +344,7 @@ process_connection(struct selector_key* key);
 /** Attemps to accept an incomming connection */
 void
 pop3_passive_accept(struct selector_key *key) {
+	fprintf(stderr,"Entre a passive accept\n");
 	struct sockaddr_storage       client_addr;
 	socklen_t                     client_addr_len = sizeof(client_addr);
 	struct pop3              	  *state           = NULL;
@@ -354,6 +378,8 @@ pop3_passive_accept(struct selector_key *key) {
 		state->stm.initial		= process_connection(key);
 		printf("This\n");*/
 	}
+		//fprintf(stderr,"ETREEEE\n");
+	fprintf(stderr,"TERMINO ESTADO");
 	return ;
 fail:
 	if(client != -1) {
@@ -385,12 +411,13 @@ process_connection_init(const unsigned state, struct selector_key *key) {
 	//request_parser_init(&d->parser);
 	d->client_fd       = &ATTACHMENT(key)->client_fd;
 	d->origin_fd       = &ATTACHMENT(key)->origin_fd;
-	d->origin_server.dest_addr_type 	= curr_origin_server.dest_addr_type;
-	d->origin_server.dest_addr 		= curr_origin_server.dest_addr;
-	d->origin_server.dest_port 		= curr_origin_server.dest_port;
+	d->origin_server.dest_addr_type 	= curr_origin_server->dest_addr_type;
+	d->origin_server.dest_addr 		= curr_origin_server->dest_addr;
+	d->origin_server.dest_port 		= curr_origin_server->dest_port;
 	d->origin_addr     = &ATTACHMENT(key)->origin_addr;
 	d->origin_addr_len = &ATTACHMENT(key)->origin_addr_len;
 	d->origin_domain   = &ATTACHMENT(key)->origin_domain;
+	
 }
 
 static unsigned
@@ -406,12 +433,15 @@ process_connection(struct selector_key* key) {
 
 	switch (d->origin_server.dest_addr_type) {
 		case req_addrtype_ipv4: {
+			
 			ATTACHMENT(key)->origin_domain = AF_INET;
 			d->origin_server.dest_addr.ipv4.sin_port = d->origin_server.dest_port;
+			fprintf(stderr,"Valor 1: %d\n",d->origin_server.dest_addr.ipv4.sin_port);
 			ATTACHMENT(key)->origin_addr_len =
 					sizeof(d->origin_server.dest_addr.ipv4);
 			memcpy(&ATTACHMENT(key)->origin_addr, &d->origin_server.dest_addr,
 					sizeof(d->origin_server.dest_addr.ipv4));
+			fprintf(stderr,"Valor 2: %d\n",d->origin_server.dest_addr.ipv4.sin_addr.s_addr);
 			ret = attempt_connection(key, d);
 			break;
 
@@ -451,7 +481,6 @@ process_connection(struct selector_key* key) {
 			selector_set_interest_key(key, OP_WRITE);
 		}
 	}
-
 	return ret;
 }
 
@@ -673,6 +702,9 @@ greeting_init(const unsigned state, struct selector_key *key) {
 	d->singleline_parser = pop3_singleline_response_parser_init();
 }
 
+void breakpoint(){
+
+}
 static unsigned
 greeting_sread(struct selector_key *key) {
 	//exit(0);
@@ -866,9 +898,6 @@ response_init(const unsigned state, struct selector_key *key) {
 	buffer_reset(d->write_buffer);
 }
 
-void breakpoint(){
-
-}
 
 static unsigned
 response_sread(struct selector_key *key) {

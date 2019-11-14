@@ -81,6 +81,7 @@ int main(int argc, char ** argv)
   ret = connect( connSock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
   if(ret==-1){
     printf("Error al conectarse\n");
+    return 1;
   }
   /* Enable receipt of SCTP Snd/Rcv Data via sctp_recvmsg */
   memset( (void *)&events, 0, sizeof(events) );
