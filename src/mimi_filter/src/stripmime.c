@@ -985,7 +985,7 @@ int main(const int argc, const char **argv)
             return 1;
         }
     }
-    uint8_t data[9999], transformed[11000];
+    uint8_t data[2048], transformed[3000];
 
     const unsigned int *no_class = parser_no_classes();
     struct parser_definition media_header_def =
@@ -1010,26 +1010,32 @@ int main(const int argc, const char **argv)
     }
 	if (flm == NULL) {
         
-		printf("No filter medias, please add one\n");
+		//printf("No filter medias, please add one\n");
         flm = "";
         //TODO write in pipe the same message!!
         int j;
         do
         {
             j = read(fd, data, sizeof(data)); //Read from pipe instead of file!
+            fprintf(stderr,"j es strip %d\n",j);
             ssize_t i;
             for (i = 0; i < j; i++)
             {
                 transformed[i] = data[i];
             }
-            fprintf(stderr,"%s",transformed);
-            
+            fprintf(stderr,"FPRINTT!!!%s",transformed);
+            printf("%s", transformed);
+            //write(STDOUT_FILENO,transformed,sizeof(transformed));
+            fprintf(stderr, "estamosa ca\n");
             memset(transformed, '\0', sizeof(transformed));
+            fprintf(stderr, "estamosa caaaaaa\n");
+
             //write to pipe!!
             //empty buffer
         } while (j > 0);
+        fprintf(stderr, "saliendo strip\n");
         return 1;
-	}
+    }
 	char * medias = malloc(strlen(flm) + 1);
 	if (medias == NULL) {
 		free(media_types);
@@ -1142,7 +1148,7 @@ int main(const int argc, const char **argv)
         }
         fprintf(stderr,"ACA VA EL MAILLLL\n\n%s",transformed);
         write_log(transformed);
-        
+        printf("%s\n",transformed);
         memset(transformed, '\0', sizeof(transformed));
         //write to pipe!!
         //empty buffer

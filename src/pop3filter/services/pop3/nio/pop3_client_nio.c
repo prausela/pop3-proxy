@@ -136,7 +136,7 @@ struct command_st {
 
 /** usado por REQUEST_CONNECTING */
 struct response_st {
-	buffer     						*write_buffer, *read_buffer;
+	buffer     						*write_buffer, *read_buffer, *trans_buffer;
 	const int  						*client_fd;
 	const int        				*origin_fd;
 	bool 							*pipelined;
@@ -192,10 +192,10 @@ struct pop3 {
 
 	/** buffers para ser usados read_bdescribe_statesuffer, write_buffer.*/
 	//pop3_new
-	uint8_t raw_buff_a[2048], raw_buff_b[2048];
+	uint8_t raw_buff_a[2048], raw_buff_b[2048], raw_buff_trans[3000];
 
 	//pop3_new
-	buffer read_buffer, write_buffer, aux_buffer;
+	buffer read_buffer, write_buffer, aux_buffer, trans_buffer;
 	
 	/** cantidad de referencias a este objeto. si es uno se debe destruir */
 	unsigned references;
@@ -854,7 +854,7 @@ command_cread(struct selector_key *key) {
 				printf("Im NOT going to be pipelined %d %d\n", command_length, n);
 				*(d->pipelined) = false;
 			}
-			printf("%s\n", d->current_command->kwrd);
+			printf("current command %s\n", d->current_command->kwrd);
 			printf("BUILD_FINISHED %s", ptr);
 			selector_set_interest(key->s, ATTACHMENT(key)->client_fd, OP_NOOP);
 			if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->origin_fd, OP_WRITE)){
@@ -1001,15 +1001,18 @@ response_init(const unsigned state, struct selector_key *key) {
 	struct response_st *d 		= &ATTACHMENT(key)->origin.response;
 	d->read_buffer              = &(ATTACHMENT(key)->read_buffer);
 	d->write_buffer             = &(ATTACHMENT(key)->write_buffer);
+	d->trans_buffer             = &(ATTACHMENT(key)->trans_buffer);
 	d->current_command 			= &(ATTACHMENT(key)->current_command);
 	d->singleline_parser 		= pop3_singleline_response_parser_init();
 	d->multiline_parser 		= pop3_multiline_response_parser_init();
 	d->transform 			= &ATTACHMENT(key)->transform;
 	d->pipelined 				= &(ATTACHMENT(key)->pipelined);
 	buffer_init(d->write_buffer,N(ATTACHMENT(key)->raw_buff_b),ATTACHMENT(key)->raw_buff_b);
+	buffer_init(d->trans_buffer,N(ATTACHMENT(key)->raw_buff_trans),ATTACHMENT(key)->raw_buff_trans);
 	//buffer_init(d->read_buffer,N(ATTACHMENT(key)->raw_buff_a),ATTACHMENT(key)->raw_buff_a);	
 	//buffer_reset(d->read_buffer);
 	buffer_reset(d->write_buffer);
+	buffer_reset(d->trans_buffer);
 }
 
 
@@ -1043,6 +1046,7 @@ response_sread(struct selector_key *key) {
 					printf("En mlt\n");
 					if(strcmp(d->current_command->kwrd, "RETR") == 0 || strcmp(d->current_command->kwrd, "TOP") == 0){
 						printf("Debo transform\n");
+						//buffer_reset(d->trans_buffer);
 						*(d->transform) = true;
 					}else {
 						printf("NO Debo transform\n");
@@ -1050,20 +1054,22 @@ response_sread(struct selector_key *key) {
 						printf("Transformed == false\n");
 					}
 					printf("A punto de transform\n");
-					fflush(stdout);
-					/*if(*(d->transform)){
-=======
 					if(*(d->transform)){
->>>>>>> f3ea92324a8c0525aae6b4b00923f7c79a90cecf
 						int bytes_to_read;
 						uint8_t *ptr = buffer_read_ptr((d->write_buffer), (&bytes_to_read));
+						printf("Antes de leer %d\n",bytes_to_read);
 						int resp = create_transformation(ATTACHMENT(key)->sender_pipe, ATTACHMENT(key)->receiver_pipe);
 						write(ATTACHMENT(key)->sender_pipe[1], ptr, bytes_to_read);
-						uint8_t *read_ptr = buffer_write_ptr(d->read_buffer, &bytes_to_read);
-						printf("Antes de leer\n");
-						read(ATTACHMENT(key)->receiver_pipe[0], read_ptr, bytes_to_read);
-						printf("DESPues de leer\n");
+						//						buffer_reset(d->trans_buffer);
 
+						uint8_t *read_ptr = buffer_write_ptr(d->trans_buffer, &bytes_to_read);
+						printf("Antes de leer\n");
+						printf("aca hay algo distintivoo0000!!! %s %d\n",read_ptr,bytes_to_read);
+						size_t u =read(ATTACHMENT(key)->receiver_pipe[0], read_ptr, bytes_to_read);
+
+						printf("aca hay algo distintivoo %s %d con u %d\n",read_ptr,bytes_to_read,u);
+						printf("DESPues de leer\n");
+						buffer_write_adv(d->trans_buffer, u);
 						if(c_state != FINISHED_CONSUMING ){
 							selector_set_interest(key->s, ATTACHMENT(key)->origin_fd, OP_NOOP);
 							if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->client_fd, OP_WRITE)){
@@ -1079,7 +1085,7 @@ response_sread(struct selector_key *key) {
 							}
 							return ret;
 						}
-					}*/
+					}
 					printf("Vamos a ver cual es el problema");
 					fflush(stdout);
 					if(c_state == FINISHED_CONSUMING ){
@@ -1138,9 +1144,10 @@ response_sread(struct selector_key *key) {
 static void
 dot_data_init(const unsigned state, struct selector_key *key) {
 	printf("WE init\n");
-	//struct response_st *d 		= &ATTACHMENT(key)->origin.response;
-	//d->transform 				= &ATTACHMENT(key)->transform;
-	//buffer_reset(d->write_buffer);
+	struct response_st *d 		= &ATTACHMENT(key)->origin.response;
+	d->transform 				= &ATTACHMENT(key)->transform;
+	buffer_reset(d->write_buffer);
+	buffer_reset(d->trans_buffer);
 }
 
 static unsigned
@@ -1153,13 +1160,34 @@ dot_data_sread(struct selector_key *key){
 	  size_t  count;
 	 ssize_t  n;
 	  enum consumer_state 	 consumer_state;
+	  
 	ptr = buffer_write_ptr(d->write_buffer, &count);
 	n = recv(key->fd, ptr, count, 0);
 	printf("IMMMM HERE %d %s\n", n, ptr);
 	if(n > 0) {
+		int bytes_to_read;
 		buffer_write_adv(d->write_buffer, n);
-		consumer_state = pop3_multiline_response_checker(ptr, n, d->multiline_parser, &error);
-		printf("SHAzAM\n %d\n", *(d->transform));
+		if(*(d->transform)){
+				uint8_t *ptr = buffer_read_ptr((d->write_buffer), (&bytes_to_read));
+				printf("Antes de leer DOT DATA CWRITE %d\n", bytes_to_read);
+				//int resp = create_transformation(ATTACHMENT(key)->sender_pipe, ATTACHMENT(key)->receiver_pipe);
+				write(ATTACHMENT(key)->sender_pipe[1], ptr, bytes_to_read);
+				//buffer_reset(d->read_buffer);
+				buffer_reset(d->trans_buffer);
+
+				uint8_t *read_ptr = buffer_write_ptr(d->trans_buffer, &bytes_to_read);
+				printf("Antes de leer DOT DATA CWRITE\n");
+				printf("aca hay algo distintivoo SREAD %s %d\n", read_ptr, bytes_to_read);
+				size_t u= read(ATTACHMENT(key)->receiver_pipe[0], read_ptr, bytes_to_read);
+				buffer_write_adv(d->trans_buffer,u);
+				printf("aca hay algo distintivoo SREAD%s %d %u\n",read_ptr,bytes_to_read,u);
+				printf("DESPues de leer\n");
+		}
+				
+
+				
+		// consumer_state = pop3_multiline_response_checker(ptr, n, d->multiline_parser, &error);
+		// printf("SHAzAM\n %d\n", *(d->transform));
 		// int bytes_to_read;
 
 		// uint8_t *ptr = buffer_read_ptr(d->write_buffer, &bytes_to_read);
@@ -1205,26 +1233,48 @@ dot_data_cwrite(struct selector_key *key) {
 	printf("dot_data_cwrite\n");
 	fflush(stdout);
 	struct response_st *d = &ATTACHMENT(key)->origin.response;
+	  enum structure_builder_states 	 			state;
+		bool  error    		= false;
+	 struct pop3_singleline_response_builder 		builder;
 
 	unsigned  ret     = DOT_DATA_CWRITE;
 	 uint8_t *ptr;
 	  size_t  count;
 	 ssize_t  n;
-
-	ptr = buffer_read_ptr(d->write_buffer, &count);
+	if(*(d->transform)){
+		ptr = buffer_read_ptr(d->trans_buffer, &count);
+	} else {
+		ptr = buffer_read_ptr(d->write_buffer, &count);
+	}
 	n = send(key->fd, ptr, count, MSG_NOSIGNAL);
 	if(n == -1) {
 		ret = ERROR;
 	} else {
-		buffer_read_adv(d->write_buffer, n);
-		if(!buffer_can_read(d->write_buffer)) {
-			selector_set_interest    (key->s, ATTACHMENT(key)->client_fd, OP_NOOP);
-			if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->origin_fd, OP_READ)){
-				ret = DOT_DATA_SREAD;
-			} else {
-				ret = ERROR;
+		if(*(d->transform)){
+			buffer_read_adv(d->trans_buffer, n);
+			state = pop3_singleline_response_builder(ptr, n, d->singleline_parser, &builder, &error);
+			if(!buffer_can_read(d->trans_buffer)) {
+				selector_set_interest    (key->s, ATTACHMENT(key)->client_fd, OP_NOOP);
+				if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->origin_fd, OP_READ)){
+					ret = DOT_DATA_SREAD;
+				} else {
+					ret = ERROR;
+				}
+			}
+		} else {
+			buffer_read_adv(d->write_buffer, n);
+			state = pop3_singleline_response_builder(ptr, n, d->singleline_parser, &builder, &error);
+			if(!buffer_can_read(d->write_buffer)) {
+				selector_set_interest    (key->s, ATTACHMENT(key)->client_fd, OP_NOOP);
+				if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->origin_fd, OP_READ)){
+					ret = DOT_DATA_SREAD;
+				} else {
+					ret = ERROR;
+				}
 			}
 		}
+		
+		
 	}
 
 	return ret;
@@ -1232,6 +1282,7 @@ dot_data_cwrite(struct selector_key *key) {
 
 static unsigned
 response_cwrite(struct selector_key *key) {
+	/*
 	printf("response_cwrite\n");
 	struct response_st *d = &ATTACHMENT(key)->origin.response;
 
@@ -1263,6 +1314,52 @@ response_cwrite(struct selector_key *key) {
 				}
 			}
 		}
+	}*/
+	struct response_st *d = &ATTACHMENT(key)->origin.response;
+	  enum structure_builder_states 	 			state;
+		bool  error    		= false;
+	 struct pop3_singleline_response_builder 		builder;
+
+	unsigned  ret     = RESPONSE_CWRITE;
+	 uint8_t *ptr;
+	  size_t  count;
+	 ssize_t  n;
+	 	
+
+	if(*(d->transform)){
+		ptr = buffer_read_ptr(d->trans_buffer, &count);
+		fprintf(stderr,"buffer trans en cwrite %d %s\n", count, d->trans_buffer->read);
+	} else {
+		ptr = buffer_read_ptr(d->write_buffer, &count);
+	}
+	n = send(key->fd, ptr, count, MSG_NOSIGNAL);
+	if(n == -1) {
+		ret = ERROR;
+	} else {
+		if(*(d->transform)){
+			buffer_read_adv(d->trans_buffer, n);
+			state = pop3_singleline_response_builder(ptr, n, d->singleline_parser, &builder, &error);
+			if(!buffer_can_read(d->trans_buffer)) {
+				if(SELECTOR_SUCCESS == selector_set_interest_key(key, OP_READ)) {
+					fprintf(stderr,"ENTRO PIPE DREAM\n");
+					ret = COMMAND_CREAD;
+				} else {
+					ret = ERROR;
+				}
+			}
+		} else {
+			buffer_read_adv(d->write_buffer, n);
+			state = pop3_singleline_response_builder(ptr, n, d->singleline_parser, &builder, &error);
+			if(!buffer_can_read(d->write_buffer)) {
+				if(SELECTOR_SUCCESS == selector_set_interest_key(key, OP_READ)) {
+					ret = COMMAND_CREAD;
+				} else {
+					ret = ERROR;
+				}
+			}
+		}
+		
+		
 	}
 
 	return ret;

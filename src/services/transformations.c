@@ -23,6 +23,10 @@ int create_transformation(int * sender_pipe, int * receiver_pipe)
   {
     return 1;
   }
+  // fcntl(receiver_pipe[1], F_SETFL, O_NONBLOCK) < 0
+  if (   fcntl(sender_pipe[0], F_SETFL, O_NONBLOCK) < 0)
+
+        return 1;
   pid = fork();
   printf("\nPID %d\n",pid);
   if(pid == 0) //Child process
@@ -33,15 +37,15 @@ int create_transformation(int * sender_pipe, int * receiver_pipe)
     dup2(receiver_pipe[1],STDOUT_FILENO);
     close(receiver_pipe[1]);
 
-    char *argv[] = {"mime_filter", 0};
-    // int x=execvp(argv[0],argv);
+    //char *argv[] = {"cat", 0};
+    //int x=execvp(argv[0],argv);
     //int x=execve("/bin/bash", argv, NULL);
 
-    int x=execl("/bin/mime_filter","mime_filter",(char*)NULL);
-
-
+   int x=execl("/bin/mime_filter","mime_filter",(char*)NULL);
+    
     fprintf(stderr,"ACA ES EXECV %d\n",x);
-    return 1;
+
+   return 1;
   }
   else if(pid < 0)
   {
