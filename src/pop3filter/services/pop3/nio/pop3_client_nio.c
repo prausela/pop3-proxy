@@ -90,6 +90,7 @@ enum states {
 	 *   - ERROR				if there is any problem (IO/parsing)
 	 */
 	RESPONSE_CWRITE,
+	PIPE_DREAM,
 
 	// estados terminales
 	UPDATE,
@@ -119,14 +120,18 @@ struct greeting_st {
 /** usado por REQUEST_READ, REQUEST_WRITE, REQUEST_RESOLV */
 struct command_st {
 	/** buffer utilizado para I/O */
-	buffer 							*read_buffer, *write_buffer;
+	buffer 							*read_buffer, *write_buffer, *aux_buffer;
 	struct pop3_command_builder     *current_command;
+	size_t 							*current_command_len;
 
 	/** parser */
 	struct parser 					*command_parser;
+	bool 							*pipelined;
 
 	const int 						*client_fd;
 	const int 						*origin_fd;
+	size_t 							*bytes_in_buffer;
+	size_t 							*bytes_read;
 };
 
 /** usado por REQUEST_CONNECTING */
@@ -134,6 +139,7 @@ struct response_st {
 	buffer     						*write_buffer, *read_buffer;
 	const int  						*client_fd;
 	const int        				*origin_fd;
+	bool 							*pipelined;
 	struct parser 					*singleline_parser;
 	struct parser 					*multiline_parser;
 	struct pop3_command_builder     *current_command;
@@ -159,6 +165,11 @@ struct pop3 {
 	//pop3_new
 	struct server_credentials 		origin_server;
 	struct pop3_command_builder     current_command;
+	bool 							has_pipelining;
+	bool 							pipelined;
+	size_t 							bytes_in_buffer;
+	size_t 							current_command_len;
+	size_t 							bytes_read;
 
 
 	/** maquinas de estados */
@@ -184,7 +195,7 @@ struct pop3 {
 	uint8_t raw_buff_a[2048], raw_buff_b[2048];
 
 	//pop3_new
-	buffer read_buffer, write_buffer;
+	buffer read_buffer, write_buffer, aux_buffer;
 	
 	/** cantidad de referencias a este objeto. si es uno se debe destruir */
 	unsigned references;
@@ -268,6 +279,7 @@ pop3_new(int client_fd) {
 	stm_init(&ret->stm);
 
 	buffer_init(&ret->read_buffer,  N(ret->raw_buff_a), ret->raw_buff_a);
+	buffer_init(&ret->aux_buffer,  N(ret->raw_buff_a), ret->raw_buff_a);
 	buffer_init(&ret->write_buffer, N(ret->raw_buff_b), ret->raw_buff_b);
 
 	ret->references = 1;
@@ -785,17 +797,26 @@ greeting_cwrite(struct selector_key *key) {
 static void
 command_init(const unsigned state, struct selector_key *key) {
 	struct command_st * d = &ATTACHMENT(key)->client.command;
-
+	printf("command_init\n");
 	d->read_buffer              = &(ATTACHMENT(key)->read_buffer);
 	d->write_buffer             = &(ATTACHMENT(key)->write_buffer);
+	d->aux_buffer             = &(ATTACHMENT(key)->aux_buffer);
 	buffer_init(d->write_buffer, N(ATTACHMENT(key)->raw_buff_b), ATTACHMENT(key)->raw_buff_b);
 	d->command_parser 			= pop3_command_parser_init();
+	d->pipelined 				= &(ATTACHMENT(key)->pipelined);
 	d->current_command 			= &(ATTACHMENT(key)->current_command);
+	d->current_command_len 			= &(ATTACHMENT(key)->current_command_len);
+	d->bytes_read 			= &(ATTACHMENT(key)->bytes_read);
+	*d->current_command_len 			= 0;
+	*d->bytes_read 			= 0;
 	d->current_command->has_args = false;
 	d->current_command->kwrd_ptr = 0;
+	d->bytes_in_buffer 			= &(ATTACHMENT(key)->bytes_in_buffer);
 	memset(d->current_command->kwrd, '\0', MAX_KEYWORD_LENGTH);
 	buffer_reset(d->read_buffer);
 	buffer_reset(d->write_buffer);
+	buffer_reset(d->aux_buffer);
+	printf("At end\n");
 }
 
 static unsigned
@@ -807,16 +828,34 @@ command_cread(struct selector_key *key) {
 	  size_t  count;
 	 ssize_t  n;
 	 enum structure_builder_states 	 			state;
-
+	 size_t  command_length;
+	 printf("Llegue\n");
 	ptr = buffer_write_ptr(d->read_buffer, &count);
 	n = recv(key->fd, ptr, count, 0);
 	if(n > 0) {
 		buffer_write_adv(d->read_buffer, n);
-		state = command_builder(ptr, n, d->command_parser, d->current_command, &error);
-		//fflush(stdout);
-		
+		state = command_builder(ptr, n, &command_length, d->command_parser, d->current_command, &error);
+		d->read_buffer->write = ptr;
+		buffer_write_adv(d->read_buffer, command_length);
+		*d->current_command_len += command_length;
+		*d->bytes_read 			+= n;
+		//d->aux_buffer->write = ptr;
+		//buffer_write_adv(d->aux_buffer, command_length);
+		//uint8_t * ptr2 = buffer_read_ptr(d->aux_buffer, &count);
+		//d->aux_buffer->write = d->read_buffer->write;
+		//printf("PTR 2 %d %*s\n", command_length, count, ptr2);
 		if(state == BUILD_FINISHED ){
-			printf("%s", d->current_command->kwrd);
+			//buffer_reset(d->aux_buffer);
+			if(n != command_length){
+				printf("Im going to be pipelined %c\n", *d->read_buffer->write);
+				*(d->pipelined) = true;
+				*(d->bytes_in_buffer) = n-command_length;
+			} else {
+				printf("Im NOT going to be pipelined %d %d\n", command_length, n);
+				*(d->pipelined) = false;
+			}
+			printf("%s\n", d->current_command->kwrd);
+			printf("BUILD_FINISHED %s", ptr);
 			selector_set_interest(key->s, ATTACHMENT(key)->client_fd, OP_NOOP);
 			if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->origin_fd, OP_WRITE)){
 				ret = COMMAND_SWRITE;
@@ -825,7 +864,6 @@ command_cread(struct selector_key *key) {
 			}
 			
 		} else if(state == BUILDING){
-			//selector_set_interest_key(key, OP_WRITE);
 			printf("State building\n");
 			if(SELECTOR_SUCCESS == selector_set_interest_key(key, OP_READ)) {
 				ret = COMMAND_CREAD;
@@ -836,16 +874,88 @@ command_cread(struct selector_key *key) {
 			printf("state else building\n");
 			ret = ERROR;
 		}
-		/*const struct parser_event* event = pop3_singleline_parser_consume(d->read_buffer, &d->singleline_parser, &error);
-		if(pop3_command_parser_is_done(event, &error)) {
-			if(SELECTOR_SUCCESS == selector_set_interest_key(key, OP_WRITE) && !error) {
+	} else {
+		ret = ERROR;
+	}
+	return error ? ERROR : ret;
+}
+static void
+pipe_init(const unsigned state, struct selector_key *key) {
+	struct command_st * d = &ATTACHMENT(key)->client.command;
+
+	d->read_buffer              = &(ATTACHMENT(key)->read_buffer);
+	d->write_buffer             = &(ATTACHMENT(key)->write_buffer);
+	//d->aux_buffer             = &(ATTACHMENT(key)->aux_buffer);
+	//buffer_init(d->write_buffer, N(ATTACHMENT(key)->raw_buff_b), ATTACHMENT(key)->raw_buff_b);
+	d->command_parser 			= pop3_command_parser_init();
+	d->pipelined 				= &(ATTACHMENT(key)->pipelined);
+	d->current_command 			= &(ATTACHMENT(key)->current_command);
+	d->bytes_in_buffer 			=&(ATTACHMENT(key)->bytes_in_buffer);
+	d->current_command->has_args = false;
+	d->current_command->kwrd_ptr = 0;
+	memset(d->current_command->kwrd, '\0', MAX_KEYWORD_LENGTH);
+	//buffer_reset(d->read_buffer);
+	//buffer_reset(d->write_buffer);
+	//buffer_reset(d->aux_buffer);
+}
+
+static unsigned
+pipe_dream(struct selector_key *key) {
+	struct command_st *d = &ATTACHMENT(key)->client.command;
+	unsigned  ret      = PIPE_DREAM;
+		bool  error    = false;
+	 uint8_t *ptr;
+	  size_t  count;
+	 ssize_t  n;
+	 enum structure_builder_states 	 			state;
+	 size_t  command_length;
+	 printf("PIPE_DREAM\n");
+	printf("Im being pipelined %c\n", *d->read_buffer->write);
+	ptr = buffer_write_ptr(d->read_buffer, &count);
+	printf("buffer_write %d %s\n", count, ptr);
+	if(*d->bytes_in_buffer > 0) {
+		buffer_write_adv(d->read_buffer, *d->bytes_in_buffer);
+		state = command_builder(ptr, *d->bytes_in_buffer, &command_length, d->command_parser, d->current_command, &error);
+		d->read_buffer->write = ptr;
+		buffer_write_adv(d->read_buffer, command_length);
+		*d->bytes_in_buffer -= command_length;
+		printf("buffer_write 2 %d %s\n", command_length, ptr);
+		//d->aux_buffer->write = ptr;
+		//buffer_write_adv(d->aux_buffer, command_length);
+		//uint8_t * ptr2 = buffer_read_ptr(d->aux_buffer, &count);
+		//d->aux_buffer->write = d->read_buffer->write;
+		//printf("PTR 2 %d %*s\n", command_length, count, ptr2);
+		//abort();
+		if(state == BUILD_FINISHED ){
+			//buffer_reset(d->aux_buffer);
+			printf("%s", d->current_command->kwrd);
+			selector_set_interest(key->s, ATTACHMENT(key)->client_fd, OP_NOOP);
+			if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->origin_fd, OP_WRITE)){
 				ret = COMMAND_SWRITE;
 			} else {
 				ret = ERROR;
 			}
-		}*/
+			
+		} else if(state == BUILDING){
+			printf("State building\n");
+			if(SELECTOR_SUCCESS == selector_set_interest_key(key, OP_WRITE)) {
+				ret = PIPE_DREAM;
+			} else {
+				ret = ERROR;
+			}
+		} else {
+			printf("state else building\n");
+			ret = ERROR;
+		}
 	} else {
-		ret = ERROR;
+		selector_set_interest    (key->s, ATTACHMENT(key)->origin_fd, OP_NOOP);
+		if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->client_fd, OP_READ)){
+			//buffer_reset(d->read_buffer);
+			printf("LISTO CALISTO\n");
+			ret = COMMAND_CREAD;
+		} else {
+			ret = ERROR;
+		}
 	}
 	return error ? ERROR : ret;
 }
@@ -861,13 +971,13 @@ command_swrite(struct selector_key *key) {
 	 ssize_t  n;
 
 	ptr = buffer_read_ptr(d->read_buffer, &count);
-	
 	n = send(key->fd, ptr, count, MSG_NOSIGNAL);
-
+	printf("Este es el cmd %d %d %*s\n", count, n, n, ptr);
 	if(n == -1) {
 		ret = ERROR;
 	} else {
-		buffer_read_adv(d->read_buffer, n);
+		d->read_buffer->read += n;
+		printf("Im command %c\n", *d->read_buffer->write);
 		if(!buffer_can_read(d->read_buffer)) {
 		
 			//key->fd = ATTACHMENT(key)->origin_fd;
@@ -887,14 +997,18 @@ command_swrite(struct selector_key *key) {
 /** inicializa las variables de los estados HELLO_… */
 static void
 response_init(const unsigned state, struct selector_key *key) {
+
 	struct response_st *d 		= &ATTACHMENT(key)->origin.response;
+	d->read_buffer              = &(ATTACHMENT(key)->read_buffer);
+	d->write_buffer             = &(ATTACHMENT(key)->write_buffer);
 	d->current_command 			= &(ATTACHMENT(key)->current_command);
 	d->singleline_parser 		= pop3_singleline_response_parser_init();
 	d->multiline_parser 		= pop3_multiline_response_parser_init();
 	d->transform 			= &ATTACHMENT(key)->transform;
+	d->pipelined 				= &(ATTACHMENT(key)->pipelined);
 	buffer_init(d->write_buffer,N(ATTACHMENT(key)->raw_buff_b),ATTACHMENT(key)->raw_buff_b);
-	buffer_init(d->read_buffer,N(ATTACHMENT(key)->raw_buff_a),ATTACHMENT(key)->raw_buff_a);	
-	buffer_reset(d->read_buffer);
+	//buffer_init(d->read_buffer,N(ATTACHMENT(key)->raw_buff_a),ATTACHMENT(key)->raw_buff_a);	
+	//buffer_reset(d->read_buffer);
 	buffer_reset(d->write_buffer);
 }
 
@@ -911,6 +1025,7 @@ response_sread(struct selector_key *key) {
 	 struct pop3_singleline_response_builder 		builder;
 	ptr = buffer_write_ptr(d->write_buffer, &count);
 	n = recv(key->fd, ptr, count, 0);
+	printf("Im response %c\n", *d->read_buffer->write);
 	if(n > 0) {
 		buffer_write_adv(d->write_buffer, n);
 		state = pop3_singleline_response_builder(ptr, n, d->singleline_parser, &builder, &error);
@@ -937,7 +1052,7 @@ response_sread(struct selector_key *key) {
 					}
 					printf("A punto de transform\n");
 					fflush(stdout);
-					if(*(d->transform)){
+					/*if(*(d->transform)){
 						int bytes_to_read;
 						uint8_t *ptr = buffer_read_ptr(d->write_buffer, &bytes_to_read);
 						int resp = create_transformation(ATTACHMENT(key)->sender_pipe, ATTACHMENT(key)->receiver_pipe);
@@ -958,7 +1073,7 @@ response_sread(struct selector_key *key) {
 							}
 							return ret;
 						}
-					}
+					}*/
 					printf("Vamos a ver cual es el problema");
 					fflush(stdout);
 					if(c_state == FINISHED_CONSUMING ){
@@ -986,6 +1101,7 @@ response_sread(struct selector_key *key) {
 						}
 						return ret;
 					}
+
 
 			}
 			selector_set_interest    (key->s, ATTACHMENT(key)->origin_fd, OP_NOOP);
@@ -1119,10 +1235,19 @@ response_cwrite(struct selector_key *key) {
 	} else {
 		buffer_read_adv(d->write_buffer, n);
 		if(!buffer_can_read(d->write_buffer)) {
-			if(SELECTOR_SUCCESS == selector_set_interest_key(key, OP_READ)) {
-				ret = COMMAND_CREAD;
+			if(*(d->pipelined)){
+				selector_set_interest    (key->s, ATTACHMENT(key)->client_fd, OP_NOOP);
+				if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->origin_fd, OP_WRITE)){
+					ret = PIPE_DREAM;
+				} else {
+					ret = ERROR;
+				}
 			} else {
-				ret = ERROR;
+				if(SELECTOR_SUCCESS == selector_set_interest_key(key, OP_READ)) {
+					ret = COMMAND_CREAD;
+				} else {
+					ret = ERROR;
+				}
 			}
 		}
 	}
@@ -1171,6 +1296,10 @@ static const struct state_definition client_statbl[] = {
 	},{
 		.state				= RESPONSE_CWRITE,
 		.on_write_ready		= response_cwrite,
+	},{
+		.state 				= PIPE_DREAM,
+		.on_arrival 		= pipe_init,
+		.on_write_ready 	= pipe_dream,
 	},{
 		.state				= UPDATE,
 

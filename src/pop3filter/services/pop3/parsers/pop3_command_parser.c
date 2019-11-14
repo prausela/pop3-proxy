@@ -310,12 +310,15 @@ set_pop3_command_builder_next(struct pop3_command_builder *cmd, uint8_t value){
 }
 
 enum structure_builder_states
-command_builder(uint8_t *ptr, size_t count, struct parser *p, struct pop3_command_builder *cmd, bool *error){
+command_builder(uint8_t *ptr, size_t count, size_t *read, struct parser *p, struct pop3_command_builder *cmd, bool *error){
     uint8_t c;
     struct parser_event *e;
+    *read = 0;
     while(count > 0){
         c = *ptr;
         e = parser_feed(p, c);
+        printf("%c\n", c);
+        (*read)++;
         switch(e->type){
             case BUFFER_CMD:
                 printf("BUFFER_CMD\n");
