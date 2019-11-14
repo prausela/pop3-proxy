@@ -1041,8 +1041,7 @@ response_sread(struct selector_key *key) {
 					printf("MULTILINE\n");
 					enum consumer_state c_state = pop3_multiline_response_checker(ptr, n, d->multiline_parser, &error);
 					printf("En mlt\n");
-					fflush(stdout);
-					if(0/*strcmp(d->current_command->kwrd, "RETR") == 0 || strcmp(d->current_command->kwrd, "TOP") == 0*/){
+					if(strcmp(d->current_command->kwrd, "RETR") == 0 || strcmp(d->current_command->kwrd, "TOP") == 0){
 						printf("Debo transform\n");
 						*(d->transform) = true;
 					}else {
@@ -1053,17 +1052,21 @@ response_sread(struct selector_key *key) {
 					printf("A punto de transform\n");
 					fflush(stdout);
 					/*if(*(d->transform)){
+=======
+					if(*(d->transform)){
+>>>>>>> f3ea92324a8c0525aae6b4b00923f7c79a90cecf
 						int bytes_to_read;
 						uint8_t *ptr = buffer_read_ptr(d->write_buffer, &bytes_to_read);
 						int resp = create_transformation(ATTACHMENT(key)->sender_pipe, ATTACHMENT(key)->receiver_pipe);
 						write(ATTACHMENT(key)->sender_pipe[1], ptr, bytes_to_read);
-						write(ATTACHMENT(key)->sender_pipe[1], "\n", 1);
 						uint8_t *read_ptr = buffer_write_ptr(d->read_buffer, &bytes_to_read);
 						printf("Antes de leer");
-						fflush(stdout);
 						read(ATTACHMENT(key)->receiver_pipe[0], read_ptr, bytes_to_read);
 						if(c_state != FINISHED_CONSUMING ){
+							selector_set_interest(key->s, ATTACHMENT(key)->origin_fd, OP_NOOP);
+							if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->client_fd, OP_WRITE)){
 							return DOT_DATA_CWRITE;
+							}
 						} else {
 							selector_set_interest    (key->s, ATTACHMENT(key)->origin_fd, OP_NOOP);
 							if(SELECTOR_SUCCESS == selector_set_interest(key->s, ATTACHMENT(key)->client_fd, OP_WRITE)){

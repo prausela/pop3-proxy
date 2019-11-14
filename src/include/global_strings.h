@@ -15,6 +15,6 @@
 #define ERR_RESP_MESSAGE          "ERR_RESP"
 #define END_SINGLELINE_MESSAGE    "END_SINGLELINE"
 #define HTTP                      "http"
-#define MEDIA_FILTER               "src/mime_filter"
+#define MEDIA_FILTER               "cat"
 
 #endif
