@@ -1,30 +1,10 @@
-all: proxy.c
-	gcc-8 -g -Wall -o proxy proxy.c ./utils/lib.c ./services/transformations.c ./services/dns_lookup.c ./services/validate_ip.c parser_factory.c parser_utils.c pop3_singleline_response_parser.c pop3_multiline_response_parser.c pop3_parser.c pop3_command_parser.c -lpthread
-	gcc-8 -o pop3_command_parser parser_factory.c parser_utils.c pop3_command_parser.c testing/pop3_command_parser_test.c
-	gcc-8 -o pop3_singleline_response_parser parser_factory.c parser_utils.c pop3_singleline_response_parser.c testing/pop3_singleline_response_parser_test.c -g
-	gcc-8 -o pop3_multiline_response_parser parser_factory.c testing/pop3_multiline_response_parser_test.c pop3_multiline_response_parser.c parser_utils.c -g
-	gcc-8 -o pop3_encrypt_parser parser_factory.c services/encrypt.c testing/pop3_encrypt_parser_test.c pop3_encrypt_parser.c parser_utils.c -g
-	gcc-8 -o pop3_decrypt_parser parser_factory.c services/decrypt.c testing/pop3_decrypt_parser_test.c pop3_decrypt_parser.c parser_utils.c -g
-	gcc-8 -o pop3_parser parser_factory.c parser_utils.c  pop3_singleline_response_parser.c pop3_multiline_response_parser.c pop3_parser.c testing/pop3_parser_test.c pop3_command_parser.c -g
-	gcc-8 -Wall -o testing_transformations testing/transformation_testing.c services/transformations.c
-	gcc-8 -Wall -o mime_filter ./mimi_filter/src/mime_chars.c ./mimi_filter/src/mime_msg.c ./mimi_filter/src/parser_utils.c ./mimi_filter/src/parser.c ./mimi_filter/src/pop3_multi.c ./mimi_filter/src/stripmime.c ./mimi_filter/src/content_type_parser.c ./mimi_filter/src/list.c ./mimi_filter/src/stack.c
-	# cp -i ./mime_filter ../
-	# cp -i ./mime_filter ./pop3filter
-	# cp -i ./mime_filter ./pop3filter/services
-	# cp -i ./mime_filter ./pop3filter/services/pop3
-	# cp -i ./mime_filter ./pop3filter/services/utils
-	# cp -i ./mime_filter ./pop3filter/services/pop3/nio
-	# cp -i ./mime_filter ./services
-	sudo cp mime_filter /
-	sudo cp /mime_filter /bin
+CFLAGS=-Wall
+all:
+	$(CC) $(CFLAGS) -o ../stripmime stripmime/src/mime_chars.c stripmime/src/mime_msg.c stripmime/src/parser_utils.c stripmime/src/parser.c stripmime/src/pop3_multi.c stripmime/src/stripmime.c stripmime/src/content_type_parser.c stripmime/src/list.c stripmime/src/stack.c
+	# $(CC) $(CFLAGS) -o ../pop3filter src/utils/lib.c src/pop3filter/main.c src/pop3filter/services/logger.c src/pop3filter/services/speedwagon/speedwagon_decoder.c src/pop3filter/services/speedwagon/include/speedwagon_decoder.h src/pop3filter/services/selector.c src/pop3filter/services/stm.c src/pop3filter/utils/netutils.c src/pop3filter/services/buffer.c src/pop3filter/services/parser_factory.c src/pop3filter/services/pop3/nio/pop3_client_nio.c src/pop3filter/services/pop3/nio/pop3_admin_nio.c src/pop3filter/services/utils/parser_utils.c src/pop3filter/services/pop3/pop3_suscriptor.c src/pop3filter/services/pop3/pop3.c src/pop3filter/services/pop3/parsers/pop3_command_parser.c src/pop3filter/services/pop3/parsers/pop3_singleline_response_parser.c src/pop3filter/services/pop3/parsers/pop3_multiline_response_parser.c src/services/transformations.c -lpthread -g
+	$(CC) $(CFLAGS) -o ../pop3ctl pop3ctl/main.c -L/usr/local/lib -lsctp
 
 clean:
-	$(RM) proxy
-	$(RM) pop3_command_parser
-	$(RM) pop3_singleline_response_parser
-	$(RM) pop3_multiline_response_parser
-	$(RM) pop3_encrypt_parser
-	$(RM) pop3_decrypt_parser
-	$(RM) pop3_parser
-	$(RM) testing_transformations
-	$(RM) mime_filter
+	$(RM) ../stripmime
+	# $(RM) ../pop3filter
+	$(RM) ../pop3ctl
