@@ -23,7 +23,7 @@
 #include "../../parsers/include/pop3_singleline_response_parser.h"
 #include "../../parsers/include/pop3_multiline_response_parser.h"
 #include "../../include/pop3.h"
-#include "../../../../../services/services.h"
+#include "../../../include/transformations.h"
 #include "../../../include/selector.h"
 #include "../../../../utils/include/structure_builder.h"
 #include "pop3_admin_nio.h"

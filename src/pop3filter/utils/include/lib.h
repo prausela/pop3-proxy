@@ -17,10 +17,12 @@
 
 #define INVALID -1
 #define REQUIRED 1
+#define VALID 1
 #define NOT_REQUIRED 2
+#define ADDRESS 3
 
 
-int command_line_parser(int argc,char **argv,char * proxy_port,char * port, char* proxy_address);
+int command_line_parser(int argc,char **argv,char* proxy_address, char* proxy_address_ipv6, char* client_port, char* admin_address, char* admin_address_ipv6, char* admin_port, char* origin_address, char* origin_port);
 int checkArg(char *argument, int *expecting_data);
 
 #endif

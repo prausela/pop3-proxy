@@ -24,8 +24,8 @@
 #include <netinet/tcp.h>
 
 #include "services/pop3/include/pop3_suscriptor.h"
-#include "../utils/lib.h"
-#include "./services/pop3/nio/include/pop3_client_nio.h"
+#include "utils/include/lib.h"
+#include "services/pop3/nio/include/pop3_client_nio.h"
 
 static void
 sigterm_handler(const int signal) {
