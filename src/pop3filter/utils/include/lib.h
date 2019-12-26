@@ -21,8 +21,18 @@
 #define NOT_REQUIRED 2
 #define ADDRESS 3
 
+struct pop3filter_arguments {
+        char 	*error_filename;
+	    char  	*client_address;
+	    char 	*admin_address;
+    unsigned 	 client_port;
+    unsigned 	 admin_port;
+    unsigned 	 origin_port;
+        char	*cmd;
+}  pop3filter_arguments_default;
 
-int command_line_parser(int argc,char **argv,char* proxy_address, char* proxy_address_ipv6, char* client_port, char* admin_address, char* admin_address_ipv6, char* admin_port, char* origin_address, char* origin_port);
-int checkArg(char *argument, int *expecting_data);
+int options_handler(const int argc, const char **argv, struct pop3filter_arguments *pop3filter_arguments);
+//int command_line_parser(int argc,char **argv,char* proxy_address, char* proxy_address_ipv6, char* client_port, char* admin_address, char* admin_address_ipv6, char* admin_port, char* origin_address, char* origin_port);
+//int checkArg(char *argument, int *expecting_data);
 
 #endif

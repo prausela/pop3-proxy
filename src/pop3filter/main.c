@@ -17,6 +17,7 @@
 #include <limits.h>
 #include <errno.h>
 #include <signal.h>
+#include <unistd.h>
 
 #include <unistd.h>
 #include <sys/types.h>   // socket
@@ -56,22 +57,24 @@ selector_status
 init_suscription_service(const int server, const char **err_msg);
 */
 
-static
+/*static
 int
 param_validation(int argc,char **argv,char* proxy_address, char* proxy_address_ipv6, char* client_port, char* admin_address, char* admin_address_ipv6, char* admin_port, char* origin_address, char* origin_port){
 	command_line_parser(argc, argv, proxy_address, proxy_address_ipv6, client_port, admin_address, admin_address_ipv6, admin_port, origin_address, origin_port);
 	return 0;
-}
+}*/
+
+typedef union {
+	struct sockaddr_in 	any;
+	struct sockaddr_in6 ipv6;
+} sockaddr_in_any;
 
 static
 int
 init_socket(struct addrinfo *addrinfo, unsigned port, const char **err_msg){
 	const int server = socket(addrinfo->ai_family, addrinfo->ai_socktype, addrinfo->ai_protocol);
-
-	union sockaddr_in_any {
-		struct sockaddr_in 	any;
-		struct sockaddr_in6 ipv6;
-	} addr;
+	
+	sockaddr_in_any addr;
 
 	switch (addrinfo->ai_family)
 	{
@@ -149,14 +152,18 @@ print_err_msg(selector_status ss, const char **err_msg){
 
 int
 main(const int argc, const char **argv) {
+	
+
 	int 		ret  	 = 0;
+	struct pop3filter_arguments args = pop3filter_arguments_default;
+	options_handler(argc, argv, &args);
 
 	// No input from user is needed
 	close(STDIN_FILENO);
 
 	// Variable for error messages
 	const char	*err_msg 	= NULL;
-	char * host = "localhost";
+	
 	struct addrinfo hints, *addrinfo;
 
 	memset(&hints, 0, sizeof(hints));
@@ -165,98 +172,14 @@ main(const int argc, const char **argv) {
 
 	hints.ai_protocol	= IPPROTO_TCP;
 
-	const int server_ipv4 = init_socket_with_addrinfo(host, AF_INET, FILTER_DEFAULT_PORT, &hints, &addrinfo, &err_msg);
-	const int server_ipv6 = init_socket_with_addrinfo(host, AF_INET6, FILTER_DEFAULT_PORT, &hints, &addrinfo, &err_msg);
+	const int server_ipv4 = init_socket_with_addrinfo(args.client_address, AF_INET, args.client_port, &hints, &addrinfo, &err_msg);
+	const int server_ipv6 = init_socket_with_addrinfo(args.client_address, AF_INET6, args.client_port, &hints, &addrinfo, &err_msg);
 	
 	hints.ai_protocol	= IPPROTO_SCTP;
 
-	const int admin_ipv4 = init_socket_with_addrinfo(host, AF_INET, CTL_DEFAULT_PORT, &hints, &addrinfo, &err_msg);
-	const int admin_ipv6 = init_socket_with_addrinfo(host, AF_INET6, CTL_DEFAULT_PORT, &hints, &addrinfo, &err_msg);
-	/*
-	hints.ai_family 	= AF_INET;
-
-	int errcode = getaddrinfo(host, NULL, &hints, &addrinfo);
-
-	if(errcode != 0){
-		perror("getaddrinfo");
-		//return -1;
-	} else {
-		const int server_ipv4 = init_socket(addrinfo, FILTER_DEFAULT_PORT, err_msg);
-		freeaddrinfo(addrinfo);
-	}
-
-	hints.ai_family 	= AF_INET6;
-
-	errcode = getaddrinfo(host, NULL, &hints, &addrinfo);
-
-	if(errcode != 0){
-		perror("getaddrinfo");
-		//return -1;
-	} else {
-		const int server_ipv6 = init_socket(addrinfo, FILTER_DEFAULT_PORT, err_msg);
-		freeaddrinfo(addrinfo);
-	}
+	const int admin_ipv4 = init_socket_with_addrinfo(args.admin_address, AF_INET, args.admin_port, &hints, &addrinfo, &err_msg);
+	const int admin_ipv6 = init_socket_with_addrinfo(args.admin_address, AF_INET6, args.admin_port, &hints, &addrinfo, &err_msg);
 	
-	hints.ai_protocol	= IPPROTO_SCTP;
-
-	hints.ai_family 	= AF_INET;
-
-	errcode = getaddrinfo(host, NULL, &hints, &addrinfo);
-
-	if(errcode != 0){
-		perror("getaddrinfo");
-		//return -1;
-	} else {
-		const int server_ipv4 = init_socket(addrinfo, CTL_DEFAULT_PORT, err_msg);
-		if(server_ipv4 == -1){
-			printf("%s\n", err_msg);
-		}
-		freeaddrinfo(addrinfo);
-	}
-
-	hints.ai_family 	= AF_INET6;
-
-	errcode = getaddrinfo(host, NULL, &hints, &addrinfo);
-
-	if(errcode != 0){
-		perror("getaddrinfo");
-		//return -1;
-	} else {
-		const int server_ipv6 = init_socket(addrinfo, CTL_DEFAULT_PORT, err_msg);
-		if(server_ipv6 == -1){
-			printf("%s\n", err_msg);
-		}
-		freeaddrinfo(addrinfo);
-	}
-
-	*/
-	/*const int 	server_ipv4 	 	= init_socket(FILTER_DEFAULT_PORT, FILTER_DEFAULT_IPV4_ADDRESS, &err_msg, IPPROTO_TCP, AF_INET);
-	const int 	server_ipv6 	 	= init_socket(FILTER_DEFAULT_PORT, FILTER_DEFAULT_IPV6_ADDRESS, &err_msg, IPPROTO_TCP, AF_INET6);
-	//const int 	server_ipv6 = init_socket(client_port, proxy_address_ipv6, &err_msg, IPPROTO_TCP,0);
-
-*/
-	//printf("Despues de init socket, server tiene el valor de: %d\n",server );
-	//if(server < 0){
-		//printf("server menor a cero\n" );
-		//goto finally;
-	// }
-
-	//printf("casi admin\n" );
-	//const int 	admin 	 	= init_socket(admin_port, admin_address, &err_msg, IPPROTO_SCTP,0);
-	//const int 	admin_ipv6 	= init_socket(admin_port, admin_address_ipv6, &err_msg, IPPROTO_SCTP,0);
-  //Valor 1
-	//if(admin < 0){
-	//	goto finally;
-	//}
-
-	//const int 	origin 	 = init_socket(origin_port, origin_address, &err_msg, IPPROTO_SCTP,1);
-	//Valor 1
-	//if(admin < 0){
-	//	goto finally;
-	//}
-
-
-
 	// registrar sigterm es útil para terminar el programa normalmente.
 	// esto ayuda mucho en herramientas como valgrind.
 	signal(SIGTERM, sigterm_handler);
